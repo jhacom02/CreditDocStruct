@@ -1,0 +1,32 @@
+---
+description: PDFScanner 아키텍처 — main 오케스트레이션과 credit_scanner 라이브러리 분리
+globs: "**/*"
+alwaysApply: true
+---
+
+# PDFScanner Architecture
+
+## 진입점
+
+- 모든 CLI/배치 오케스트레이션은 `main.py`에서만 한다.
+- `credit_scanner/`는 추출·분류·저장 헬퍼 라이브러리다. 여기에 CLI 흐름을 두지 않는다.
+- `pdf_scanner/pdf_scanner.py`, `credit_scanner/cli.py`는 `main` 위임용 하위 호환만 유지한다.
+- 구조·진입점·사용법 변경 시 `README.md`를 같은 작업에서 갱신한다 (`documentation.mdc`).
+
+## 패키지 역할
+
+| 경로 | 역할 |
+|------|------|
+| `main.py` | 인자 파싱 → 단일/폴더 분기 → 추출 호출 → JSON/Excel 저장 |
+| `credit_scanner/pipeline.py` | 단일 PDF → 레코드 추출 API |
+| `credit_scanner/extract/` | 표·시각·fallback 구조 추출 |
+| `credit_scanner/classifier.py` | taxonomy 기반 점수 분류 |
+| `credit_scanner/agency.py` | 기관 식별 + 레이아웃(헤더/섹션)만 |
+| `credit_scanner/export/` | 행 조립·워크북/JSON 쓰기 (루프 오케스트레이션 금지) |
+| `credit_scanner/config/instrument_taxonomy.yaml` | 평가대상 별칭·특징 사전 |
+
+## 금지
+
+- export/extract에 폴더 순회·CLI 오케스트레이션을 넣지 말 것
+- 평가대상 동의어를 Python 정규식 하드코딩으로 늘리지 말 것 → taxonomy YAML
+- 분류 실패 시 등급 있는 행을 폐기하지 말 것 → `unknown` 보존

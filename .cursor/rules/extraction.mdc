@@ -1,0 +1,24 @@
+---
+description: PDFScanner 추출 파이프라인 — 구조 우선, unknown 보존
+globs: credit_scanner/extract/**,credit_scanner/pipeline.py,main.py
+alwaysApply: false
+---
+
+# Extraction Pipeline
+
+## 2단계 분리
+
+1. **구조 추출**: 표/시각에서 레이블+등급 행 수집
+2. **의미 분류**: taxonomy로 `instrument_type` 부여
+
+등급이 있으면 분류 실패해도 `unknown`으로 보존한다.
+
+## 추출 경로
+
+tables → visual layout → valid ratings → (비어 있을 때만) fallback
+
+## 수정 위치
+
+- 헤더/섹션 → `agency.py`
+- 상품 워딩 → `instrument_taxonomy.yaml`
+- 등급 토큰 → `rating_tokens.py` / `constants.py`

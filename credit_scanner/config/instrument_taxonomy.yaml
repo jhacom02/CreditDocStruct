@@ -1,0 +1,205 @@
+# Canonical instrument types with aliases and feature rules.
+# Add new wordings under aliases without changing Python code.
+
+features:
+  tier1:
+    - "T\\s*1"
+    - "Tier\\s*1"
+    - "AT\\s*1"
+    - "Additional\\s+Tier\\s*1"
+    - "신종"
+    - "기타\\s*기본\\s*자본"
+    - "추가\\s*기본\\s*자본"
+    - "조건부\\s*자본\\s*증권\\s*\\(\\s*상\\s*\\)"
+    - "CoCo\\s*\\(\\s*HB\\s*\\)"
+  tier2:
+    - "T\\s*2"
+    - "Tier\\s*2"
+    - "보완\\s*자본"
+    - "조건부\\s*자본\\s*증권\\s*\\(\\s*(?:후|후순위)\\s*\\)"
+    - "CoCo\\s*\\(\\s*(?:후|T\\s*2|Tier\\s*2)\\s*\\)"
+    - "조건부\\s*후순위"
+    - "후순위\\s*조건부"
+  coco:
+    - "조건부\\s*자본\\s*증권"
+    - "CoCo"
+    - "신종\\s*자본\\s*증권"
+    - "채권형\\s*신종\\s*자본\\s*증권"
+  issuer_like:
+    - "발행자"
+    - "Issuer\\s+Rating"
+    - "Issuer\\s+Credit\\s+Rating"
+    - "Corporate\\s+Credit\\s+Rating"
+    - "기업\\s*신용\\s*등급"
+    - "기업\\s*신용\\s*평가"
+    - "\\bICR\\b"
+  unsecured:
+    - "선순위\\s*무보증"
+    - "무보증\\s*(?:사채|채권)"
+    - "일반\\s*사채"
+    - "사모\\s*일반\\s*사채"
+    - "선순위\\s*사채"
+    - "Senior\\s+Unsecured"
+  subordinated:
+    - "후순위\\s*(?:사채|채권)"
+    - "무보증\\s*후순위"
+    - "Subordinated\\s+(?:Bond|Debt)"
+  commercial_paper:
+    - "기업\\s*어음"
+    - "지급\\s*보증부\\s*기업\\s*어음"
+    - "\\bCP\\b"
+    - "Commercial\\s+Paper"
+  short_term_bond:
+    - "전자\\s*단기\\s*사채"
+    - "단기\\s*사채"
+    - "\\bABSTB\\b"
+  insurance:
+    - "보험금\\s*지급\\s*능력"
+  structured:
+    - "\\bABS\\b"
+    - "\\bABCP\\b"
+    - "선순위\\s*수익\\s*증권"
+    - "후순위\\s*수익\\s*증권"
+
+instruments:
+  coco_t1:
+    aliases:
+      - "조건부자본증권(T1)"
+      - "조건부자본증권(T 1)"
+      - "조건부자본증권(Tier1)"
+      - "조건부자본증권(Tier 1)"
+      - "조건부자본증권(신종)"
+      - "조건부자본증권(상)"
+      - "조건부자본증권 T1"
+      - "조건부자본증권 Tier1"
+      - "CoCo(HB)"
+      - "CoCo(T1)"
+      - "CoCo Tier1"
+      - "CoCo Tier 1"
+      - "채권형신종자본증권"
+      - "신종자본증권"
+      - "기타기본자본"
+      - "추가기본자본"
+      - "AT1"
+      - "AT 1"
+      - "Additional Tier 1"
+    require_any: [tier1, coco]
+    boost_features: [tier1, coco]
+    exclude_features: [tier2]
+    base_score: 10
+
+  coco_t2:
+    aliases:
+      - "조건부자본증권(T2)"
+      - "조건부자본증권(T 2)"
+      - "조건부자본증권(Tier2)"
+      - "조건부자본증권(Tier 2)"
+      - "조건부자본증권(후)"
+      - "조건부자본증권(후순위)"
+      - "조건부자본증권 T2"
+      - "조건부자본증권 Tier2"
+      - "CoCo(후)"
+      - "CoCo(T2)"
+      - "CoCo Tier2"
+      - "CoCo Tier 2"
+      - "조건부후순위사채"
+      - "조건부후순위채권"
+      - "후순위조건부자본증권"
+      - "보완자본"
+      - "Tier 2"
+      - "Tier2"
+    require_any: [tier2, coco]
+    boost_features: [tier2, coco]
+    exclude_features: [tier1]
+    base_score: 10
+
+  issuer:
+    aliases:
+      - "발행자"
+      - "발행자 신용등급"
+      - "발행자신용등급"
+      - "Issuer Rating"
+      - "Issuer Credit Rating"
+      - "Corporate Credit Rating"
+      - "기업신용등급"
+      - "기업신용평가"
+      - "ICR"
+    require_any: [issuer_like]
+    boost_features: [issuer_like]
+    exclude_features: []
+    base_score: 10
+
+  senior_unsecured:
+    aliases:
+      - "선순위무보증사채"
+      - "선순위무보증채권"
+      - "무보증사채"
+      - "무보증채권"
+      - "무보증사채(일반)"
+      - "일반사채"
+      - "사모일반사채"
+      - "선순위사채"
+      - "Senior Unsecured"
+    require_any: [unsecured]
+    boost_features: [unsecured]
+    exclude_features: [subordinated, coco]
+    base_score: 10
+
+  subordinated:
+    aliases:
+      - "후순위사채"
+      - "후순위채권"
+      - "무보증후순위사채"
+      - "무보증후순위채권"
+      - "Subordinated Bond"
+      - "Subordinated Debt"
+    require_any: [subordinated]
+    boost_features: [subordinated]
+    exclude_features: [coco]
+    base_score: 8
+
+  commercial_paper:
+    aliases:
+      - "기업어음"
+      - "지급보증부기업어음"
+      - "CP"
+      - "Commercial Paper"
+    require_any: [commercial_paper]
+    boost_features: [commercial_paper]
+    exclude_features: []
+    base_score: 10
+
+  short_term_bond:
+    aliases:
+      - "전자단기사채"
+      - "단기사채"
+      - "ABSTB"
+    require_any: [short_term_bond]
+    boost_features: [short_term_bond]
+    exclude_features: [structured]
+    base_score: 10
+
+  insurance_payment:
+    aliases:
+      - "보험금지급능력등급"
+      - "보험금지급능력"
+    require_any: [insurance]
+    boost_features: [insurance]
+    exclude_features: []
+    base_score: 10
+
+  structured_finance:
+    aliases:
+      - "ABS"
+      - "ABCP"
+      - "선순위수익증권"
+      - "후순위수익증권"
+    require_any: [structured]
+    boost_features: [structured]
+    exclude_features: []
+    base_score: 8
+
+# Minimum score to accept a classification; below → unknown
+min_score: 8
+# If top two scores differ by less than this → ambiguous
+ambiguity_margin: 2

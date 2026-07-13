@@ -1,0 +1,29 @@
+---
+description: 프로젝트 구조·사용법·진입점 변경 시 README를 함께 업데이트
+globs: "**/*"
+alwaysApply: true
+---
+
+# Documentation Sync
+
+프로젝트 수정 시 **같은 작업에서** `README.md`도 최신 상태에 맞게 갱신한다.
+
+## README를 반드시 갱신하는 경우
+
+- 디렉터리/파일 추가·이동·삭제·이름 변경
+- 진입점·CLI 옵션·실행 방법 변경 (`main.py` 등)
+- 패키지 역할 분리 또는 public API 변경
+- 유지보수 워크플로(taxonomy, needs_review, 테스트) 변경
+- 의존성(`requirements.txt`) 추가·제거
+
+## 점검 항목
+
+1. **디렉터리 구조** 트리가 실제 파일과 일치하는가
+2. **사용법/실행 예**가 동작하는 경로·명령인가
+3. **하위 호환 경로**(`credit_scanner`, `pdf_scanner/`) 설명이 맞는가
+4. 더 이상 없는 파일을 README에 남겨 두지 않았는가
+
+## 예외
+
+- 순수 버그 수정으로 동작·구조·문서화된 API가 바뀌지 않으면 README 생략 가능
+- 테스트 fixture 문구만 추가한 경우 README의 fixture 안내가 이미 있으면 생략 가능
