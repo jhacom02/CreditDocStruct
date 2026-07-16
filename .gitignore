@@ -1,12 +1,41 @@
-venv/
+# Python cache
 __pycache__/
 *.py[cod]
-.pytest_cache/
-*.egg-info/
-.eggs/
-dist/
-build/
-*.xlsx
-*.credit_rating.json
+*$py.class
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Environment variables
+.env
+.env.local
+
+# Logs
+*.log
+logs/
+
+# OS files
 .DS_Store
 Thumbs.db
+
+# VSCode
+.vscode/
+
+# Build / package
+build/
+dist/
+*.egg-info/
+
+# Test / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Data / output files
+data/
+output/
+downloads/
+results/
+result/
