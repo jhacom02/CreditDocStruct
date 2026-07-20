@@ -23,8 +23,13 @@ if str(ROOT) not in sys.path:
 
 import pymupdf
 
-from agency.agency import detect_agency, extract_company_name
+from agency.agency import (
+    extract_company_name,
+    format_agency_display,
+    resolve_agency_key,
+)
 from classify.classifier import LabelClassifier
+from classify.undefined_filter import should_include_undefined_record
 from common.fail_reasons import (
     FILE_ERROR,
     LABEL_NOT_FOUND,
@@ -45,10 +50,10 @@ from extract import (
     extract_primary_rows_from_tables,
     extract_primary_rows_from_visual_layout,
     extract_valid_rating_rows,
-    merge_rating_records,
 )
-from extract.merge import is_primary_record
+from extract.row_rebuild import rebuild_merged_rows
 from extract.row_parser import PRIMARY_EVAL_TYPES
+from extract.merge import is_primary_record, merge_canonical_records
 from export.excel import write_results_excel_tmp
 from export.json_io import write_results_json_tmp
 from export.undefined_store import (
@@ -127,8 +132,11 @@ def select_and_judge(
         for record in records
         if record.classification_status == "matched"
     ]
+    primary_matched = [
+        record for record in matched if is_primary_record(record)
+    ]
 
-    # instrument_key별 그룹 (rating 있는 후보만) — ratings sparse용 전체
+    # ratings sparse: canonical 전체 (valid-only 상품 포함)
     groups: dict[str, list[RatingRecord]] = defaultdict(list)
     for record in matched:
         if record.instrument_key and record.rating_status in {
@@ -140,12 +148,11 @@ def select_and_judge(
     rating_groups = dict(groups)
     ratings = _build_ratings_sparse(rating_groups)
 
-    # 본/본평가 경로: primary 표의 확정 등급 행만 selected 후보
+    # selected: Primary만
     bon_candidates = [
         record
-        for record in matched
-        if is_primary_record(record)
-        and record.evaluation_type in PRIMARY_EVAL_TYPES
+        for record in primary_matched
+        if record.evaluation_type in PRIMARY_EVAL_TYPES
         and record.rating_status == "single"
         and record.instrument_key
         and record.rating
@@ -160,7 +167,6 @@ def select_and_judge(
                 ratings,
             )
         if len(bon_candidates) >= 2 and len(bon_keys) == 1:
-            # 동일 상품 본이 여러 행이면 등급 일치 여부 확인
             distinct = {
                 (item.rating, item.outlook) for item in bon_candidates
             }
@@ -174,12 +180,21 @@ def select_and_judge(
         chosen = bon_candidates[0]
         return "success", None, _selected_dict(chosen), ratings
 
-    # 본이 없으면 기존 알고리즘 (정기 등 포함 전체 rating 후보)
-    if len(rating_groups) >= 2:
+    primary_groups: dict[str, list[RatingRecord]] = defaultdict(list)
+    for record in primary_matched:
+        if record.instrument_key and record.rating_status in {
+            "single",
+            "ambiguous",
+        }:
+            primary_groups[record.instrument_key].append(record)
+
+    primary_rating_groups = dict(primary_groups)
+
+    if len(primary_rating_groups) >= 2:
         return "fail", make_fail_reason(MULTIPLE_INSTRUMENTS), None, ratings
 
-    if len(rating_groups) == 1:
-        instrument_key, group = next(iter(rating_groups.items()))
+    if len(primary_rating_groups) == 1:
+        _instrument_key, group = next(iter(primary_rating_groups.items()))
         if any(item.rating_status == "ambiguous" for item in group):
             return (
                 "fail",
@@ -194,6 +209,9 @@ def select_and_judge(
 
         chosen = group[0]
         return "success", None, _selected_dict(chosen), ratings
+
+    if primary_matched:
+        return "fail", make_fail_reason(RATING_NOT_FOUND), None, ratings
 
     if matched:
         return "fail", make_fail_reason(RATING_NOT_FOUND), None, ratings
@@ -226,17 +244,17 @@ def select_and_judge(
 
 def _extract_rows_from_page(
     page: pymupdf.Page,
-    agency: str,
+    agency_key: str,
 ) -> list[ExtractedRatingRow]:
-    table_rows = extract_primary_rows_from_tables(page=page, agency=agency)
+    table_rows = extract_primary_rows_from_tables(page=page, agency=agency_key)
     if table_rows:
         primary_rows = table_rows
     else:
         primary_rows = extract_primary_rows_from_visual_layout(
-            page=page, agency=agency
+            page=page, agency=agency_key
         )
 
-    valid_rows = extract_valid_rating_rows(page=page, agency=agency)
+    valid_rows = extract_valid_rating_rows(page=page, agency=agency_key)
     rows = list(primary_rows) + list(valid_rows)
 
     if not primary_rows and not valid_rows:
@@ -262,13 +280,14 @@ def extract_credit_report(
             "file_name": pdf_path.name,
             "file_path": str(pdf_path),
             "company_name": pdf_path.stem,
-            "agency": "미확인",
+            "agency": format_agency_display(None),
             "status": "fail",
             "fail_reason": make_fail_reason(FILE_ERROR),
             "selected": None,
             "ratings": {},
             "records": [],
             "undefined_records": [],
+            "validation_warnings": [],
             "extracted_text_chars": 0,
             "extracted_word_count": 0,
             "rating_token_count": 0,
@@ -284,13 +303,14 @@ def extract_credit_report(
             "file_name": pdf_path.name,
             "file_path": str(pdf_path),
             "company_name": pdf_path.stem,
-            "agency": "미확인",
+            "agency": format_agency_display(None),
             "status": "fail",
             "fail_reason": make_fail_reason(FILE_ERROR),
             "selected": None,
             "ratings": {},
             "records": [],
             "undefined_records": [],
+            "validation_warnings": [],
             "extracted_text_chars": 0,
             "extracted_word_count": 0,
             "rating_token_count": 0,
@@ -309,16 +329,45 @@ def extract_credit_report(
 
         first_page = document[0]
         first_page_text = first_page.get_text("text", sort=True)
-        agency = detect_agency(first_page_text)
-        company_name = extract_company_name(first_page_text, pdf_path.name)
+        agency_key = resolve_agency_key(first_page_text, pdf_path.name)
+        agency = format_agency_display(agency_key)
+        company_name = extract_company_name(
+            first_page,
+            pdf_path.name,
+            agency_key=agency_key,
+        )
 
         extracted_rows: list[ExtractedRatingRow] = []
         for page_index in range(pages_to_check):
             extracted_rows.extend(
-                _extract_rows_from_page(document[page_index], agency)
+                _extract_rows_from_page(document[page_index], agency_key)
             )
 
-        if not extracted_rows:
+        config = get_instruments_config()
+        rebuilt_rows, rebuild_error = rebuild_merged_rows(
+            extracted_rows, config
+        )
+        if rebuild_error:
+            return {
+                "result_id": result_id,
+                "file_name": pdf_path.name,
+                "file_path": str(pdf_path),
+                "company_name": company_name,
+                "agency": agency,
+                "status": "fail",
+                "fail_reason": make_fail_reason(PARSE_ERROR),
+                "selected": None,
+                "ratings": {},
+                "records": [],
+                "undefined_records": [],
+            "validation_warnings": [],
+                "extracted_text_chars": extracted_text_chars,
+                "extracted_word_count": extracted_word_count,
+                "rating_token_count": rating_token_count,
+                "file_hash": file_hash,
+            }
+
+        if not rebuilt_rows:
             if (
                 extracted_text_chars < settings.min_extracted_text_chars
                 and rating_token_count == 0
@@ -338,21 +387,34 @@ def extract_credit_report(
                 "ratings": {},
                 "records": [],
                 "undefined_records": [],
+            "validation_warnings": [],
                 "extracted_text_chars": extracted_text_chars,
                 "extracted_word_count": extracted_word_count,
                 "rating_token_count": rating_token_count,
                 "file_hash": file_hash,
             }
 
-        records = merge_rating_records(
-            _dedupe_records(active.classify_rows(extracted_rows))
+        records, validation_warnings = merge_canonical_records(
+            _dedupe_records(active.classify_rows(rebuilt_rows))
         )
         status, fail_reason, selected, ratings = select_and_judge(records)
+
+        primary_matched_labels = {
+            record.normalized_label
+            for record in records
+            if record.classification_status == "matched"
+            and is_primary_record(record)
+            and record.normalized_label
+        }
 
         undefined_records = [
             record.to_dict()
             for record in records
             if record.classification_status == "undefined"
+            and should_include_undefined_record(
+                record,
+                primary_matched_labels=primary_matched_labels,
+            )
         ]
 
         return {
@@ -365,6 +427,7 @@ def extract_credit_report(
             "fail_reason": fail_reason,
             "selected": selected,
             "ratings": ratings,
+            "validation_warnings": validation_warnings,
             "records": [record.to_dict() for record in records],
             "undefined_records": undefined_records,
             "extracted_text_chars": extracted_text_chars,
@@ -385,8 +448,8 @@ def _result_stem(override: str | None = None) -> str:
 
 
 def _format_result_id(index: int) -> str:
-    settings = get_settings()
-    return f"{settings.result_id_prefix}{index:0{settings.result_id_width}d}"
+    """JSON/Excel 표시용 결과 ID (고정 형식 A0001)."""
+    return f"A{index:04d}"
 
 
 def collect_undefined_occurrences(
@@ -400,6 +463,8 @@ def collect_undefined_occurrences(
         for record in result.get("undefined_records") or []:
             normalized = record.get("normalized_label") or ""
             if not normalized:
+                continue
+            if record.get("rating_status") == "none" and not record.get("rating"):
                 continue
             # YAML에 이미 matched로 등록된 라벨은 누적 제외
             # (정규화 결과가 lookup에 있으면 skip)

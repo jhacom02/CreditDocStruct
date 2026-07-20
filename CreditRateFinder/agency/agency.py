@@ -9,18 +9,59 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
+import pymupdf
+
 from common.text_utils import normalize_text
+
+
+AGENCY_KEYS = ("nice", "kis", "kr")
+
+AGENCY_DISPLAY_NAMES: dict[str, str] = {
+    "nice": "NICE신용평가㈜",
+    "kis": "한국신용평가㈜",
+    "kr": "한국기업평가㈜",
+}
+
+_LEGACY_AGENCY_ALIASES: dict[str, str] = {
+    "nice신용평가": "nice",
+    "nice신용평가㈜": "nice",
+    "한국신용평가": "kis",
+    "한국신용평가㈜": "kis",
+    "한국기업평가": "kr",
+    "한국기업평가㈜": "kr",
+    "미확인": "kis",
+}
 
 
 def _compact(text: str | None) -> str:
     return re.sub(r"\s+", "", normalize_text(text)).lower()
 
 
+def normalize_agency_key(agency: str | None) -> str | None:
+    if not agency:
+        return None
+    compact = _compact(agency)
+    if compact in AGENCY_DISPLAY_NAMES:
+        return compact
+    if compact in _LEGACY_AGENCY_ALIASES:
+        return _LEGACY_AGENCY_ALIASES[compact]
+    for key, display in AGENCY_DISPLAY_NAMES.items():
+        if _compact(display) == compact:
+            return key
+    return None
+
+
+def format_agency_display(agency_key: str | None) -> str:
+    if agency_key and agency_key in AGENCY_DISPLAY_NAMES:
+        return AGENCY_DISPLAY_NAMES[agency_key]
+    return AGENCY_DISPLAY_NAMES["kis"]
+
+
 @dataclass(frozen=True)
 class AgencyLayoutConfig:
     """기관별 표 헤더·섹션 경계 설정."""
 
-    agency: str
+    agency_key: str
     table_header_tokens: tuple[str, ...] = (
         "현재등급",
         "평가대상",
@@ -54,9 +95,13 @@ class AgencyLayoutConfig:
     valid_rating_max_width: float = 360.0
     extra_header_tokens: tuple[str, ...] = ()
 
+    @property
+    def agency(self) -> str:
+        return format_agency_display(self.agency_key)
+
 
 NICE_LAYOUT = AgencyLayoutConfig(
-    agency="NICE신용평가",
+    agency_key="nice",
     primary_section_patterns=(
         r"평가\s*개요",
         r"평가\s*등급",
@@ -67,7 +112,7 @@ NICE_LAYOUT = AgencyLayoutConfig(
 )
 
 KIS_LAYOUT = AgencyLayoutConfig(
-    agency="한국신용평가",
+    agency_key="kis",
     primary_section_patterns=(
         r"평가\s*개요",
         r"평가\s*등급",
@@ -87,7 +132,7 @@ KIS_LAYOUT = AgencyLayoutConfig(
 )
 
 KR_LAYOUT = AgencyLayoutConfig(
-    agency="한국기업평가",
+    agency_key="kr",
     primary_section_patterns=(
         r"평가\s*개요",
         r"평가\s*등급",
@@ -98,19 +143,20 @@ KR_LAYOUT = AgencyLayoutConfig(
     valid_rating_max_width=380.0,
 )
 
-DEFAULT_LAYOUT = AgencyLayoutConfig(agency="미확인")
+DEFAULT_LAYOUT = AgencyLayoutConfig(agency_key="kis")
 
-_LAYOUT_BY_AGENCY: dict[str, AgencyLayoutConfig] = {
-    NICE_LAYOUT.agency: NICE_LAYOUT,
-    KIS_LAYOUT.agency: KIS_LAYOUT,
-    KR_LAYOUT.agency: KR_LAYOUT,
+_LAYOUT_BY_KEY: dict[str, AgencyLayoutConfig] = {
+    "nice": NICE_LAYOUT,
+    "kis": KIS_LAYOUT,
+    "kr": KR_LAYOUT,
 }
 
 
 def get_agency_layout(agency: str | None) -> AgencyLayoutConfig:
-    if not agency:
+    key = normalize_agency_key(agency)
+    if not key:
         return DEFAULT_LAYOUT
-    return _LAYOUT_BY_AGENCY.get(agency, DEFAULT_LAYOUT)
+    return _LAYOUT_BY_KEY.get(key, DEFAULT_LAYOUT)
 
 
 def is_rating_table_header(
@@ -128,68 +174,108 @@ def is_rating_table_header(
     return True
 
 
-def detect_agency(text: str) -> str:
+def detect_agency_key(text: str) -> str | None:
     compact = _compact(text)
 
     if "nicecreditopinion" in compact or "nice신용평가" in compact:
-        return "NICE신용평가"
+        return "nice"
 
     if "kiscreditopinion" in compact or "한국신용평가" in compact:
-        return "한국신용평가"
+        return "kis"
 
     if (
         "한국기업평가" in compact
         or "korearatings" in compact
         or "krcredit" in compact
     ):
-        return "한국기업평가"
+        return "kr"
 
-    return "미확인"
+    return None
+
+
+def detect_agency_key_from_filename(file_name: str | Path) -> str | None:
+    stem = _compact(Path(file_name).stem)
+    if not stem:
+        return None
+
+    if "nice" in stem or "나이스" in stem:
+        return "nice"
+    if "korearatings" in stem or "kr" in stem or "한기평" in stem:
+        return "kr"
+    if (
+        "kis" in stem
+        or "한신평" in stem
+        or "한국신용" in stem
+        or re.search(r"(?<![a-z])rs(?![a-z])", stem)
+    ):
+        return "kis"
+
+    return None
+
+
+def resolve_agency_key(
+    text: str,
+    file_name: str | Path,
+) -> str:
+    key = detect_agency_key(text)
+    if key:
+        return key
+    filename_key = detect_agency_key_from_filename(file_name)
+    if filename_key:
+        return filename_key
+    return "kis"
+
+
+def detect_agency(text: str) -> str:
+    """외부 출력용 신평사 표준명 (㈜ 포함)."""
+    return format_agency_display(detect_agency_key(text))
 
 
 _COMPANY_NOISE = (
     "credit opinion",
+    "nice credit opinion",
+    "kis credit opinion",
     "신용평가",
     "신용등급",
     "평가개요",
     "평가등급",
+    "등급요약",
     "nice",
     "kis",
+    "korearatings",
     "한국기업평가",
     "한국신용평가",
     "nice신용평가",
+    "nice신용평가㈜",
+    "한국신용평가㈜",
+    "한국기업평가㈜",
 )
 
 
-def extract_company_name(
-    page_text: str,
-    file_name: str | Path,
-) -> str:
-    """1페이지 헤더/제목에서 회사명 추출. 실패 시 파일명 stem 보조."""
-    lines = [
-        normalize_text(line)
-        for line in (page_text or "").splitlines()
-        if normalize_text(line)
-    ]
+def is_plausible_company_name(value: str) -> bool:
+    line = normalize_text(value)
+    if len(line) < 2 or len(line) > 60:
+        return False
 
-    for line in lines[:12]:
-        compact = _compact(line)
-        if len(line) < 2 or len(line) > 60:
-            continue
-        if any(noise in compact for noise in _COMPANY_NOISE):
-            continue
-        if re.fullmatch(r"[\d\W]+", line):
-            continue
-        # 등급 토큰만 있는 줄 제외
-        if re.fullmatch(
-            r"(?:AAA|AA[+-]?|A[+-]?|BBB[+-]?|BB[+-]?|B[+-]?|CCC?|CC|C|D)"
-            r"(?:/(?:Stable|Positive|Negative|Developing|안정적|긍정적|부정적|유동적))?",
-            line,
-            re.IGNORECASE,
-        ):
-            continue
-        return line
+    compact = _compact(line)
+    if any(noise in compact for noise in _COMPANY_NOISE):
+        return False
+    if re.fullmatch(r"[\d\W]+", line):
+        return False
+    if re.fullmatch(
+        r"(?:AAA|AA[+-]?|A[+-]?|BBB[+-]?|BB[+-]?|B[+-]?|CCC?|CC|C|D)"
+        r"(?:/(?:Stable|Positive|Negative|Developing|안정적|긍정적|부정적|유동적))?",
+        line,
+        re.IGNORECASE,
+    ):
+        return False
 
+    if "(주)" in line or "(유)" in line or re.search(r"[가-힣]{2,}", line):
+        return True
+    return False
+
+
+def _company_name_from_filename(file_name: str | Path) -> str:
     stem = Path(file_name).stem
     stem = re.sub(
         r"[_-]?(NICE|KIS|KR|신용평가|신용등급|CreditOpinion).*$",
@@ -199,3 +285,51 @@ def extract_company_name(
     )
     stem = stem.replace("_", " ").replace("-", " ").strip()
     return stem or Path(file_name).stem
+
+
+def extract_company_name(
+    page: pymupdf.Page | str,
+    file_name: str | Path,
+    *,
+    agency_key: str | None = None,
+) -> str:
+    """제목 영역에서 평가대상 회사명 추출. 실패 시 파일명 stem 보조."""
+    if isinstance(page, str):
+        page_text = page
+        lines = [
+            normalize_text(line)
+            for line in (page_text or "").splitlines()
+            if normalize_text(line)
+        ]
+        for line in lines[:12]:
+            if is_plausible_company_name(line):
+                return line
+        return _company_name_from_filename(file_name)
+
+    layout = get_agency_layout(agency_key)
+    from extract.visual import extract_visual_lines, find_heading_line
+
+    all_lines = extract_visual_lines(page)
+    heading = find_heading_line(all_lines, layout.primary_section_patterns)
+
+    title_lines: list[str] = []
+    if heading:
+        title_lines = [
+            line.text
+            for line in all_lines
+            if line.y1 <= heading.y0 + 2
+        ]
+    if not title_lines:
+        title_lines = [line.text for line in all_lines[:12]]
+
+    for line in title_lines:
+        if is_plausible_company_name(line):
+            return normalize_text(line)
+
+    page_text = page.get_text("text", sort=True)
+    for line in page_text.splitlines():
+        normalized = normalize_text(line)
+        if is_plausible_company_name(normalized):
+            return normalized
+
+    return _company_name_from_filename(file_name)

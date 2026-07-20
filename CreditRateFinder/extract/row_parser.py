@@ -1,19 +1,17 @@
-"""셀/줄 → ExtractedRatingRow 조립 (현재등급 열 선택·rating_status 판정).
-
-분류(exact match)는 classify에 위임한다. 이 모듈은 rating_status만 확정한다.
-"""
+"""셀/줄 → ExtractedRatingRow 조립 (행 전체 등급 탐색·현재등급 열 선택)."""
 
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
 
-from common.models import ExtractedRatingRow
+from common.models import ExtractedRatingRow, RatingStatus
 from common.rating_tokens import (
     OUTLOOK_TOKEN_RE,
+    RatingToken,
     count_rating_tokens_in_cell,
     find_rating_tokens_in_text,
     normalize_outlook,
-    parse_rating_value,
 )
 from common.text_utils import normalize_text
 
@@ -41,7 +39,6 @@ EVALUATION_TYPES = {
     "정기평가",
 }
 
-# selected 후보로 쓰는 평가 종류
 PRIMARY_EVAL_TYPES = frozenset({"본", "본평가"})
 
 RATING_ACTIONS = {
@@ -57,7 +54,15 @@ RATING_ACTIONS = {
 }
 
 CURRENT_RATING_HEADER_NAMES = ("현재등급", "현재 등급", "currentrating")
+PREVIOUS_RATING_HEADER_NAMES = ("직전등급", "직전 등급", "previousrating")
 EVAL_TYPE_HEADER_NAMES = ("종류", "평가종류", "구분")
+TARGET_LABEL_HEADER_NAMES = ("평가대상", "구분", "종목")
+
+
+@dataclass(frozen=True)
+class _RatingCandidate:
+    cell_index: int
+    token: RatingToken
 
 
 def _compact(text: str | None) -> str:
@@ -65,7 +70,6 @@ def _compact(text: str | None) -> str:
 
 
 def looks_like_rating_row(text: str | None) -> bool:
-    """구조 게이트: 타입이 미지여도 평가 행 후보로 인정."""
     normalized = normalize_text(text)
     if not normalized:
         return False
@@ -119,6 +123,8 @@ def looks_like_instrument_label(text: str | None) -> bool:
 
 
 def _is_noise_label(value: str) -> bool:
+    from common.rating_tokens import parse_rating_value
+
     compact = _compact(value)
     if not compact:
         return True
@@ -141,11 +147,25 @@ def infer_raw_label(cleaned_values: list[str]) -> str:
     return cleaned_values[0] if cleaned_values else ""
 
 
+def infer_target_label(
+    cells: list[str],
+    header_cells: list[str] | None,
+) -> str:
+    index = find_header_column_index(
+        header_cells, TARGET_LABEL_HEADER_NAMES
+    )
+    if index is not None and index < len(cells):
+        value = normalize_text(cells[index])
+        if value and value not in EVALUATION_TYPES:
+            return value
+
+    return infer_raw_label([value for value in cells if value])
+
+
 def find_header_column_index(
     header_cells: list[str] | None,
     names: tuple[str, ...] = CURRENT_RATING_HEADER_NAMES,
 ) -> int | None:
-    """헤더 셀에서 이름(공백 무시·대소문자 무시)이 포함된 열 인덱스를 찾는다."""
     if not header_cells:
         return None
 
@@ -163,7 +183,6 @@ def infer_evaluation_type(
     cells: list[str],
     header_cells: list[str] | None = None,
 ) -> str | None:
-    """종류 열 또는 셀 목록에서 평가 종류를 추론한다."""
     type_index = find_header_column_index(header_cells, EVAL_TYPE_HEADER_NAMES)
     if type_index is not None and type_index < len(cells):
         value = normalize_text(cells[type_index])
@@ -181,50 +200,75 @@ def _collect_rating_cells(cleaned_values: list[str]) -> list[str]:
     rating_cells: list[str] = []
     for cell in cleaned_values:
         if count_rating_tokens_in_cell(cell) > 0:
-            if OUTLOOK_TOKEN_RE.fullmatch(cell) and not parse_rating_value(cell):
+            if OUTLOOK_TOKEN_RE.fullmatch(cell) and not find_rating_tokens_in_text(
+                cell
+            ):
                 continue
             rating_cells.append(cell)
     return rating_cells
 
 
-def _resolve_single_rating(
-    rating_cell: str,
-    cleaned_values: list[str],
-) -> tuple[str, str | None] | None:
-    tokens = find_rating_tokens_in_text(rating_cell)
-    if len(tokens) != 1:
-        return None
+def _collect_row_rating_candidates(cells: list[str]) -> list[_RatingCandidate]:
+    candidates: list[_RatingCandidate] = []
+    for index, cell in enumerate(cells):
+        value = normalize_text(cell)
+        if not value:
+            continue
+        for token in find_rating_tokens_in_text(value):
+            candidates.append(_RatingCandidate(cell_index=index, token=token))
+    return candidates
 
-    rating = tokens[0].rating
-    outlook = tokens[0].outlook
-    try:
-        cell_index = cleaned_values.index(rating_cell)
-    except ValueError:
-        cell_index = -1
 
-    if outlook is None and 0 <= cell_index < len(cleaned_values) - 1:
-        next_cell = cleaned_values[cell_index + 1]
+def _token_from_candidate(
+    candidate: _RatingCandidate,
+    cells: list[str],
+) -> tuple[str, str | None, str | None]:
+    rating = candidate.token.rating
+    outlook = candidate.token.outlook
+    raw_outlook = candidate.token.raw_outlook
+
+    if outlook is None and candidate.cell_index < len(cells) - 1:
+        next_cell = cells[candidate.cell_index + 1]
         outlook_match = OUTLOOK_TOKEN_RE.fullmatch(next_cell)
         if outlook_match:
+            raw_outlook = next_cell
             outlook = normalize_outlook(outlook_match.group("outlook"))
 
-    return rating, outlook
+    return rating, outlook, raw_outlook
 
 
-def _pick_current_rating_cell(
+def _resolve_row_rating(
     cells: list[str],
-    *,
     header_cells: list[str] | None,
-    current_rating_cell: str | None,
-) -> str | None:
-    if current_rating_cell is not None and normalize_text(current_rating_cell):
-        return normalize_text(current_rating_cell)
+) -> tuple[str | None, str | None, str | None, RatingStatus, list[str]]:
+    candidates = _collect_row_rating_candidates(cells)
+    rating_cells = _collect_rating_cells(cells)
 
-    index = find_header_column_index(header_cells, CURRENT_RATING_HEADER_NAMES)
-    if index is not None and index < len(cells):
-        value = normalize_text(cells[index])
-        return value or None
-    return None
+    if not candidates:
+        return None, None, None, "none", rating_cells
+
+    if len(candidates) == 1:
+        rating, outlook, raw_outlook = _token_from_candidate(
+            candidates[0], cells
+        )
+        return rating, outlook, raw_outlook, "single", rating_cells
+
+    current_index = find_header_column_index(
+        header_cells, CURRENT_RATING_HEADER_NAMES
+    )
+    if current_index is None:
+        return None, None, None, "ambiguous", rating_cells
+
+    current_candidates = [
+        item for item in candidates if item.cell_index == current_index
+    ]
+    if len(current_candidates) == 1:
+        rating, outlook, raw_outlook = _token_from_candidate(
+            current_candidates[0], cells
+        )
+        return rating, outlook, raw_outlook, "single", rating_cells
+
+    return None, None, None, "ambiguous", rating_cells
 
 
 def parse_rating_row_values(
@@ -237,13 +281,6 @@ def parse_rating_row_values(
     header_cells: list[str] | None = None,
     current_rating_cell: str | None = None,
 ) -> ExtractedRatingRow | None:
-    """셀/줄 값 목록 → ExtractedRatingRow.
-
-    rating 셀 0개 → none
-    rating 셀 1개 + 셀 내부 토큰 1개 → single
-    rating 셀 2개 이상 → 현재등급 열/셀로 재해석, 실패 시 ambiguous
-    """
-    # 헤더 정렬 행은 빈 문자열을 유지해야 열 인덱스가 맞다.
     if header_cells is not None and len(values) == len(header_cells):
         cells = [normalize_text(value) for value in values]
         cleaned_values = [value for value in cells if value]
@@ -253,53 +290,30 @@ def parse_rating_row_values(
         ]
         cells = cleaned_values
 
+    if current_rating_cell and normalize_text(current_rating_cell):
+        index = find_header_column_index(
+            header_cells, CURRENT_RATING_HEADER_NAMES
+        )
+        if index is not None and index < len(cells):
+            cells = list(cells)
+            cells[index] = normalize_text(current_rating_cell)
+
     if not cleaned_values and not any(cells):
         return None
 
-    rating_cells = _collect_rating_cells(
-        cells if any(cells) else cleaned_values
-    )
     scan_values = cells if any(cells) else cleaned_values
 
-    rating: str | None = None
-    outlook: str | None = None
-    rating_status: str
-
-    if not rating_cells:
-        rating_status = "none"
-    elif (
-        len(rating_cells) == 1
-        and count_rating_tokens_in_cell(rating_cells[0]) == 1
-    ):
-        resolved = _resolve_single_rating(rating_cells[0], scan_values)
-        if resolved is None:
-            rating_status = "ambiguous"
-        else:
-            rating_status = "single"
-            rating, outlook = resolved
-    else:
-        # 복수 등급 셀 또는 셀 내부 복수 토큰 → 현재등급 열만 재파싱
-        current_cell = _pick_current_rating_cell(
-            scan_values,
-            header_cells=header_cells,
-            current_rating_cell=current_rating_cell,
-        )
-        if current_cell is None:
-            rating_status = "ambiguous"
-        else:
-            tokens = find_rating_tokens_in_text(current_cell)
-            if len(tokens) == 1:
-                resolved = _resolve_single_rating(current_cell, scan_values)
-                if resolved is None:
-                    rating_status = "ambiguous"
-                else:
-                    rating_status = "single"
-                    rating, outlook = resolved
-            else:
-                rating_status = "ambiguous"
+    rating, outlook, raw_outlook, rating_status, rating_cells = (
+        _resolve_row_rating(scan_values, header_cells)
+    )
 
     evaluation_type = infer_evaluation_type(scan_values, header_cells)
-    raw_label = infer_raw_label(cleaned_values if cleaned_values else scan_values)
+    if header_cells is not None and len(values) == len(header_cells):
+        raw_label = infer_target_label(cells, header_cells)
+    else:
+        raw_label = infer_raw_label(
+            cleaned_values if cleaned_values else scan_values
+        )
 
     if rating_status == "none" and not raw_label:
         return None
@@ -310,13 +324,15 @@ def parse_rating_row_values(
     return ExtractedRatingRow(
         raw_label=raw_label,
         rating_cells=rating_cells,
-        rating_status=rating_status,  # type: ignore[arg-type]
+        rating_status=rating_status,
         rating=rating,
         outlook=outlook,
+        raw_outlook=raw_outlook,
         page=page_number,
         row_index=row_index,
         section=section,
         source=source,
         cells=scan_values,
         evaluation_type=evaluation_type,
+        label_text=normalize_text(" ".join(scan_values)),
     )

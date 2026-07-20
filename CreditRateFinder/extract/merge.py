@@ -1,6 +1,8 @@
-"""추출 source 우선순위 병합 (primary 우선, valid는 보완만)."""
+"""Primary·유효등급 canonical 병합 및 교차검증."""
 
 from __future__ import annotations
+
+from dataclasses import replace
 
 from common.models import ExtractedRatingRow, RatingRecord
 
@@ -33,54 +35,99 @@ def _record_merge_key(record: RatingRecord) -> str:
     return f"label:{record.normalized_label}"
 
 
-def _prefer_record(left: RatingRecord, right: RatingRecord) -> RatingRecord:
-    """동일 상품 중복 시 single·높은 source 우선."""
-    left_single = 0 if left.rating_status == "single" else 1
-    right_single = 0 if right.rating_status == "single" else 1
-    if left_single != right_single:
-        return left if left_single < right_single else right
+def _ratings_equal(left: RatingRecord, right: RatingRecord) -> bool:
+    return (left.rating, left.outlook) == (right.rating, right.outlook)
+
+
+def _prefer_canonical(left: RatingRecord, right: RatingRecord) -> RatingRecord:
+    left_primary = 0 if is_primary_record(left) else 1
+    right_primary = 0 if is_primary_record(right) else 1
+    if left_primary != right_primary:
+        return left if left_primary < right_primary else right
 
     left_rank = source_rank(left.source)
     right_rank = source_rank(right.source)
     if left_rank != right_rank:
         return left if left_rank < right_rank else right
 
-    # primary section 선호
-    left_primary = 0 if is_primary_record(left) else 1
-    right_primary = 0 if is_primary_record(right) else 1
-    if left_primary != right_primary:
-        return left if left_primary < right_primary else right
+    left_single = 0 if left.rating_status == "single" else 1
+    right_single = 0 if right.rating_status == "single" else 1
+    if left_single != right_single:
+        return left if left_single < right_single else right
 
     return left
 
 
-def merge_rating_records(records: list[RatingRecord]) -> list[RatingRecord]:
-    """primary에 있는 상품은 valid에서 제외하고, 동키는 source 우선으로 1건만 유지."""
-    primary_keys: set[str] = set()
-    for record in records:
-        if is_primary_record(record):
-            primary_keys.add(_record_merge_key(record))
-
-    filtered: list[RatingRecord] = []
-    for record in records:
-        key = _record_merge_key(record)
+def _merge_pair(
+    canonical: RatingRecord,
+    other: RatingRecord,
+    warnings: list[dict],
+) -> RatingRecord:
+    if _ratings_equal(canonical, other):
+        confirmed = list(canonical.confirmed_by)
         if (
-            not is_primary_record(record)
-            and record.source == "valid_rating_section"
-            and key in primary_keys
+            other.source == "valid_rating_section"
+            and "valid_rating_section" not in confirmed
         ):
-            continue
-        filtered.append(record)
+            confirmed.append("valid_rating_section")
+        return replace(canonical, confirmed_by=confirmed)
 
-    merged: dict[str, RatingRecord] = {}
+    if is_primary_record(canonical) and not is_primary_record(other):
+        warnings.append(
+            {
+                "code": "conflicting_rating_sources",
+                "instrument_key": canonical.instrument_key,
+                "primary_rating": canonical.rating,
+                "primary_outlook": canonical.outlook,
+                "valid_rating": other.rating,
+                "valid_outlook": other.outlook,
+            }
+        )
+        return canonical
+
+    if is_primary_record(other) and not is_primary_record(canonical):
+        warnings.append(
+            {
+                "code": "conflicting_rating_sources",
+                "instrument_key": other.instrument_key,
+                "primary_rating": other.rating,
+                "primary_outlook": other.outlook,
+                "valid_rating": canonical.rating,
+                "valid_outlook": canonical.outlook,
+            }
+        )
+        return other
+
+    return _prefer_canonical(canonical, other)
+
+
+def merge_canonical_records(
+    records: list[RatingRecord],
+) -> tuple[list[RatingRecord], list[dict]]:
+    """instrument_key별 canonical 병합 + confirmed_by·충돌 warning."""
+    warnings: list[dict] = []
+    grouped: dict[str, list[RatingRecord]] = {}
     order: list[str] = []
-    for record in filtered:
-        key = _record_merge_key(record)
-        existing = merged.get(key)
-        if existing is None:
-            merged[key] = record
-            order.append(key)
-        else:
-            merged[key] = _prefer_record(existing, record)
 
-    return [merged[key] for key in order]
+    for record in records:
+        key = _record_merge_key(record)
+        if key not in grouped:
+            grouped[key] = []
+            order.append(key)
+        grouped[key].append(record)
+
+    merged: list[RatingRecord] = []
+    for key in order:
+        group = grouped[key]
+        canonical = group[0]
+        for other in group[1:]:
+            canonical = _merge_pair(canonical, other, warnings)
+        merged.append(canonical)
+
+    return merged, warnings
+
+
+def merge_rating_records(records: list[RatingRecord]) -> list[RatingRecord]:
+    """하위 호환: canonical 병합 결과만 반환."""
+    merged, _warnings = merge_canonical_records(records)
+    return merged

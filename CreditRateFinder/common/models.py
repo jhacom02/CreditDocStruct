@@ -39,6 +39,10 @@ class ExtractedRatingRow:
     source: str = "unknown"
     cells: list[str] = field(default_factory=list)
     evaluation_type: str | None = None
+    issue_name: str | None = None
+    remark: str | None = None
+    label_text: str | None = None
+    raw_outlook: str | None = None
 
 
 @dataclass
@@ -68,6 +72,11 @@ class RatingRecord:
     source: str = "unknown"
     suggestions: list[Suggestion] = field(default_factory=list)
     evaluation_type: str | None = None
+    issue_name: str | None = None
+    remark: str | None = None
+    label_text: str | None = None
+    raw_outlook: str | None = None
+    confirmed_by: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         payload = asdict(self)

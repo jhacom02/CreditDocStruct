@@ -1,8 +1,9 @@
-"""PDF 표 → ExtractedRatingRow (헤더 열 인덱스 유지)."""
+"""PDF 표 → ExtractedRatingRow (헤더 열 인덱스·bbox 행 그룹핑 유지)."""
 
 from __future__ import annotations
 
 import re
+from statistics import median
 
 import pymupdf
 
@@ -15,6 +16,139 @@ from extract.row_parser import looks_like_rating_row, parse_rating_row_values
 
 def _compact(text: str | None) -> str:
     return re.sub(r"\s+", "", normalize_text(text)).lower()
+
+
+def _row_y_center(cells: list[pymupdf.Rect | None]) -> float | None:
+    rects = [cell for cell in cells if cell is not None]
+    if not rects:
+        return None
+    return median((rect.y0 + rect.y1) / 2 for rect in rects)
+
+
+def _group_matrix_by_bbox_rows(
+    table: object,
+    cleaned_matrix: list[list[str]],
+    header_index: int,
+    col_count: int,
+    *,
+    y_tolerance: float = 6.0,
+) -> list[list[str]] | None:
+    cells_attr = getattr(table, "cells", None)
+    if not cells_attr:
+        return None
+
+    try:
+        row_count = len(cleaned_matrix)
+        grouped: list[list[str]] = []
+        current_row_index: int | None = None
+        current_values: list[str] | None = None
+
+        for row_index in range(header_index + 1, row_count):
+            row_cells: list[pymupdf.Rect | None] = []
+            row_values = cleaned_matrix[row_index]
+            aligned = list(row_values[:col_count])
+            while len(aligned) < col_count:
+                aligned.append("")
+
+            for col_index in range(col_count):
+                try:
+                    rect = cells_attr[row_index][col_index]
+                except (IndexError, TypeError):
+                    rect = None
+                row_cells.append(rect)
+
+            y_center = _row_y_center(row_cells)
+            if y_center is None:
+                if any(aligned):
+                    grouped.append(aligned)
+                continue
+
+            if current_row_index is None:
+                current_row_index = row_index
+                current_values = aligned
+                continue
+
+            prev_cells = [
+                cells_attr[current_row_index][col_index]
+                if col_index < len(cells_attr[current_row_index])
+                else None
+                for col_index in range(col_count)
+            ]
+            prev_y = _row_y_center(prev_cells)
+            same_band = (
+                prev_y is not None and abs(y_center - prev_y) <= y_tolerance
+            )
+
+            if same_band and current_values is not None:
+                for index, value in enumerate(aligned):
+                    if value and not current_values[index]:
+                        current_values[index] = value
+                    elif value and current_values[index]:
+                        current_values[index] = (
+                            f"{current_values[index]} {value}"
+                        ).strip()
+            else:
+                if current_values is not None and any(current_values):
+                    grouped.append(current_values)
+                current_row_index = row_index
+                current_values = aligned
+
+        if current_values is not None and any(current_values):
+            grouped.append(current_values)
+
+        return grouped if grouped else None
+    except Exception:
+        return None
+
+
+def _group_rows_heuristic(
+    cleaned_matrix: list[list[str]],
+    header_index: int,
+    col_count: int,
+) -> list[list[str]]:
+    grouped_rows: list[list[str]] = []
+    current_group: list[str] | None = None
+
+    for row in cleaned_matrix[header_index + 1 :]:
+        aligned = list(row[:col_count])
+        while len(aligned) < col_count:
+            aligned.append("")
+
+        nonempty = [value for value in aligned if value]
+        if not nonempty:
+            continue
+
+        row_text = normalize_text(" ".join(nonempty))
+        starts_new = looks_like_rating_row(row_text)
+
+        if not starts_new and current_group is not None:
+            if find_rating_tokens_in_text(" ".join(nonempty)):
+                for index, value in enumerate(aligned):
+                    if value and not current_group[index]:
+                        current_group[index] = value
+                    elif value and current_group[index]:
+                        current_group[index] = (
+                            f"{current_group[index]} {value}"
+                        ).strip()
+                continue
+
+        if starts_new:
+            if current_group is not None:
+                grouped_rows.append(current_group)
+            current_group = list(aligned)
+        elif current_group is not None:
+            for index, value in enumerate(aligned):
+                if value and not current_group[index]:
+                    current_group[index] = value
+                elif value and current_group[index]:
+                    current_group[index] = (
+                        f"{current_group[index]} {value}"
+                    ).strip()
+
+    if current_group is not None:
+        grouped_rows.append(current_group)
+
+    return grouped_rows
 
 
 def extract_primary_rows_from_tables(
@@ -57,50 +191,16 @@ def extract_primary_rows_from_tables(
         header_cells = list(cleaned_matrix[header_index])
         col_count = len(header_cells)
 
-        # 열 정렬을 유지한 채 행을 그룹핑 (빈 셀도 자리 유지)
-        grouped_rows: list[list[str]] = []
-        current_group: list[str] | None = None
-
-        for row in cleaned_matrix[header_index + 1 :]:
-            # 헤더 길이에 맞춤
-            aligned = list(row[:col_count])
-            while len(aligned) < col_count:
-                aligned.append("")
-
-            nonempty = [value for value in aligned if value]
-            if not nonempty:
-                continue
-
-            row_text = normalize_text(" ".join(nonempty))
-            starts_new = looks_like_rating_row(row_text)
-
-            if not starts_new and current_group is not None:
-                if find_rating_tokens_in_text(" ".join(nonempty)):
-                    # 이어지는 등급 조각: 빈 칸에만 채움
-                    for index, value in enumerate(aligned):
-                        if value and not current_group[index]:
-                            current_group[index] = value
-                        elif value and current_group[index]:
-                            current_group[index] = (
-                                f"{current_group[index]} {value}"
-                            ).strip()
-                    continue
-
-            if starts_new:
-                if current_group is not None:
-                    grouped_rows.append(current_group)
-                current_group = list(aligned)
-            elif current_group is not None:
-                for index, value in enumerate(aligned):
-                    if value and not current_group[index]:
-                        current_group[index] = value
-                    elif value and current_group[index]:
-                        current_group[index] = (
-                            f"{current_group[index]} {value}"
-                        ).strip()
-
-        if current_group is not None:
-            grouped_rows.append(current_group)
+        grouped_rows = _group_matrix_by_bbox_rows(
+            table,
+            cleaned_matrix,
+            header_index,
+            col_count,
+        )
+        if grouped_rows is None:
+            grouped_rows = _group_rows_heuristic(
+                cleaned_matrix, header_index, col_count
+            )
 
         for row_values in grouped_rows:
             record = parse_rating_row_values(

@@ -5,7 +5,20 @@ from pathlib import Path
 
 import pytest
 
-from agency.agency import get_agency_layout, is_rating_table_header
+from agency.agency import (
+    AGENCY_DISPLAY_NAMES,
+    detect_agency,
+    extract_company_name,
+    format_agency_display,
+    get_agency_layout,
+    is_rating_table_header,
+    is_plausible_company_name,
+    resolve_agency_key,
+)
+from classify.undefined_filter import should_include_undefined_record
+from common.rating_tokens import find_rating_tokens_in_text, parse_rating_value
+from extract.label_fields import decompose_label_fields
+from extract.row_rebuild import rebuild_merged_rows
 from classify.classifier import LabelClassifier
 from common.fail_reasons import (
     MULTIPLE_INSTRUMENTS,
@@ -16,9 +29,11 @@ from common.fail_reasons import (
     UNDEFINED_LABEL,
     PRIORITY_ORDER,
 )
-from common.models import RatingRecord
+from common.models import ExtractedRatingRow, RatingRecord
 from common.settings import get_instruments_config, get_settings
-from extract.merge import merge_rating_records
+from extract.label_fields import decompose_label_fields, split_label_and_issue
+from extract.layout import truncate_valid_row_text
+from extract.merge import merge_canonical_records, merge_rating_records
 from extract.row_parser import parse_rating_row_values
 from export.excel import build_excel_row
 from export.undefined_store import (
@@ -27,7 +42,7 @@ from export.undefined_store import (
     merge_undefined_occurrences,
     write_undefined_store_tmp,
 )
-from main import commit_batch_outputs, select_and_judge
+from main import _extract_rows_from_page, commit_batch_outputs, select_and_judge
 
 
 @pytest.fixture(scope="module")
@@ -52,10 +67,6 @@ def test_label_variants_exact_match(classifier: LabelClassifier) -> None:
                 failures.append(
                     f"{case['label']!r} expected undefined, got "
                     f"{result.instrument_key}/{result.classification_status}"
-                )
-            elif not result.suggestions:
-                failures.append(
-                    f"{case['label']!r} undefined but suggestions empty"
                 )
             elif result.instrument_key is not None:
                 failures.append(
@@ -377,11 +388,12 @@ def test_select_undefined_label() -> None:
     assert selected is None
 
 
-def test_merge_drops_valid_when_primary_has_instrument() -> None:
+def test_merge_confirms_valid_when_same_rating() -> None:
     primary = _record(
         key="coco_t1",
         status="matched",
         rating="AA",
+        outlook="안정적",
         source="pdf_table",
         section="primary_rating",
         evaluation_type="본",
@@ -390,25 +402,19 @@ def test_merge_drops_valid_when_primary_has_instrument() -> None:
         key="coco_t1",
         status="matched",
         rating="AA",
+        outlook="안정적",
         source="valid_rating_section",
         section="valid_ratings",
         row_index=1,
     )
-    visual = _record(
-        key="coco_t1",
-        status="matched",
-        rating="AA-",
-        source="visual_layout",
-        section="primary_rating",
-        row_index=2,
-    )
-    merged = merge_rating_records([primary, valid, visual])
+    merged, warnings = merge_canonical_records([primary, valid])
     assert len(merged) == 1
     assert merged[0].source == "pdf_table"
-    assert merged[0].rating == "AA"
+    assert merged[0].confirmed_by == ["valid_rating_section"]
+    assert warnings == []
 
 
-def test_merge_keeps_valid_when_primary_missing_instrument() -> None:
+def test_merge_keeps_valid_only_instrument() -> None:
     primary = _record(
         key="issuer",
         status="matched",
@@ -424,8 +430,34 @@ def test_merge_keeps_valid_when_primary_missing_instrument() -> None:
         section="valid_ratings",
         row_index=1,
     )
-    merged = merge_rating_records([primary, valid])
+    merged, _warnings = merge_canonical_records([primary, valid])
     assert {item.instrument_key for item in merged} == {"issuer", "coco_t1"}
+
+
+def test_merge_conflict_warning() -> None:
+    primary = _record(
+        key="coco_t1",
+        status="matched",
+        rating="A+",
+        outlook="안정적",
+        source="pdf_table",
+        section="primary_rating",
+        evaluation_type="본",
+    )
+    valid = _record(
+        key="coco_t1",
+        status="matched",
+        rating="A",
+        outlook="안정적",
+        source="valid_rating_section",
+        section="valid_ratings",
+        row_index=1,
+    )
+    merged, warnings = merge_canonical_records([primary, valid])
+    assert len(merged) == 1
+    assert merged[0].rating == "A+"
+    assert warnings
+    assert warnings[0]["code"] == "conflicting_rating_sources"
 
 
 def test_fail_reason_priority_has_text_extraction_failed() -> None:
@@ -459,9 +491,9 @@ def test_agency_layout_headers() -> None:
 def test_excel_row_uses_selected() -> None:
     config = get_instruments_config()
     result = {
-        "result_id": "R000001",
+        "result_id": "A0001",
         "company_name": "테스트은행",
-        "agency": "NICE신용평가",
+        "agency": "NICE신용평가㈜",
         "status": "success",
         "file_name": "a.pdf",
         "selected": {
@@ -481,9 +513,9 @@ def test_excel_row_uses_selected() -> None:
 def test_excel_fail_blanks_fields() -> None:
     config = get_instruments_config()
     result = {
-        "result_id": "R000002",
+        "result_id": "A0002",
         "company_name": "테스트은행",
-        "agency": "NICE신용평가",
+        "agency": "NICE신용평가㈜",
         "status": "fail",
         "file_name": "b.pdf",
         "selected": None,
@@ -501,7 +533,7 @@ def test_undefined_occurrence_dedup(tmp_path: Path) -> None:
         "normalized_label": "미등록상품",
         "raw_label": "미등록상품",
         "file_name": "a.pdf",
-        "agency": "NICE신용평가",
+        "agency": "NICE신용평가㈜",
         "rating": "A+",
         "suggestions": [],
     }
@@ -547,11 +579,11 @@ def test_commit_batch_atomic(
 
     results = [
         {
-            "result_id": "R000001",
+            "result_id": "A0001",
             "file_name": "a.pdf",
             "file_path": "a.pdf",
             "company_name": "테스트",
-            "agency": "NICE신용평가",
+            "agency": "NICE신용평가㈜",
             "status": "success",
             "fail_reason": None,
             "selected": {
@@ -578,3 +610,308 @@ def test_commit_batch_atomic(
     assert not json_path.with_name(json_path.name + ".tmp").exists()
 
     settings_mod.get_settings.cache_clear()
+
+
+def test_agency_standard_display_names() -> None:
+    assert detect_agency("NICE CREDIT OPINION nice신용평가") == "NICE신용평가㈜"
+    assert detect_agency("한국신용평가 KIS") == "한국신용평가㈜"
+    assert detect_agency("한국기업평가") == "한국기업평가㈜"
+    assert resolve_agency_key("", "NICE_report.pdf") == "nice"
+    assert format_agency_display("kr") == "한국기업평가㈜"
+    assert set(AGENCY_DISPLAY_NAMES.values()) == {
+        "NICE신용평가㈜",
+        "한국신용평가㈜",
+        "한국기업평가㈜",
+    }
+
+
+def test_company_name_rejects_credit_opinion() -> None:
+    assert not is_plausible_company_name("CREDIT OPINION")
+    name = extract_company_name(
+        "CREDIT OPINION\n평가 개요\n(주)경남은행",
+        "경남은행_KR.pdf",
+        agency_key="kr",
+    )
+    assert name != "CREDIT OPINION"
+    assert "경남" in name or "CREDIT" not in name.upper()
+
+
+def test_outlook_parenthetical_and_short_codes() -> None:
+    token = parse_rating_value("A+(안정적)")
+    assert token is not None
+    assert token.rating == "A+"
+    assert token.outlook == "안정적"
+    assert token.raw_outlook == "(안정적)"
+
+    token_s = parse_rating_value("AA-(S)")
+    assert token_s is not None
+    assert token_s.outlook == "안정적"
+    assert token_s.raw_outlook == "(S)"
+
+    token_stable = parse_rating_value("AA+/Stable")
+    assert token_stable is not None
+    assert token_stable.outlook == "안정적"
+    assert token_stable.raw_outlook in {"Stable", "STABLE"}
+
+
+def test_rating_false_positives() -> None:
+    for text in ("영구A-05", "1A-23", "A-10(사)", "2026-06이"):
+        assert find_rating_tokens_in_text(text) == []
+
+
+def test_nice_label_issue_split_yaml() -> None:
+    config = get_instruments_config()
+    combined = (
+        "조건부자본증권(신종) 경남은행 조건부(상) "
+        "2026-06이(신종)영구A-05"
+    )
+    raw_label, issue_name = split_label_and_issue(combined, config)
+    assert raw_label == "조건부자본증권(신종)"
+    assert issue_name == (
+        "경남은행 조건부(상) 2026-06이(신종)영구A-05"
+    )
+
+
+def test_row_rating_single_any_cell() -> None:
+    row = parse_rating_row_values(
+        values=["조건부자본증권(신종)", "본", "비고", "A+", "안정적"],
+        page_number=1,
+        row_index=0,
+        section="primary_rating",
+        source="unit_test",
+        header_cells=["평가대상", "종류", "비고", "현재등급", "전망"],
+    )
+    assert row is not None
+    assert row.rating_status == "single"
+    assert row.rating == "A+"
+    assert row.outlook == "안정적"
+
+
+def test_label_decompose_coco_issue_bon(classifier: LabelClassifier) -> None:
+    header = ["평가대상", "종목", "종류", "현재등급", "전망"]
+    row = parse_rating_row_values(
+        values=["조건부자본증권(신종)", "제19회", "본", "A+", "안정적"],
+        page_number=1,
+        row_index=0,
+        section="primary_rating",
+        source="unit_test",
+        header_cells=header,
+    )
+    assert row is not None
+    config = get_instruments_config()
+    decomposed = decompose_label_fields(
+        row, header_cells=header, config=config
+    )
+    record = classifier.classify_row(decomposed)
+    assert record.instrument_key == "coco_t1"
+    assert record.evaluation_type == "본"
+    assert record.issue_name == "제19회"
+
+
+def test_kyongnam_bank_primary_success(classifier: LabelClassifier) -> None:
+    config = get_instruments_config()
+    header = ["평가대상", "종류", "현재등급", "비고"]
+    row = parse_rating_row_values(
+        values=[
+            "CoCo(신종) 조건부(상)2026-06이(신종)영구A-05",
+            "본",
+            "A+(안정적)",
+            "상각형",
+        ],
+        page_number=1,
+        row_index=0,
+        section="primary_rating",
+        source="pdf_table",
+        header_cells=header,
+    )
+    assert row is not None
+    assert row.rating == "A+"
+    assert row.outlook == "안정적"
+    decomposed = decompose_label_fields(
+        row, header_cells=header, config=config
+    )
+    assert decomposed.raw_label == "CoCo(신종)"
+    records, warnings = merge_canonical_records(
+        [classifier.classify_row(decomposed)]
+    )
+    status, fail_reason, selected, _ratings = select_and_judge(records)
+    assert status == "success"
+    assert fail_reason is None
+    assert selected is not None
+    assert selected["instrument_key"] == "coco_t1"
+    assert selected["evaluation_type"] == "본"
+    assert warnings == []
+
+
+def test_valid_multiple_does_not_fail_selected() -> None:
+    primary = _record(
+        key="coco_t1",
+        status="matched",
+        rating="A+",
+        outlook="안정적",
+        source="pdf_table",
+        section="primary_rating",
+        evaluation_type="본",
+    )
+    valid_issuer = _record(
+        key="issuer",
+        status="matched",
+        rating="AA+",
+        outlook="안정적",
+        source="valid_rating_section",
+        section="valid_ratings",
+        row_index=1,
+    )
+    valid_sub = _record(
+        key="subordinated",
+        status="matched",
+        rating="AA-",
+        outlook="안정적",
+        source="valid_rating_section",
+        section="valid_ratings",
+        row_index=2,
+    )
+    merged, _warnings = merge_canonical_records(
+        [primary, valid_issuer, valid_sub]
+    )
+    status, fail_reason, selected, ratings = select_and_judge(merged)
+    assert status == "success"
+    assert fail_reason is None
+    assert selected is not None
+    assert selected["instrument_key"] == "coco_t1"
+    assert "issuer" in ratings
+    assert "subordinated" in ratings
+
+
+def test_truncate_valid_row_text() -> None:
+    noisy = "무보증사채 AA+/Stable BIS자본비율(%) 15"
+    trimmed = truncate_valid_row_text(noisy)
+    assert "BIS" not in trimmed
+    assert "AA+" in trimmed or "Stable" in trimmed
+
+
+def test_classifier_coco_ifsr_aliases(classifier: LabelClassifier) -> None:
+    for label in ("CoCo(신종)", "COCO(신종)", "IFSR"):
+        record = classifier.classify_label(label)
+        assert record.classification_status == "matched"
+        assert record.instrument_key in {"coco_t1", "insurance_payment"}
+
+
+def test_rebuild_merged_three_products() -> None:
+    config = get_instruments_config()
+    merged_row = ExtractedRatingRow(
+        raw_label="보험금지급능력평가 후순위사채 신종자본증권",
+        label_text="보험금지급능력평가 후순위사채 신종자본증권",
+        rating_cells=["AAA/안정적"],
+        rating_status="single",
+        rating="AAA",
+        outlook="안정적",
+        page=1,
+        row_index=0,
+        section="primary_rating",
+        source="pdf_table",
+        cells=[
+            "보험금지급능력평가 후순위사채 신종자본증권",
+            "본",
+            "AAA/안정적",
+        ],
+        evaluation_type="본",
+    )
+    rebuilt, error = rebuild_merged_rows([merged_row], config)
+    assert error is None
+    assert len(rebuilt) == 3
+    labels = {item.raw_label for item in rebuilt}
+    assert "보험금지급능력평가" in labels
+    assert "후순위사채" in labels
+    assert "신종자본증권" in labels
+
+
+def test_rebuild_merged_failure_returns_error() -> None:
+    config = get_instruments_config()
+    row = ExtractedRatingRow(
+        raw_label="본",
+        label_text="본",
+        rating_cells=[],
+        rating_status="none",
+        rating=None,
+        outlook=None,
+        page=1,
+        row_index=0,
+        section="primary_rating",
+        source="pdf_table",
+        cells=["본", "정기"],
+        evaluation_type="정기",
+    )
+    rebuilt, error = rebuild_merged_rows([row], config)
+    assert rebuilt == []
+    assert error == "evaluation_type_only_label"
+
+
+def test_undefined_filter_excludes_noise() -> None:
+    record = _record(
+        key=None,
+        status="undefined",
+        rating="100",
+        label="BIS 15.2%",
+        rating_status="single",
+    )
+    assert not should_include_undefined_record(record)
+
+    email_record = _record(
+        key=None,
+        status="undefined",
+        rating="A+",
+        label="contact@example.com",
+        rating_status="single",
+    )
+    assert not should_include_undefined_record(email_record)
+
+
+def test_primary_and_valid_both_extracted(monkeypatch: pytest.MonkeyPatch) -> None:
+    from unittest.mock import MagicMock
+
+    page = MagicMock()
+    primary = ExtractedRatingRow(
+        raw_label="신종자본증권",
+        rating_cells=["AA"],
+        rating_status="single",
+        rating="AA",
+        outlook=None,
+        page=1,
+        row_index=0,
+        section="primary_rating",
+        source="pdf_table",
+    )
+    valid = ExtractedRatingRow(
+        raw_label="BIS",
+        rating_cells=["15"],
+        rating_status="single",
+        rating="15",
+        outlook=None,
+        page=1,
+        row_index=1,
+        section="valid_ratings",
+        source="valid_rating_section",
+    )
+
+    monkeypatch.setattr(
+        "main.extract_primary_rows_from_tables",
+        lambda **kwargs: [primary],
+    )
+    monkeypatch.setattr(
+        "main.extract_valid_rating_rows",
+        lambda **kwargs: [valid],
+    )
+    monkeypatch.setattr(
+        "main.extract_primary_rows_from_visual_layout",
+        lambda **kwargs: [],
+    )
+    monkeypatch.setattr(
+        "main.extract_fallback_rows_from_text",
+        lambda **kwargs: [],
+    )
+
+    rows = _extract_rows_from_page(page, "kis")
+    assert len(rows) == 2
+    assert rows[0].source == "pdf_table"
+    assert rows[1].source == "valid_rating_section"

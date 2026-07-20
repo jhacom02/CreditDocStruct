@@ -1,331 +1,9 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-07-20T15:31:03+09:00",
+  "updated_at": "2026-07-20T16:47:30+09:00",
   "entries": [
     {
       "id": "U000001",
-      "normalized_label": "KYUNGKEUN.KIM@KISRATING.COM(주)경남은행조건부(상)",
-      "raw_labels": [
-        "KYUNGKEUN.KIM@KISRATING.COM (주)경남은행 조건부(상)"
-      ],
-      "occurrence_ids": [
-        "5bfd262325c3f8d3a5798f5d8d45486b8a01560deb4167a5ad174d9cf4c80912|KYUNGKEUN.KIM@KISRATING.COM(주)경남은행조건부(상)|p1|r0"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T14:55:17+09:00",
-      "sample_files": [
-        "(주)경남은행_rs20260521-75.pdf"
-      ],
-      "sample_agencies": [
-        "한국신용평가"
-      ],
-      "sample_ratings": [],
-      "suggestions": [
-        {
-          "instrument_key": "issuer",
-          "score": 25.14,
-          "reasons": [
-            "기존 issuer(발행자 신용등급) 라벨과 char n-gram cosine 유사도 25.1"
-          ]
-        },
-        {
-          "instrument_key": "coco_t2",
-          "score": 17.17,
-          "reasons": [
-            "기존 coco_t2(조건부자본증권(후순위/T2)) 라벨과 char n-gram cosine 유사도 17.2"
-          ]
-        },
-        {
-          "instrument_key": "coco_t1",
-          "score": 16.88,
-          "reasons": [
-            "기존 coco_t1(조건부자본증권(신종/AT1)) 라벨과 char n-gram cosine 유사도 16.9"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000002",
-      "normalized_label": "조건부자본증권(T1)본A+/안정적A+/안정적유지",
-      "raw_labels": [
-        "조건부자본증권(T1) 본 A+/안정적 A+/안정적 유지"
-      ],
-      "occurrence_ids": [
-        "5bfd262325c3f8d3a5798f5d8d45486b8a01560deb4167a5ad174d9cf4c80912|조건부자본증권(T1)본A+/안정적A+/안정적유지|p1|r1"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T14:55:17+09:00",
-      "sample_files": [
-        "(주)경남은행_rs20260521-75.pdf"
-      ],
-      "sample_agencies": [
-        "한국신용평가"
-      ],
-      "sample_ratings": [],
-      "suggestions": [
-        {
-          "instrument_key": "coco_t1",
-          "score": 42.66,
-          "reasons": [
-            "기존 coco_t1(조건부자본증권(신종/AT1)) 라벨과 char n-gram cosine 유사도 42.7"
-          ]
-        },
-        {
-          "instrument_key": "coco_t2",
-          "score": 36.83,
-          "reasons": [
-            "기존 coco_t2(조건부자본증권(후순위/T2)) 라벨과 char n-gram cosine 유사도 36.8"
-          ]
-        },
-        {
-          "instrument_key": "structured_finance",
-          "score": 6.28,
-          "reasons": [
-            "기존 structured_finance(자산유동화증권(ABS)) 라벨과 char n-gram cosine 유사도 6.3"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000003",
-      "normalized_label": "위지원실장무보증사채정기AA+/안정적AA+/안정적유지2026-02이(변)1A-23외",
-      "raw_labels": [
-        "위지원 실장 무보증사채 정기 AA+/안정적 AA+/안정적 유지 2026-02이(변)1A-23 외"
-      ],
-      "occurrence_ids": [
-        "5bfd262325c3f8d3a5798f5d8d45486b8a01560deb4167a5ad174d9cf4c80912|위지원실장무보증사채정기AA+/안정적AA+/안정적유지2026-02이(변)1A-23외|p1|r2"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T14:55:17+09:00",
-      "sample_files": [
-        "(주)경남은행_rs20260521-75.pdf"
-      ],
-      "sample_agencies": [
-        "한국신용평가"
-      ],
-      "sample_ratings": [],
-      "suggestions": [
-        {
-          "instrument_key": "senior_unsecured",
-          "score": 19.72,
-          "reasons": [
-            "기존 senior_unsecured(선순위 무보증사채) 라벨과 char n-gram cosine 유사도 19.7"
-          ]
-        },
-        {
-          "instrument_key": "subordinated",
-          "score": 7.31,
-          "reasons": [
-            "기존 subordinated(후순위사채) 라벨과 char n-gram cosine 유사도 7.3"
-          ]
-        },
-        {
-          "instrument_key": "short_term_bond",
-          "score": 6.19,
-          "reasons": [
-            "기존 short_term_bond(전자단기사채) 라벨과 char n-gram cosine 유사도 6.2"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000004",
-      "normalized_label": "02-787-2279ISSUERRATING정기AA+/안정적AA+/안정적유지원화및외화",
-      "raw_labels": [
-        "02-787-2279 ISSUER RATING 정기 AA+/안정적 AA+/안정적 유지 원화 및 외화"
-      ],
-      "occurrence_ids": [
-        "5bfd262325c3f8d3a5798f5d8d45486b8a01560deb4167a5ad174d9cf4c80912|02-787-2279ISSUERRATING정기AA+/안정적AA+/안정적유지원화및외화|p1|r3"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T14:55:17+09:00",
-      "sample_files": [
-        "(주)경남은행_rs20260521-75.pdf"
-      ],
-      "sample_agencies": [
-        "한국신용평가"
-      ],
-      "sample_ratings": [],
-      "suggestions": [
-        {
-          "instrument_key": "issuer",
-          "score": 27.19,
-          "reasons": [
-            "기존 issuer(발행자 신용등급) 라벨과 char n-gram cosine 유사도 27.2"
-          ]
-        },
-        {
-          "instrument_key": "subordinated",
-          "score": 7.38,
-          "reasons": [
-            "기존 subordinated(후순위사채) 라벨과 char n-gram cosine 유사도 7.4"
-          ]
-        },
-        {
-          "instrument_key": "coco_t1",
-          "score": 6.43,
-          "reasons": [
-            "기존 coco_t1(조건부자본증권(신종/AT1)) 라벨과 char n-gram cosine 유사도 6.4"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000005",
-      "normalized_label": "GEEWON.WEE@KISRATING.COM",
-      "raw_labels": [
-        "GEEWON.WEE@KISRATING.COM"
-      ],
-      "occurrence_ids": [
-        "5bfd262325c3f8d3a5798f5d8d45486b8a01560deb4167a5ad174d9cf4c80912|GEEWON.WEE@KISRATING.COM|p1|r4"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T14:55:17+09:00",
-      "sample_files": [
-        "(주)경남은행_rs20260521-75.pdf"
-      ],
-      "sample_agencies": [
-        "한국신용평가"
-      ],
-      "sample_ratings": [],
-      "suggestions": [
-        {
-          "instrument_key": "issuer",
-          "score": 29.33,
-          "reasons": [
-            "기존 issuer(발행자 신용등급) 라벨과 char n-gram cosine 유사도 29.3"
-          ]
-        },
-        {
-          "instrument_key": "coco_t1",
-          "score": 11.65,
-          "reasons": [
-            "기존 coco_t1(조건부자본증권(신종/AT1)) 라벨과 char n-gram cosine 유사도 11.6"
-          ]
-        },
-        {
-          "instrument_key": "coco_t2",
-          "score": 9.34,
-          "reasons": [
-            "기존 coco_t2(조건부자본증권(후순위/T2)) 라벨과 char n-gram cosine 유사도 9.3"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000006",
-      "normalized_label": "조건부자본증권(T2)정기AA-/안정적AA-/안정적유지21-04이(후)10A-25외",
-      "raw_labels": [
-        "조건부자본증권(T2) 정기 AA-/안정적 AA-/안정적 유지 21-04이(후)10A-25 외"
-      ],
-      "occurrence_ids": [
-        "5bfd262325c3f8d3a5798f5d8d45486b8a01560deb4167a5ad174d9cf4c80912|조건부자본증권(T2)정기AA-/안정적AA-/안정적유지21-04이(후)10A-25외|p1|r5"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T14:55:17+09:00",
-      "sample_files": [
-        "(주)경남은행_rs20260521-75.pdf"
-      ],
-      "sample_agencies": [
-        "한국신용평가"
-      ],
-      "sample_ratings": [],
-      "suggestions": [
-        {
-          "instrument_key": "coco_t2",
-          "score": 33.76,
-          "reasons": [
-            "기존 coco_t2(조건부자본증권(후순위/T2)) 라벨과 char n-gram cosine 유사도 33.8"
-          ]
-        },
-        {
-          "instrument_key": "coco_t1",
-          "score": 27.99,
-          "reasons": [
-            "기존 coco_t1(조건부자본증권(신종/AT1)) 라벨과 char n-gram cosine 유사도 28.0"
-          ]
-        },
-        {
-          "instrument_key": "structured_finance",
-          "score": 4.79,
-          "reasons": [
-            "기존 structured_finance(자산유동화증권(ABS)) 라벨과 char n-gram cosine 유사도 4.8"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000007",
-      "normalized_label": "조건부자본증권(T1)정기A+/안정적A+/안정적유지",
-      "raw_labels": [
-        "조건부자본증권(T1) 정기 A+/안정적 A+/안정적 유지"
-      ],
-      "occurrence_ids": [
-        "5bfd262325c3f8d3a5798f5d8d45486b8a01560deb4167a5ad174d9cf4c80912|조건부자본증권(T1)정기A+/안정적A+/안정적유지|p1|r6"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T14:55:17+09:00",
-      "sample_files": [
-        "(주)경남은행_rs20260521-75.pdf"
-      ],
-      "sample_agencies": [
-        "한국신용평가"
-      ],
-      "sample_ratings": [],
-      "suggestions": [
-        {
-          "instrument_key": "coco_t1",
-          "score": 42.07,
-          "reasons": [
-            "기존 coco_t1(조건부자본증권(신종/AT1)) 라벨과 char n-gram cosine 유사도 42.1"
-          ]
-        },
-        {
-          "instrument_key": "coco_t2",
-          "score": 36.32,
-          "reasons": [
-            "기존 coco_t2(조건부자본증권(후순위/T2)) 라벨과 char n-gram cosine 유사도 36.3"
-          ]
-        },
-        {
-          "instrument_key": "structured_finance",
-          "score": 6.19,
-          "reasons": [
-            "기존 structured_finance(자산유동화증권(ABS)) 라벨과 char n-gram cosine 유사도 6.2"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000008",
       "normalized_label": "ISSUERRATINGAA+/안정적구분",
       "raw_labels": [
         "ISSUER RATING AA+/안정적 구 분"
@@ -334,8 +12,8 @@
         "5bfd262325c3f8d3a5798f5d8d45486b8a01560deb4167a5ad174d9cf4c80912|ISSUERRATINGAA+/안정적구분|p1|r0"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "(주)경남은행_rs20260521-75.pdf"
       ],
@@ -373,7 +51,7 @@
       "note": ""
     },
     {
-      "id": "U000009",
+      "id": "U000002",
       "normalized_label": "무보증사채AA+/안정적",
       "raw_labels": [
         "무보증사채 AA+/안정적"
@@ -382,8 +60,8 @@
         "5bfd262325c3f8d3a5798f5d8d45486b8a01560deb4167a5ad174d9cf4c80912|무보증사채AA+/안정적|p1|r1"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "(주)경남은행_rs20260521-75.pdf"
       ],
@@ -421,7 +99,7 @@
       "note": ""
     },
     {
-      "id": "U000010",
+      "id": "U000003",
       "normalized_label": "조건부자본증권(T2)AA-/안정적총자산(십억원)",
       "raw_labels": [
         "조건부자본증권(T2) AA-/안정적 총자산(십억원)"
@@ -430,8 +108,8 @@
         "5bfd262325c3f8d3a5798f5d8d45486b8a01560deb4167a5ad174d9cf4c80912|조건부자본증권(T2)AA-/안정적총자산(십억원)|p1|r2"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "(주)경남은행_rs20260521-75.pdf"
       ],
@@ -469,7 +147,7 @@
       "note": ""
     },
     {
-      "id": "U000011",
+      "id": "U000004",
       "normalized_label": "조건부자본증권(T1)A+/안정적",
       "raw_labels": [
         "조건부자본증권(T1) A+/안정적"
@@ -478,8 +156,8 @@
         "5bfd262325c3f8d3a5798f5d8d45486b8a01560deb4167a5ad174d9cf4c80912|조건부자본증권(T1)A+/안정적|p1|r3"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "(주)경남은행_rs20260521-75.pdf"
       ],
@@ -517,7 +195,7 @@
       "note": ""
     },
     {
-      "id": "U000012",
+      "id": "U000005",
       "normalized_label": "대출채권(십억원)",
       "raw_labels": [
         "대출채권(십억원)"
@@ -526,8 +204,8 @@
         "5bfd262325c3f8d3a5798f5d8d45486b8a01560deb4167a5ad174d9cf4c80912|대출채권(십억원)|p1|r4"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "(주)경남은행_rs20260521-75.pdf"
       ],
@@ -563,384 +241,18 @@
       "note": ""
     },
     {
-      "id": "U000013",
-      "normalized_label": "증권제외).",
-      "raw_labels": [
-        "증권 제외)."
-      ],
-      "occurrence_ids": [
-        "5bfd262325c3f8d3a5798f5d8d45486b8a01560deb4167a5ad174d9cf4c80912|증권제외).|p2|r0"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
-      "sample_files": [
-        "(주)경남은행_rs20260521-75.pdf"
-      ],
-      "sample_agencies": [
-        "한국신용평가"
-      ],
-      "sample_ratings": [],
-      "suggestions": [
-        {
-          "instrument_key": "structured_finance",
-          "score": 16.61,
-          "reasons": [
-            "기존 structured_finance(자산유동화증권(ABS)) 라벨과 char n-gram cosine 유사도 16.6"
-          ]
-        },
-        {
-          "instrument_key": "coco_t1",
-          "score": 14.47,
-          "reasons": [
-            "기존 coco_t1(조건부자본증권(신종/AT1)) 라벨과 char n-gram cosine 유사도 14.5"
-          ]
-        },
-        {
-          "instrument_key": "coco_t2",
-          "score": 12.53,
-          "reasons": [
-            "기존 coco_t2(조건부자본증권(후순위/T2)) 라벨과 char n-gram cosine 유사도 12.5"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000014",
-      "normalized_label": "각증권별특약에따른후순위성및자본성을반영하였다.",
-      "raw_labels": [
-        "각 증권별 특약에 따른 후순위성 및 자본성을 반영하였다."
-      ],
-      "occurrence_ids": [
-        "5bfd262325c3f8d3a5798f5d8d45486b8a01560deb4167a5ad174d9cf4c80912|각증권별특약에따른후순위성및자본성을반영하였다.|p2|r1"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
-      "sample_files": [
-        "(주)경남은행_rs20260521-75.pdf"
-      ],
-      "sample_agencies": [
-        "한국신용평가"
-      ],
-      "sample_ratings": [],
-      "suggestions": [
-        {
-          "instrument_key": "structured_finance",
-          "score": 19.36,
-          "reasons": [
-            "기존 structured_finance(자산유동화증권(ABS)) 라벨과 char n-gram cosine 유사도 19.4"
-          ]
-        },
-        {
-          "instrument_key": "coco_t2",
-          "score": 17.53,
-          "reasons": [
-            "기존 coco_t2(조건부자본증권(후순위/T2)) 라벨과 char n-gram cosine 유사도 17.5"
-          ]
-        },
-        {
-          "instrument_key": "subordinated",
-          "score": 15.49,
-          "reasons": [
-            "기존 subordinated(후순위사채) 라벨과 char n-gram cosine 유사도 15.5"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000015",
-      "normalized_label": "⚫정부지원에앞선손실부담조건선순위채권신용등급에서정부의직접적인",
-      "raw_labels": [
-        "⚫ 정부지원에 앞선 손실부담 조건 선순위채권 신용등급에서 정부의 직접적인"
-      ],
-      "occurrence_ids": [
-        "5bfd262325c3f8d3a5798f5d8d45486b8a01560deb4167a5ad174d9cf4c80912|⚫정부지원에앞선손실부담조건선순위채권신용등급에서정부의직접적인|p2|r2"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
-      "sample_files": [
-        "(주)경남은행_rs20260521-75.pdf"
-      ],
-      "sample_agencies": [
-        "한국신용평가"
-      ],
-      "sample_ratings": [],
-      "suggestions": [
-        {
-          "instrument_key": "subordinated",
-          "score": 12.93,
-          "reasons": [
-            "기존 subordinated(후순위사채) 라벨과 char n-gram cosine 유사도 12.9"
-          ]
-        },
-        {
-          "instrument_key": "issuer",
-          "score": 12.76,
-          "reasons": [
-            "기존 issuer(발행자 신용등급) 라벨과 char n-gram cosine 유사도 12.8"
-          ]
-        },
-        {
-          "instrument_key": "senior_unsecured",
-          "score": 11.01,
-          "reasons": [
-            "기존 senior_unsecured(선순위 무보증사채) 라벨과 char n-gram cosine 유사도 11.0"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000016",
-      "normalized_label": "⚫채권상환순위의후순위성지원을배제한신용도대비1NOTCHDOWN",
-      "raw_labels": [
-        "⚫ 채권상환순위의 후순위성 지원을 배제한 신용도 대비 1 NOTCH DOWN"
-      ],
-      "occurrence_ids": [
-        "5bfd262325c3f8d3a5798f5d8d45486b8a01560deb4167a5ad174d9cf4c80912|⚫채권상환순위의후순위성지원을배제한신용도대비1NOTCHDOWN|p2|r4"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
-      "sample_files": [
-        "(주)경남은행_rs20260521-75.pdf"
-      ],
-      "sample_agencies": [
-        "한국신용평가"
-      ],
-      "sample_ratings": [],
-      "suggestions": [
-        {
-          "instrument_key": "subordinated",
-          "score": 22.29,
-          "reasons": [
-            "기존 subordinated(후순위사채) 라벨과 char n-gram cosine 유사도 22.3"
-          ]
-        },
-        {
-          "instrument_key": "structured_finance",
-          "score": 15.92,
-          "reasons": [
-            "기존 structured_finance(자산유동화증권(ABS)) 라벨과 char n-gram cosine 유사도 15.9"
-          ]
-        },
-        {
-          "instrument_key": "senior_unsecured",
-          "score": 10.85,
-          "reasons": [
-            "기존 senior_unsecured(선순위 무보증사채) 라벨과 char n-gram cosine 유사도 10.8"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000017",
-      "normalized_label": "선순위채권신용등급에서정부의직접적인",
-      "raw_labels": [
-        "선순위채권 신용등급에서 정부의 직접적인"
-      ],
-      "occurrence_ids": [
-        "5bfd262325c3f8d3a5798f5d8d45486b8a01560deb4167a5ad174d9cf4c80912|선순위채권신용등급에서정부의직접적인|p2|r5"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
-      "sample_files": [
-        "(주)경남은행_rs20260521-75.pdf"
-      ],
-      "sample_agencies": [
-        "한국신용평가"
-      ],
-      "sample_ratings": [],
-      "suggestions": [
-        {
-          "instrument_key": "subordinated",
-          "score": 18.02,
-          "reasons": [
-            "기존 subordinated(후순위사채) 라벨과 char n-gram cosine 유사도 18.0"
-          ]
-        },
-        {
-          "instrument_key": "issuer",
-          "score": 17.78,
-          "reasons": [
-            "기존 issuer(발행자 신용등급) 라벨과 char n-gram cosine 유사도 17.8"
-          ]
-        },
-        {
-          "instrument_key": "senior_unsecured",
-          "score": 15.34,
-          "reasons": [
-            "기존 senior_unsecured(선순위 무보증사채) 라벨과 char n-gram cosine 유사도 15.3"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000018",
-      "normalized_label": "조건부자본증권(T1)⚫이자미지급가능성",
-      "raw_labels": [
-        "조건부자본증권(T1) ⚫ 이자 미지급 가능성"
-      ],
-      "occurrence_ids": [
-        "5bfd262325c3f8d3a5798f5d8d45486b8a01560deb4167a5ad174d9cf4c80912|조건부자본증권(T1)⚫이자미지급가능성|p2|r6"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
-      "sample_files": [
-        "(주)경남은행_rs20260521-75.pdf"
-      ],
-      "sample_agencies": [
-        "한국신용평가"
-      ],
-      "sample_ratings": [],
-      "suggestions": [
-        {
-          "instrument_key": "coco_t1",
-          "score": 57.91,
-          "reasons": [
-            "기존 coco_t1(조건부자본증권(신종/AT1)) 라벨과 char n-gram cosine 유사도 57.9"
-          ]
-        },
-        {
-          "instrument_key": "coco_t2",
-          "score": 49.99,
-          "reasons": [
-            "기존 coco_t2(조건부자본증권(후순위/T2)) 라벨과 char n-gram cosine 유사도 50.0"
-          ]
-        },
-        {
-          "instrument_key": "insurance_payment",
-          "score": 9.0,
-          "reasons": [
-            "기존 insurance_payment(보험금지급능력등급) 라벨과 char n-gram cosine 유사도 9.0"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000019",
-      "normalized_label": "⚫채권상환순위의후순위성",
-      "raw_labels": [
-        "⚫ 채권상환순위의 후순위성"
-      ],
-      "occurrence_ids": [
-        "5bfd262325c3f8d3a5798f5d8d45486b8a01560deb4167a5ad174d9cf4c80912|⚫채권상환순위의후순위성|p2|r7",
-        "0baec2daa2f4f521f4463f86b0997776bc23be889bc8378fb45381d7330b6bea|⚫채권상환순위의후순위성|p2|r1"
-      ],
-      "occurrence_count": 2,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
-      "sample_files": [
-        "(주)경남은행_rs20260521-75.pdf",
-        "교보생명보험(주)_rs20260511-11.pdf"
-      ],
-      "sample_agencies": [
-        "한국신용평가"
-      ],
-      "sample_ratings": [],
-      "suggestions": [
-        {
-          "instrument_key": "subordinated",
-          "score": 36.05,
-          "reasons": [
-            "기존 subordinated(후순위사채) 라벨과 char n-gram cosine 유사도 36.1"
-          ]
-        },
-        {
-          "instrument_key": "structured_finance",
-          "score": 25.75,
-          "reasons": [
-            "기존 structured_finance(자산유동화증권(ABS)) 라벨과 char n-gram cosine 유사도 25.8"
-          ]
-        },
-        {
-          "instrument_key": "senior_unsecured",
-          "score": 17.54,
-          "reasons": [
-            "기존 senior_unsecured(선순위 무보증사채) 라벨과 char n-gram cosine 유사도 17.5"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000020",
-      "normalized_label": "지여부에따라신용등급이반드시조정되는것은아님에유의바랍니다.",
-      "raw_labels": [
-        "지 여부에 따라 신용등급이 반드시 조정되는 것은 아님에 유의 바랍니다."
-      ],
-      "occurrence_ids": [
-        "5bfd262325c3f8d3a5798f5d8d45486b8a01560deb4167a5ad174d9cf4c80912|지여부에따라신용등급이반드시조정되는것은아님에유의바랍니다.|p3|r0",
-        "0baec2daa2f4f521f4463f86b0997776bc23be889bc8378fb45381d7330b6bea|지여부에따라신용등급이반드시조정되는것은아님에유의바랍니다.|p3|r0"
-      ],
-      "occurrence_count": 2,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
-      "sample_files": [
-        "(주)경남은행_rs20260521-75.pdf",
-        "교보생명보험(주)_rs20260511-11.pdf"
-      ],
-      "sample_agencies": [
-        "한국신용평가"
-      ],
-      "sample_ratings": [],
-      "suggestions": [
-        {
-          "instrument_key": "issuer",
-          "score": 13.62,
-          "reasons": [
-            "기존 issuer(발행자 신용등급) 라벨과 char n-gram cosine 유사도 13.6"
-          ]
-        },
-        {
-          "instrument_key": "insurance_payment",
-          "score": 3.64,
-          "reasons": [
-            "기존 insurance_payment(보험금지급능력등급) 라벨과 char n-gram cosine 유사도 3.6"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000021",
+      "id": "U000006",
       "normalized_label": "COCO(신종)",
       "raw_labels": [
         "COCO(신종)"
       ],
       "occurrence_ids": [
         "d1a1e2bba2cecc409cf3453dff8829704ac52c82d24cf589ab24e6821584bb19|COCO(신종)|p1|r0",
-        "d1a1e2bba2cecc409cf3453dff8829704ac52c82d24cf589ab24e6821584bb19|COCO(신종)|p1|r2",
         "f54599e2377db00d0f1d05181f264bfd7c5c853f10e6a3df0b3ff5369c5d6e7f|COCO(신종)|p1|r0"
       ],
-      "occurrence_count": 3,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "occurrence_count": 2,
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "(주)경남은행_본(2026-05-21).pdf",
         "(주)하나금융지주_본(2026-05-15).pdf"
@@ -980,55 +292,7 @@
       "note": ""
     },
     {
-      "id": "U000022",
-      "normalized_label": "COCO(신종)본A+(안정적)",
-      "raw_labels": [
-        "COCO(신종) 본 A+(안정적)"
-      ],
-      "occurrence_ids": [
-        "d1a1e2bba2cecc409cf3453dff8829704ac52c82d24cf589ab24e6821584bb19|COCO(신종)본A+(안정적)|p1|r0"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T14:55:17+09:00",
-      "sample_files": [
-        "(주)경남은행_본(2026-05-21).pdf"
-      ],
-      "sample_agencies": [
-        "한국기업평가"
-      ],
-      "sample_ratings": [
-        "A+"
-      ],
-      "suggestions": [
-        {
-          "instrument_key": "coco_t1",
-          "score": 21.19,
-          "reasons": [
-            "기존 coco_t1(조건부자본증권(신종/AT1)) 라벨과 char n-gram cosine 유사도 21.2"
-          ]
-        },
-        {
-          "instrument_key": "coco_t2",
-          "score": 16.61,
-          "reasons": [
-            "기존 coco_t2(조건부자본증권(후순위/T2)) 라벨과 char n-gram cosine 유사도 16.6"
-          ]
-        },
-        {
-          "instrument_key": "commercial_paper",
-          "score": 8.32,
-          "reasons": [
-            "기존 commercial_paper(기업어음(CP)) 라벨과 char n-gram cosine 유사도 8.3"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000023",
+      "id": "U000007",
       "normalized_label": "무보증사채AA+(S)평가대상",
       "raw_labels": [
         "무보증사채 AA+(S) 평가대상"
@@ -1037,8 +301,8 @@
         "d1a1e2bba2cecc409cf3453dff8829704ac52c82d24cf589ab24e6821584bb19|무보증사채AA+(S)평가대상|p1|r0"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "(주)경남은행_본(2026-05-21).pdf"
       ],
@@ -1076,7 +340,7 @@
       "note": ""
     },
     {
-      "id": "U000024",
+      "id": "U000008",
       "normalized_label": "COCO(후)AA-(S)조건",
       "raw_labels": [
         "COCO(후) AA-(S) 조건"
@@ -1085,8 +349,8 @@
         "d1a1e2bba2cecc409cf3453dff8829704ac52c82d24cf589ab24e6821584bb19|COCO(후)AA-(S)조건|p1|r1"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "(주)경남은행_본(2026-05-21).pdf"
       ],
@@ -1124,7 +388,7 @@
       "note": ""
     },
     {
-      "id": "U000025",
+      "id": "U000009",
       "normalized_label": "COCO(신종)A+(S)",
       "raw_labels": [
         "COCO(신종) A+(S)"
@@ -1133,8 +397,8 @@
         "d1a1e2bba2cecc409cf3453dff8829704ac52c82d24cf589ab24e6821584bb19|COCO(신종)A+(S)|p1|r3"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "(주)경남은행_본(2026-05-21).pdf"
       ],
@@ -1172,7 +436,7 @@
       "note": ""
     },
     {
-      "id": "U000026",
+      "id": "U000010",
       "normalized_label": "ICRAA+(S)",
       "raw_labels": [
         "ICR AA+(S)"
@@ -1181,8 +445,8 @@
         "d1a1e2bba2cecc409cf3453dff8829704ac52c82d24cf589ab24e6821584bb19|ICRAA+(S)|p1|r4"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "(주)경남은행_본(2026-05-21).pdf"
       ],
@@ -1206,7 +470,7 @@
       "note": ""
     },
     {
-      "id": "U000027",
+      "id": "U000011",
       "normalized_label": "등급추이총자산46,",
       "raw_labels": [
         "등급 추이 총자산 46,"
@@ -1215,8 +479,8 @@
         "d1a1e2bba2cecc409cf3453dff8829704ac52c82d24cf589ab24e6821584bb19|등급추이총자산46,|p1|r5"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "(주)경남은행_본(2026-05-21).pdf"
       ],
@@ -1245,53 +509,7 @@
       "note": ""
     },
     {
-      "id": "U000028",
-      "normalized_label": "(주)경남은행최근동향수익성유지되었으나재무건전성저하세지속2026년1분기금리상승에따른채권관련손익축소로비이자순이익이감소하였으나,NIM상승및충당금적립감소에힘입어ROA가0.5%로전년동기(0.5%)수준을유지하였다.그러나중소기업대출중심의건전성저하가이어지면서2026년3월말고정이하및요주의이하여신비율이각각0.9%,1.6%로상승하고,충당금/고정이하여신비율은87.1%로하락하였다(전년말각각0.8%,1.5%,106.0%).BIS기준보통주자본비율및총자본비율은각각12.7%,13.7%로매우우수한수준이나,금리상승에따른FVOCI평가손익감소영향으로하락세가이어졌다(전년말12.9%,13.8%).주요이슈와KR'SVIEW최근거시환경변화가실적에미칠영향2026년경제성장률은반도체업황개선과수출증가,전년도저성장에따른기저효과에힘입어다소회복될것으로예상된다.다만경기회복이수출및대기업중심으로나타나는가운데,고금리부담및내수회복지연으로민간소비와설비투자개선폭은제한적일전망이다.이에따라은행업권의여신성장률은상승가능성이존재하나절대적으로낮은수준에머물것으로예상된다.미국-이란전쟁이장기화될경우실적에부정적으로작용할전망이다.중동지역의지정학적긴장이고조되면서국제유가가큰폭으로상승하였고환율및금리변동성이커졌다.유가증권및파생상품관련손익등비이자순이익변동성이확대될것이며,환율상승은BIS비율,LCR등재무건전성지표에부정적으로작용할것으로예상된다.동행은외화자산비중이낮아환율변동에따른영향은시중은행대비크지않을것으로예상된다.다만핵심영업지역인경남ᆞ울산지역이조선,철강,자동차등수출산업에대한의존도가높은수준으로,글로벌경기변동영향에상대적으로크게노출되어있어여신건전성에미칠영향에대해모니터링이필요하다.최근금리강세는NIM개선을통해이자이익확대에기여할전망이나,충당금적립추이에대해모니터링이필요하다.은행업권차주의채무상환능력은타금융업권과차별화된수준이나,금리상승이지속될경우취약차주의상환능력저하가불가피하다.부실채권신규발생이증가한상황으로향후수익성은충당금적립규모에의해결정될전망이다.생산적금융,밸류업강화등정책기조변화정부주도의생산적금융확대기조에따라은행업권의자산포트폴리오변화가예상된다.주택담보대출위험가중치상향조정에따라주택담보대출중심의성장전략은제약을받을전망이다.정책유인이강화된중소기업대출및첨단·벤처·혁신기업투자비중은점진적으로확대될것으로예상된다.BNK금융은2026년연간20조원규모의생산적금융투입계획을밝혔으며,동행은미래성장기업,지역주력산업,소상공인을대상으로총2.2조원규모의대출실행을추진중이다.기업금융비중확대는경기민감도와신용리스크를높이는요인으로작용할수있어향후자산건전성관리부담은확대될것으로전망된다.2026년들어금융지주사들은기업가치제고를위해주주환원을본격화하고있다.BNK금융지주는배당을매년10%이상확대할계획이고,자기주식매입역시당분간지속될전망이다.지주는목표BIS보통주자본비율(13%)달성을위해연간RWA증가율을4%이내로관리할계획이다.WWW.KOREARATINGS.COM2",
-      "raw_labels": [
-        "(주)경남은행 최근 동향 수익성 유지되었으나 재무건전성 저하세 지속 2026년 1분기 금리 상승에 따른 채권관련손익 축소로 비이자순이익이 감소하였으나, NIM 상승 및 충당금적립 감소에 힘입어 ROA가 0.5%로 전년동기(0.5%) 수준을 유지 하였다. 그러나 중소기업대출 중심의 건전성 저하가 이어지면서 2026년 3월말 고정이 하 및 요주의이하여신비율이 각각 0.9%, 1.6%로 상승하고, 충당금/고정이하여신 비율 은 87.1%로 하락하였다(전년말 각각 0.8%, 1.5%, 106.0%). BIS 기준 보통주자본비율 및 총자본비율은 각각 12.7%, 13.7%로 매우 우수한 수준이나, 금리 상승에 따른 FVOCI 평가손익 감소 영향으로 하락세가 이어졌다(전년말 12.9%, 13.8%). 주요 이슈와 KR'S VIEW 최근 거시환경 변화가 실적에 미칠 영향 2026년 경제성장률은 반도체 업황 개선과 수출 증가, 전년도 저성장에 따른 기저효과 에 힘입어 다소 회복될 것으로 예상된다. 다만 경기 회복이 수출 및 대기업 중심으로 나타나는 가운데, 고금리 부담 및 내수회복 지연으로 민간소비와 설비투자 개선폭은 제 한적일 전망이다. 이에 따라 은행업권의 여신성장률은 상승 가능성이 존재하나 절대적 으로 낮은 수준에 머물 것으로 예상된다. 미국-이란 전쟁이 장기화될 경우 실적에 부정적으로 작용할 전망이다. 중동지역의 지정 학적 긴장이 고조되면서 국제유가가 큰 폭으로 상승하였고 환율 및 금리 변동성이 커 졌다. 유가증권 및 파생상품관련손익 등 비이자순이익 변동성이 확대될 것이며, 환율 상승은 BIS 비율, LCR 등 재무건전성 지표에 부정적으로 작용할 것으로 예상된다. 동 행은 외화자산 비중이 낮아 환율 변동에 따른 영향은 시중은행 대비 크지 않을 것으로 예상된다. 다만 핵심 영업지역인 경남ᆞ울산 지역이 조선, 철강, 자동차 등 수출 산업에 대한 의존도가 높은 수준으로, 글로벌 경기 변동 영향에 상대적으로 크게 노출되어 있 어 여신건전성에 미칠 영향에 대해 모니터링이 필요하다. 최근 금리 강세는 NIM 개선을 통해 이자이익 확대에 기여할 전망이나, 충당금적립 추 이에 대해 모니터링이 필요하다. 은행업권 차주의 채무상환능력은 타 금융업권과 차별 화된 수준이나, 금리 상승이 지속될 경우 취약차주의 상환능력 저하가 불가피하다. 부 실채권 신규 발생이 증가한 상황으로 향후 수익성은 충당금적립 규모에 의해 결정될 전망이다. 생산적금융, 밸류업 강화 등 정책기조 변화 정부 주도의 생산적금융 확대 기조에 따라 은행업권의 자산 포트폴리오 변화가 예상된 다. 주택담보대출 위험가중치 상향조정에 따라 주택담보대출 중심의 성장 전략은 제약 을 받을 전망이다. 정책 유인이 강화된 중소기업대출 및 첨단·벤처·혁신기업 투자 비 중은 점진적으로 확대될 것으로 예상된다. BNK금융은 2026년 연간 20조원 규모의 생 산적금융 투입 계획을 밝혔으며, 동행은 미래성장기업, 지역주력산업, 소상공인을 대상 으로 총 2.2조원 규모의 대출 실행을 추진 중이다. 기업금융 비중 확대는 경기 민감도 와 신용리스크를 높이는 요인으로 작용할 수 있어 향후 자산건전성 관리 부담은 확대 될 것으로 전망된다. 2026년 들어 금융지주사들은 기업가치 제고를 위해 주주환원을 본격화하고 있다. BNK 금융지주는 배당을 매년 10% 이상 확대할 계획이고, 자기주식 매입 역시 당분간 지속 될 전망이다. 지주는 목표 BIS보통주자본비율(13%) 달성을 위해 연간 RWA 증가율을 4% 이내로 관리할 계획이다. WWW.KOREARATINGS.COM 2"
-      ],
-      "occurrence_ids": [
-        "d1a1e2bba2cecc409cf3453dff8829704ac52c82d24cf589ab24e6821584bb19|(주)경남은행최근동향수익성유지되었으나재무건전성저하세지속2026년1분기금리상승에따른채권관련손익축소로비이자순이익이감소하였으나,NIM상승및충당금적립감소에힘입어ROA가0.5%로전년동기(0.5%)수준을유지하였다.그러나중소기업대출중심의건전성저하가이어지면서2026년3월말고정이하및요주의이하여신비율이각각0.9%,1.6%로상승하고,충당금/고정이하여신비율은87.1%로하락하였다(전년말각각0.8%,1.5%,106.0%).BIS기준보통주자본비율및총자본비율은각각12.7%,13.7%로매우우수한수준이나,금리상승에따른FVOCI평가손익감소영향으로하락세가이어졌다(전년말12.9%,13.8%).주요이슈와KR'SVIEW최근거시환경변화가실적에미칠영향2026년경제성장률은반도체업황개선과수출증가,전년도저성장에따른기저효과에힘입어다소회복될것으로예상된다.다만경기회복이수출및대기업중심으로나타나는가운데,고금리부담및내수회복지연으로민간소비와설비투자개선폭은제한적일전망이다.이에따라은행업권의여신성장률은상승가능성이존재하나절대적으로낮은수준에머물것으로예상된다.미국-이란전쟁이장기화될경우실적에부정적으로작용할전망이다.중동지역의지정학적긴장이고조되면서국제유가가큰폭으로상승하였고환율및금리변동성이커졌다.유가증권및파생상품관련손익등비이자순이익변동성이확대될것이며,환율상승은BIS비율,LCR등재무건전성지표에부정적으로작용할것으로예상된다.동행은외화자산비중이낮아환율변동에따른영향은시중은행대비크지않을것으로예상된다.다만핵심영업지역인경남ᆞ울산지역이조선,철강,자동차등수출산업에대한의존도가높은수준으로,글로벌경기변동영향에상대적으로크게노출되어있어여신건전성에미칠영향에대해모니터링이필요하다.최근금리강세는NIM개선을통해이자이익확대에기여할전망이나,충당금적립추이에대해모니터링이필요하다.은행업권차주의채무상환능력은타금융업권과차별화된수준이나,금리상승이지속될경우취약차주의상환능력저하가불가피하다.부실채권신규발생이증가한상황으로향후수익성은충당금적립규모에의해결정될전망이다.생산적금융,밸류업강화등정책기조변화정부주도의생산적금융확대기조에따라은행업권의자산포트폴리오변화가예상된다.주택담보대출위험가중치상향조정에따라주택담보대출중심의성장전략은제약을받을전망이다.정책유인이강화된중소기업대출및첨단·벤처·혁신기업투자비중은점진적으로확대될것으로예상된다.BNK금융은2026년연간20조원규모의생산적금융투입계획을밝혔으며,동행은미래성장기업,지역주력산업,소상공인을대상으로총2.2조원규모의대출실행을추진중이다.기업금융비중확대는경기민감도와신용리스크를높이는요인으로작용할수있어향후자산건전성관리부담은확대될것으로전망된다.2026년들어금융지주사들은기업가치제고를위해주주환원을본격화하고있다.BNK금융지주는배당을매년10%이상확대할계획이고,자기주식매입역시당분간지속될전망이다.지주는목표BIS보통주자본비율(13%)달성을위해연간RWA증가율을4%이내로관리할계획이다.WWW.KOREARATINGS.COM2|p2|r0"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
-      "sample_files": [
-        "(주)경남은행_본(2026-05-21).pdf"
-      ],
-      "sample_agencies": [
-        "한국기업평가"
-      ],
-      "sample_ratings": [],
-      "suggestions": [
-        {
-          "instrument_key": "issuer",
-          "score": 6.04,
-          "reasons": [
-            "기존 issuer(발행자 신용등급) 라벨과 char n-gram cosine 유사도 6.0"
-          ]
-        },
-        {
-          "instrument_key": "commercial_paper",
-          "score": 4.8,
-          "reasons": [
-            "기존 commercial_paper(기업어음(CP)) 라벨과 char n-gram cosine 유사도 4.8"
-          ]
-        },
-        {
-          "instrument_key": "coco_t1",
-          "score": 4.0,
-          "reasons": [
-            "기존 coco_t1(조건부자본증권(신종/AT1)) 라벨과 char n-gram cosine 유사도 4.0"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000029",
+      "id": "U000012",
       "normalized_label": "조건부자본증권(신종)경남은행조건부(상)2026-06이(신종)영구A-05본",
       "raw_labels": [
         "조건부자본증권(신종) 경남은행 조건부(상) 2026-06이(신종)영구A-05 본"
@@ -1300,8 +518,8 @@
         "35cc7d5d8f1b5e16f46d4c54e21e2c50fe9cc127f149624a5b3fe1635d487ecb|조건부자본증권(신종)경남은행조건부(상)2026-06이(신종)영구A-05본|p1|r0"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "(주)경남은행_회사채_본_20260520_요지 PDF.pdf"
       ],
@@ -1339,98 +557,7 @@
       "note": ""
     },
     {
-      "id": "U000030",
-      "normalized_label": "평가등급",
-      "raw_labels": [
-        "평가 등급"
-      ],
-      "occurrence_ids": [
-        "35cc7d5d8f1b5e16f46d4c54e21e2c50fe9cc127f149624a5b3fe1635d487ecb|평가등급|p1|r0",
-        "f1a56302459a29e93388436e681018c16e01ec2f648255825ea0df3f29c348bb|평가등급|p1|r0",
-        "0c0981e13420bdeb0a0837f592d9a01e6467c16fa074172eabe7e9ab7d1a1a07|평가등급|p1|r1"
-      ],
-      "occurrence_count": 3,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T14:55:17+09:00",
-      "sample_files": [
-        "(주)경남은행_회사채_본_20260520_요지 PDF.pdf",
-        "(주)하나금융지주_회사채_본_20260515_요지 PDF.pdf",
-        "교보생명보험(주)_회사채_정기_20260512_요지 PDF.pdf"
-      ],
-      "sample_agencies": [
-        "NICE신용평가"
-      ],
-      "sample_ratings": [],
-      "suggestions": [
-        {
-          "instrument_key": "issuer",
-          "score": 16.93,
-          "reasons": [
-            "기존 issuer(발행자 신용등급) 라벨과 char n-gram cosine 유사도 16.9"
-          ]
-        },
-        {
-          "instrument_key": "insurance_payment",
-          "score": 11.32,
-          "reasons": [
-            "기존 insurance_payment(보험금지급능력등급) 라벨과 char n-gram cosine 유사도 11.3"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000031",
-      "normalized_label": "조건부자본증권(신종)경남은행조건부(상)2026-06이(신종)영구A-05본A+/STABLE상각형",
-      "raw_labels": [
-        "조건부자본증권(신종) 경남은행 조건부(상) 2026-06이(신종)영구A-05 본 A+/STABLE 상각형"
-      ],
-      "occurrence_ids": [
-        "35cc7d5d8f1b5e16f46d4c54e21e2c50fe9cc127f149624a5b3fe1635d487ecb|조건부자본증권(신종)경남은행조건부(상)2026-06이(신종)영구A-05본A+/STABLE상각형|p1|r1"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T14:55:17+09:00",
-      "sample_files": [
-        "(주)경남은행_회사채_본_20260520_요지 PDF.pdf"
-      ],
-      "sample_agencies": [
-        "NICE신용평가"
-      ],
-      "sample_ratings": [
-        "A+"
-      ],
-      "suggestions": [
-        {
-          "instrument_key": "coco_t1",
-          "score": 36.69,
-          "reasons": [
-            "기존 coco_t1(조건부자본증권(신종/AT1)) 라벨과 char n-gram cosine 유사도 36.7"
-          ]
-        },
-        {
-          "instrument_key": "coco_t2",
-          "score": 34.12,
-          "reasons": [
-            "기존 coco_t2(조건부자본증권(후순위/T2)) 라벨과 char n-gram cosine 유사도 34.1"
-          ]
-        },
-        {
-          "instrument_key": "structured_finance",
-          "score": 9.36,
-          "reasons": [
-            "기존 structured_finance(자산유동화증권(ABS)) 라벨과 char n-gram cosine 유사도 9.4"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000032",
+      "id": "U000013",
       "normalized_label": "기업신용등급AA+/STABLEBIS자본비율(%)15",
       "raw_labels": [
         "기업신용등급 AA+/STABLE BIS자본비율(%) 15"
@@ -1439,8 +566,8 @@
         "35cc7d5d8f1b5e16f46d4c54e21e2c50fe9cc127f149624a5b3fe1635d487ecb|기업신용등급AA+/STABLEBIS자본비율(%)15|p1|r0"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "(주)경남은행_회사채_본_20260520_요지 PDF.pdf"
       ],
@@ -1478,7 +605,7 @@
       "note": ""
     },
     {
-      "id": "U000033",
+      "id": "U000014",
       "normalized_label": "무보증사채AA+/STABLEROA(PEER)(%)0",
       "raw_labels": [
         "무보증사채 AA+/STABLE ROA(PEER)(%) 0"
@@ -1487,8 +614,8 @@
         "35cc7d5d8f1b5e16f46d4c54e21e2c50fe9cc127f149624a5b3fe1635d487ecb|무보증사채AA+/STABLEROA(PEER)(%)0|p1|r1"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "(주)경남은행_회사채_본_20260520_요지 PDF.pdf"
       ],
@@ -1526,7 +653,7 @@
       "note": ""
     },
     {
-      "id": "U000034",
+      "id": "U000015",
       "normalized_label": "COCO(후)AA-/STABLE핵심이익=(이자수익-이자비용)+(수수료수",
       "raw_labels": [
         "COCO(후) AA-/STABLE 핵심이익=(이자수익-이자비용)+(수수료수"
@@ -1535,8 +662,8 @@
         "35cc7d5d8f1b5e16f46d4c54e21e2c50fe9cc127f149624a5b3fe1635d487ecb|COCO(후)AA-/STABLE핵심이익=(이자수익-이자비용)+(수수료수|p1|r2"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "(주)경남은행_회사채_본_20260520_요지 PDF.pdf"
       ],
@@ -1574,7 +701,7 @@
       "note": ""
     },
     {
-      "id": "U000035",
+      "id": "U000016",
       "normalized_label": "COCO(HB)A+/STABLE",
       "raw_labels": [
         "COCO(HB) A+/STABLE"
@@ -1583,8 +710,8 @@
         "35cc7d5d8f1b5e16f46d4c54e21e2c50fe9cc127f149624a5b3fe1635d487ecb|COCO(HB)A+/STABLE|p1|r3"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "(주)경남은행_회사채_본_20260520_요지 PDF.pdf"
       ],
@@ -1622,53 +749,7 @@
       "note": ""
     },
     {
-      "id": "U000036",
-      "normalized_label": "(주)경남은행등급논거경남및울산지역내안정적인사업기반을바탕으로한우수한수익성•전체은행업권내총자산점유율은낮은수준이나,주사업지역인경남/울산에서높은고객충성도를바탕으로안정적인여수신기반을보유•최근3개년(’23~’25년)평균ROA는0.6%로시중은행평균0.6%수준의우수한수익성지속•2024년에는금리하락영향으로순이자마진(NIM;NETINTERESTMARGIN)은감소되었으나,여신규모성장세지속,비이자수익증가등의영향으로ROA는소폭개선•2025년중순이자마진하락으로이자이익수준이정체된가운데,퇴직급여등판관비증가로연간당기순이익규모가전년대비감소(’24년3,097억원→’25년2,901억원)•2026년1분기에는시중금리상승으로유가증권평가손익이감소하였으나,대손비용부담이소폭완화되면서전년동분기수준의ROA(0.5%)시현•가계대출관리기조에따른여신성장둔화,내수경기회복지연등에따른대손부담지속은중단기수익성의하방요인으로작용할것으로전망부실여신증가에따른자산건전성저하세이나,자산건전성및자본적정성은우수한수준•부동산업을중심으로부실여신규모가증가(부동산업고정이하여신규모2023년말119억원→2026년3월말1,261억원)함에따라자산건전성지표저하•2026년3월말기준고정이하여신비율과충당금/고정이하여신비율은각각0.9%,87.1%으로지방은행평균(’25년말기준각각1.1%,99.2%)과유사한수준•2026년3월말은행의BIS자본비율13.7%,CET1자본비율12.8%으로지방은행평균(’25년말15.5%,14.2%)대비낮은편이나,이익누적등으로우수한자본적정성지속•보수적인위험가중자산관리기조,이익누적등을고려시,우수한자본적정성이안정적으로유지될전망중점검토사항부동산및개인신용대출등경기민감업종여신의자산건전성저하수준•고금리영향과금융지원정책종료,부동산경기저하영향으로부동산관련업종과개인신용대출의부실위험우려높아지고있는모습•부동산업고정이하여신비율’21년말0.6%→’26년3월말2.0%•개인신용대출연체율(+1M)’21년말0.8%→’26년3월말1.6%•타업권대비은행업권의연체율양호한수준인점,선제적인충당금적립수준과은행의취약업종대출부실률이PEERGROUP대비낮은점은위험완화요인•한편2025년2월부산반얀트리리조트화재로인해,은행의주요여신거래처인삼정기업관련채권(삼정기업3사95억원,기타800억원)이2024년4분기와2025년1분기중고정이하자산으로분류됨•다만잔여담보가액등감안시관련손실규모는감내가능한수준으로파악됨2",
-      "raw_labels": [
-        "(주)경남은행 등급논거 경남 및 울산지역 내 안정적인 사업기반을 바탕으로 한 우수한 수익성 • 전체 은행업권 내 총자산 점유율은 낮은 수준이나, 주 사업지역인 경남/울산에서 높은 고객충성도를 바탕으로 안정적인 여수신기반을 보유 • 최근 3개년(’23~’25년) 평균 ROA는 0.6%로 시중은행 평균 0.6% 수준의 우수한 수익 성 지속 • 2024년에는 금리하락 영향으로 순이자마진(NIM; NET INTEREST MARGIN)은 감소되었으나, 여신 규모 성장세 지속, 비이자수익 증가 등의 영향으로 ROA는 소폭 개선 • 2025년 중 순이자마진 하락으로 이자이익 수준이 정체된 가운데, 퇴직급여 등 판관비 증가로 연간 당기순이익 규모가 전년 대비 감소(’24년 3,097억원 → ’25년 2,901억원) • 2026년 1분기에는 시중금리 상승으로 유가증권 평가손익이 감소하였으나, 대손비용 부 담이 소폭 완화되면서 전년 동분기 수준의 ROA(0.5%) 시현 • 가계대출 관리 기조에 따른 여신 성장 둔화, 내수경기 회복 지연 등에 따른 대손부담 지 속은 중단기 수익성의 하방요인으로 작용할 것으로 전망 부실여신 증가에 따른 자산건전성 저하세이나, 자산건전성 및 자본적정성은 우수한 수준 • 부동산업을 중심으로 부실여신 규모가 증가(부동산업 고정이하여신 규모 2023년말 119 억원 → 2026년 3월말 1,261억원)함에 따라 자산건전성 지표 저하 • 2026년 3월말 기준 고정이하여신비율과 충당금/고정이하여신비율은 각각 0.9%, 87.1% 으로 지방은행 평균(’25년말 기준 각각 1.1%, 99.2%)과 유사한 수준 • 2026년 3월말 은행의 BIS자본비율 13.7%, CET1자본비율 12.8%으로 지방은행 평균 (’25년 말 15.5%, 14.2%) 대비 낮은 편이나, 이익누적 등으로 우수한 자본적정성 지속 • 보수적인 위험가중자산 관리 기조, 이익누적 등을 고려 시, 우수한 자본적정성이 안정적 으로 유지될 전망 중점 검토사항 부동산 및 개인신용대출 등 경기민감업종 여신의 자산건전성 저하 수준 • 고금리 영향과 금융지원 정책 종료, 부동산 경기 저하 영향으로 부동산 관련 업종과 개 인신용대출의 부실위험 우려 높아지고 있는 모습 • 부동산업 고정이하여신비율 ’21년말 0.6% → ’26년 3월말 2.0% • 개인신용대출 연체율(+1M) ’21년말 0.8% → ’26년 3월말 1.6% • 타업권 대비 은행업권의 연체율 양호한 수준인 점, 선제적인 충당금 적립 수준과 은행의 취약업종 대출 부실률이 PEER GROUP 대비 낮은 점은 위험 완화 요인 • 한편 2025년 2월 부산 반얀트리 리조트 화재로 인해, 은행의 주요 여신거래처인 삼정기 업 관련 채권(삼정기업 3사 95억원, 기타 800억원)이 2024년 4분기와 2025년 1분기 중 고정이하자산으로 분류됨 • 다만 잔여 담보가액 등 감안 시 관련 손실 규모는 감내 가능한 수준으로 파악됨 2"
-      ],
-      "occurrence_ids": [
-        "35cc7d5d8f1b5e16f46d4c54e21e2c50fe9cc127f149624a5b3fe1635d487ecb|(주)경남은행등급논거경남및울산지역내안정적인사업기반을바탕으로한우수한수익성•전체은행업권내총자산점유율은낮은수준이나,주사업지역인경남/울산에서높은고객충성도를바탕으로안정적인여수신기반을보유•최근3개년(’23~’25년)평균ROA는0.6%로시중은행평균0.6%수준의우수한수익성지속•2024년에는금리하락영향으로순이자마진(NIM;NETINTERESTMARGIN)은감소되었으나,여신규모성장세지속,비이자수익증가등의영향으로ROA는소폭개선•2025년중순이자마진하락으로이자이익수준이정체된가운데,퇴직급여등판관비증가로연간당기순이익규모가전년대비감소(’24년3,097억원→’25년2,901억원)•2026년1분기에는시중금리상승으로유가증권평가손익이감소하였으나,대손비용부담이소폭완화되면서전년동분기수준의ROA(0.5%)시현•가계대출관리기조에따른여신성장둔화,내수경기회복지연등에따른대손부담지속은중단기수익성의하방요인으로작용할것으로전망부실여신증가에따른자산건전성저하세이나,자산건전성및자본적정성은우수한수준•부동산업을중심으로부실여신규모가증가(부동산업고정이하여신규모2023년말119억원→2026년3월말1,261억원)함에따라자산건전성지표저하•2026년3월말기준고정이하여신비율과충당금/고정이하여신비율은각각0.9%,87.1%으로지방은행평균(’25년말기준각각1.1%,99.2%)과유사한수준•2026년3월말은행의BIS자본비율13.7%,CET1자본비율12.8%으로지방은행평균(’25년말15.5%,14.2%)대비낮은편이나,이익누적등으로우수한자본적정성지속•보수적인위험가중자산관리기조,이익누적등을고려시,우수한자본적정성이안정적으로유지될전망중점검토사항부동산및개인신용대출등경기민감업종여신의자산건전성저하수준•고금리영향과금융지원정책종료,부동산경기저하영향으로부동산관련업종과개인신용대출의부실위험우려높아지고있는모습•부동산업고정이하여신비율’21년말0.6%→’26년3월말2.0%•개인신용대출연체율(+1M)’21년말0.8%→’26년3월말1.6%•타업권대비은행업권의연체율양호한수준인점,선제적인충당금적립수준과은행의취약업종대출부실률이PEERGROUP대비낮은점은위험완화요인•한편2025년2월부산반얀트리리조트화재로인해,은행의주요여신거래처인삼정기업관련채권(삼정기업3사95억원,기타800억원)이2024년4분기와2025년1분기중고정이하자산으로분류됨•다만잔여담보가액등감안시관련손실규모는감내가능한수준으로파악됨2|p2|r0"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
-      "sample_files": [
-        "(주)경남은행_회사채_본_20260520_요지 PDF.pdf"
-      ],
-      "sample_agencies": [
-        "NICE신용평가"
-      ],
-      "sample_ratings": [],
-      "suggestions": [
-        {
-          "instrument_key": "coco_t1",
-          "score": 5.89,
-          "reasons": [
-            "기존 coco_t1(조건부자본증권(신종/AT1)) 라벨과 char n-gram cosine 유사도 5.9"
-          ]
-        },
-        {
-          "instrument_key": "issuer",
-          "score": 4.92,
-          "reasons": [
-            "기존 issuer(발행자 신용등급) 라벨과 char n-gram cosine 유사도 4.9"
-          ]
-        },
-        {
-          "instrument_key": "coco_t2",
-          "score": 4.78,
-          "reasons": [
-            "기존 coco_t2(조건부자본증권(후순위/T2)) 라벨과 char n-gram cosine 유사도 4.8"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000037",
+      "id": "U000017",
       "normalized_label": "본",
       "raw_labels": [
         "본"
@@ -1677,114 +758,24 @@
         "d156e3cfc1e436796d37426758a22a5181fa83ff13c91770f9e18d52aab9c2b4|본|p1|r0"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "(주)하나금융지주_rs20260515-22.pdf"
       ],
       "sample_agencies": [
         "한국신용평가"
       ],
-      "sample_ratings": [],
+      "sample_ratings": [
+        "AA-"
+      ],
       "suggestions": [],
       "review_status": "pending",
       "chosen_instrument_key": null,
       "note": ""
     },
     {
-      "id": "U000038",
-      "normalized_label": "조건부자본증권(T1)본AA-/안정적AA-/안정적유지제19회",
-      "raw_labels": [
-        "조건부자본증권(T1) 본 AA-/안정적 AA-/안정적 유지 제19회"
-      ],
-      "occurrence_ids": [
-        "d156e3cfc1e436796d37426758a22a5181fa83ff13c91770f9e18d52aab9c2b4|조건부자본증권(T1)본AA-/안정적AA-/안정적유지제19회|p1|r0"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T14:55:17+09:00",
-      "sample_files": [
-        "(주)하나금융지주_rs20260515-22.pdf"
-      ],
-      "sample_agencies": [
-        "한국신용평가"
-      ],
-      "sample_ratings": [],
-      "suggestions": [
-        {
-          "instrument_key": "coco_t1",
-          "score": 38.49,
-          "reasons": [
-            "기존 coco_t1(조건부자본증권(신종/AT1)) 라벨과 char n-gram cosine 유사도 38.5"
-          ]
-        },
-        {
-          "instrument_key": "coco_t2",
-          "score": 33.23,
-          "reasons": [
-            "기존 coco_t2(조건부자본증권(후순위/T2)) 라벨과 char n-gram cosine 유사도 33.2"
-          ]
-        },
-        {
-          "instrument_key": "structured_finance",
-          "score": 5.66,
-          "reasons": [
-            "기존 structured_finance(자산유동화증권(ABS)) 라벨과 char n-gram cosine 유사도 5.7"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000039",
-      "normalized_label": "YEIL.KIM@KISRATING.COM",
-      "raw_labels": [
-        "YEIL.KIM@KISRATING.COM"
-      ],
-      "occurrence_ids": [
-        "d156e3cfc1e436796d37426758a22a5181fa83ff13c91770f9e18d52aab9c2b4|YEIL.KIM@KISRATING.COM|p1|r1"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T14:55:17+09:00",
-      "sample_files": [
-        "(주)하나금융지주_rs20260515-22.pdf"
-      ],
-      "sample_agencies": [
-        "한국신용평가"
-      ],
-      "sample_ratings": [],
-      "suggestions": [
-        {
-          "instrument_key": "issuer",
-          "score": 30.58,
-          "reasons": [
-            "기존 issuer(발행자 신용등급) 라벨과 char n-gram cosine 유사도 30.6"
-          ]
-        },
-        {
-          "instrument_key": "coco_t1",
-          "score": 11.47,
-          "reasons": [
-            "기존 coco_t1(조건부자본증권(신종/AT1)) 라벨과 char n-gram cosine 유사도 11.5"
-          ]
-        },
-        {
-          "instrument_key": "coco_t2",
-          "score": 9.74,
-          "reasons": [
-            "기존 coco_t2(조건부자본증권(후순위/T2)) 라벨과 char n-gram cosine 유사도 9.7"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000040",
+      "id": "U000018",
       "normalized_label": "무보증사채AAA/안정적당기순이익(십억원)",
       "raw_labels": [
         "무보증사채 AAA/안정적 당기순이익(십억원)"
@@ -1793,8 +784,8 @@
         "d156e3cfc1e436796d37426758a22a5181fa83ff13c91770f9e18d52aab9c2b4|무보증사채AAA/안정적당기순이익(십억원)|p1|r0"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "(주)하나금융지주_rs20260515-22.pdf"
       ],
@@ -1832,7 +823,7 @@
       "note": ""
     },
     {
-      "id": "U000041",
+      "id": "U000019",
       "normalized_label": "조건부자본증권(T2)AA/안정적",
       "raw_labels": [
         "조건부자본증권(T2) AA/안정적"
@@ -1841,8 +832,8 @@
         "d156e3cfc1e436796d37426758a22a5181fa83ff13c91770f9e18d52aab9c2b4|조건부자본증권(T2)AA/안정적|p1|r1"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "(주)하나금융지주_rs20260515-22.pdf"
       ],
@@ -1880,7 +871,7 @@
       "note": ""
     },
     {
-      "id": "U000042",
+      "id": "U000020",
       "normalized_label": "조건부자본증권(T1)AA-/안정적",
       "raw_labels": [
         "조건부자본증권(T1) AA-/안정적"
@@ -1889,8 +880,8 @@
         "d156e3cfc1e436796d37426758a22a5181fa83ff13c91770f9e18d52aab9c2b4|조건부자본증권(T1)AA-/안정적|p1|r2"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "(주)하나금융지주_rs20260515-22.pdf"
       ],
@@ -1928,328 +919,7 @@
       "note": ""
     },
     {
-      "id": "U000043",
-      "normalized_label": "(주)하나금융지주주요등급논리주력자회사인하나은행의신용도에큰영향을받고있다.핵심자회사인하나은행(AAA/안정적)은국내4대시중은행중하나로최상위권의시장지위,안정적인이익창출력,우수한재무건전성등을바탕으로매우우수한원리금상환능력을보유하고있다.은행시스템의중요도가매우높고,연결기준자산에서은행부문이차지하는비중이80%를상회하고있으며,다수의경영진이하나은행과임원을겸직하고있는점등을감안하면동사와은행자회사간의통합도가매우높다.사업다각화수준이우수하나,경쟁금융그룹대비열위하다.금융지주의사업다각화는자회사로부터의배당수익기반을공고히하고,배당수익을통한자본확충으로이중레버리지비율을관리할수있게하는등금융지주의이익안정성과재무적유연성을제고할수있어금융지주신용도판단시주요고려요인이다.동사는하나카드,하나증권등업권내상위권의시장지위와우수한재무안정성을확보한비은행자회사들을보유하고있어전반적인사업다각화수준이우수하지만,경쟁금융그룹과사업다각화수준을비교할경우양적,질적측면에서다소열위한모습을보이고있다.재무건전성이우수하다.2025년말고정이하여신비율0.6%,대손충당금/고정이하여신비율126.5%,BIS자기자본비율15.6%로재무건전성지표가우수하다.적극적인부실채권매각으로고정이하여신비율은우수한수준을유지하고있다.2022년부터자산건전성지표가저하되고있는데,이는2022년이후상승한금리,물가가영향을미친것으로판단하고있다.대손충당금초과적립규모및최종손실위험을경감시킬수있는담보설정비율등과더불어정부의확장적재정정책시행및내수회복이기대되는점등을고려할때,2026년자산건전성지표는서서히회복될것으로보인다.조건부자본증권특약에따른후순위성및자본성을반영하였다.평가대상주요개별특약사항신용도에미치는영향⚫정부지원에앞선손실부담조건선순위채권신용등급에서정부의직접적인조건부자본증권(T1)⚫이자미지급가능성지원을배제한신용도대비2NOTCHDOWN⚫채권상환순위의후순위성KEYISSUEUPDATE⚫은행부문실적개선에기반한그룹이익규모증가-그룹영업이익4조8,552억원→5조3,509억원(FY2024→FY2025)-순이익3조7,388억원→4조29억원(FY2024→FY2025)-은행부문전년동기대비12.4%증가(3조3,360억원→3조7,494억원)-금융투자부문전기대비15.1%감소(3,239억원→2,751억원)-기타부문전기대비14.1%감소(4,360억원→3,745억원)주주환원과기업가치제고-2025년총주주환원율47%(현금배당,자사주매입∙소각포함)-13%이상의보통주자본비율유지하는가운데,RORWA중심경영으로ROE관리2",
-      "raw_labels": [
-        "(주)하나금융지주 주요 등급논리 주력 자회사인 하나은행의 신용도에 큰 영향을 받고 있다. 핵심 자회사인 하나은행(AAA/안정적)은 국내 4대 시중은행 중 하나로 최상위권의 시장지위, 안정 적인 이익창출력, 우수한 재무건전성 등을 바탕으로 매우 우수한 원리금상환능력을 보유하고 있다. 은행 시스템의 중요도가 매우 높고, 연결 기준 자산에서 은행부문이 차지하는 비중이 80%를 상회하 고 있으며, 다수의 경영진이 하나은행과 임원을 겸직하고 있는 점 등을 감안하면 동사와 은행 자회사 간의 통합도가 매우 높다. 사업다각화 수준이 우수하나, 경쟁 금융그룹 대비 열위하다. 금융지주의 사업다각화는 자회사로부터의 배당수익 기반을 공고히 하고, 배당수익을 통한 자본확충 으로 이중레버리지비율을 관리할 수 있게 하는 등 금융지주의 이익안정성과 재무적 유연성을 제고할 수 있어 금융지주 신용도 판단 시 주요 고려요인이다. 동사는 하나카드, 하나증권 등 업권 내 상위권 의 시장지위와 우수한 재무안정성을 확보한 비은행 자회사들을 보유하고 있어 전반적인 사업다각화 수준이 우수하지만, 경쟁 금융그룹과 사업다각화 수준을 비교할 경우 양적, 질적 측면에서 다소 열위 한 모습을 보이고 있다. 재무건전성이 우수하다. 2025년 말 고정이하여신비율 0.6%, 대손충당금/고정이하여신비율 126.5%, BIS자기자본비율 15.6%로 재무건전성 지표가 우수하다. 적극적인 부실채권 매각으로 고정이하여신비율은 우수한 수 준을 유지하고 있다. 2022년부터 자산건전성 지표가 저하되고 있는데, 이는 2022년 이후 상승한 금 리, 물가가 영향을 미친 것으로 판단하고 있다. 대손충당금 초과 적립 규모 및 최종손실위험을 경감 시킬 수 있는 담보 설정 비율 등과 더불어 정부의 확장적 재정정책 시행 및 내수 회복이 기대되는 점 등을 고려할 때, 2026년 자산건전성 지표는 서서히 회복될 것으로 보인다. 조건부자본증권 특약에 따른 후순위성 및 자본성을 반영하였다. 평가대상 주요 개별 특약사항 신용도에 미치는 영향 ⚫ 정부지원에 앞선 손실부담 조건 선순위채권 신용등급에서 정부의 직접적인 조건부자본증권(T1) ⚫ 이자 미지급 가능성 지원을 배제한 신용도 대비 2 NOTCH DOWN ⚫ 채권상환순위의 후순위성 KEY ISSUE UPDATE ⚫ 은행부문 실적 개선에 기반한 그룹 이익규모 증가 - 그룹 영업이익 4조 8,552억원 → 5조 3,509억원 (FY2024 → FY2025) - 순이익 3조 7,388억원 → 4조 29억원 (FY2024 → FY2025) - 은행 부문 전년 동기 대비 12.4% 증가(3조 3,360억원 → 3조 7,494억원) - 금융투자 부문 전기 대비 15.1% 감소(3,239억원 → 2,751억원) - 기타 부문 전기 대비 14.1% 감소(4,360억원 → 3,745억원) 주주환원과 기업가치 제고 - 2025년 총 주주환원율 47%(현금배당, 자사주매입∙소각 포함) - 13% 이상의 보통주 자본비율 유지하는 가운데, RORWA 중심 경영으로 ROE 관리 2"
-      ],
-      "occurrence_ids": [
-        "d156e3cfc1e436796d37426758a22a5181fa83ff13c91770f9e18d52aab9c2b4|(주)하나금융지주주요등급논리주력자회사인하나은행의신용도에큰영향을받고있다.핵심자회사인하나은행(AAA/안정적)은국내4대시중은행중하나로최상위권의시장지위,안정적인이익창출력,우수한재무건전성등을바탕으로매우우수한원리금상환능력을보유하고있다.은행시스템의중요도가매우높고,연결기준자산에서은행부문이차지하는비중이80%를상회하고있으며,다수의경영진이하나은행과임원을겸직하고있는점등을감안하면동사와은행자회사간의통합도가매우높다.사업다각화수준이우수하나,경쟁금융그룹대비열위하다.금융지주의사업다각화는자회사로부터의배당수익기반을공고히하고,배당수익을통한자본확충으로이중레버리지비율을관리할수있게하는등금융지주의이익안정성과재무적유연성을제고할수있어금융지주신용도판단시주요고려요인이다.동사는하나카드,하나증권등업권내상위권의시장지위와우수한재무안정성을확보한비은행자회사들을보유하고있어전반적인사업다각화수준이우수하지만,경쟁금융그룹과사업다각화수준을비교할경우양적,질적측면에서다소열위한모습을보이고있다.재무건전성이우수하다.2025년말고정이하여신비율0.6%,대손충당금/고정이하여신비율126.5%,BIS자기자본비율15.6%로재무건전성지표가우수하다.적극적인부실채권매각으로고정이하여신비율은우수한수준을유지하고있다.2022년부터자산건전성지표가저하되고있는데,이는2022년이후상승한금리,물가가영향을미친것으로판단하고있다.대손충당금초과적립규모및최종손실위험을경감시킬수있는담보설정비율등과더불어정부의확장적재정정책시행및내수회복이기대되는점등을고려할때,2026년자산건전성지표는서서히회복될것으로보인다.조건부자본증권특약에따른후순위성및자본성을반영하였다.평가대상주요개별특약사항신용도에미치는영향⚫정부지원에앞선손실부담조건선순위채권신용등급에서정부의직접적인조건부자본증권(T1)⚫이자미지급가능성지원을배제한신용도대비2NOTCHDOWN⚫채권상환순위의후순위성KEYISSUEUPDATE⚫은행부문실적개선에기반한그룹이익규모증가-그룹영업이익4조8,552억원→5조3,509억원(FY2024→FY2025)-순이익3조7,388억원→4조29억원(FY2024→FY2025)-은행부문전년동기대비12.4%증가(3조3,360억원→3조7,494억원)-금융투자부문전기대비15.1%감소(3,239억원→2,751억원)-기타부문전기대비14.1%감소(4,360억원→3,745억원)주주환원과기업가치제고-2025년총주주환원율47%(현금배당,자사주매입∙소각포함)-13%이상의보통주자본비율유지하는가운데,RORWA중심경영으로ROE관리2|p2|r0"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
-      "sample_files": [
-        "(주)하나금융지주_rs20260515-22.pdf"
-      ],
-      "sample_agencies": [
-        "한국신용평가"
-      ],
-      "sample_ratings": [
-        "AAA"
-      ],
-      "suggestions": [
-        {
-          "instrument_key": "coco_t2",
-          "score": 12.64,
-          "reasons": [
-            "기존 coco_t2(조건부자본증권(후순위/T2)) 라벨과 char n-gram cosine 유사도 12.6"
-          ]
-        },
-        {
-          "instrument_key": "coco_t1",
-          "score": 12.48,
-          "reasons": [
-            "기존 coco_t1(조건부자본증권(신종/AT1)) 라벨과 char n-gram cosine 유사도 12.5"
-          ]
-        },
-        {
-          "instrument_key": "issuer",
-          "score": 7.48,
-          "reasons": [
-            "기존 issuer(발행자 신용등급) 라벨과 char n-gram cosine 유사도 7.5"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000044",
-      "normalized_label": "에따라신용등급이반드시조정되는것은아님에유의바랍니다.",
-      "raw_labels": [
-        "에 따라 신용등급이 반드시 조정되는 것은 아님에 유의 바랍니다."
-      ],
-      "occurrence_ids": [
-        "d156e3cfc1e436796d37426758a22a5181fa83ff13c91770f9e18d52aab9c2b4|에따라신용등급이반드시조정되는것은아님에유의바랍니다.|p3|r0"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
-      "sample_files": [
-        "(주)하나금융지주_rs20260515-22.pdf"
-      ],
-      "sample_agencies": [
-        "한국신용평가"
-      ],
-      "sample_ratings": [],
-      "suggestions": [
-        {
-          "instrument_key": "issuer",
-          "score": 14.38,
-          "reasons": [
-            "기존 issuer(발행자 신용등급) 라벨과 char n-gram cosine 유사도 14.4"
-          ]
-        },
-        {
-          "instrument_key": "insurance_payment",
-          "score": 3.85,
-          "reasons": [
-            "기존 insurance_payment(보험금지급능력등급) 라벨과 char n-gram cosine 유사도 3.8"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000045",
-      "normalized_label": "증권,신용카드,생명보험,저축은행,캐피탈등의금융자회사를보유하고있는순수",
-      "raw_labels": [
-        "증권, 신용카드, 생명보험, 저축은행, 캐피탈 등의 금융 자회사를 보유하고 있는 순수"
-      ],
-      "occurrence_ids": [
-        "d156e3cfc1e436796d37426758a22a5181fa83ff13c91770f9e18d52aab9c2b4|증권,신용카드,생명보험,저축은행,캐피탈등의금융자회사를보유하고있는순수|p3|r1"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
-      "sample_files": [
-        "(주)하나금융지주_rs20260515-22.pdf"
-      ],
-      "sample_agencies": [
-        "한국신용평가"
-      ],
-      "sample_ratings": [
-        "AAA"
-      ],
-      "suggestions": [
-        {
-          "instrument_key": "insurance_payment",
-          "score": 6.54,
-          "reasons": [
-            "기존 insurance_payment(보험금지급능력등급) 라벨과 char n-gram cosine 유사도 6.5"
-          ]
-        },
-        {
-          "instrument_key": "structured_finance",
-          "score": 6.19,
-          "reasons": [
-            "기존 structured_finance(자산유동화증권(ABS)) 라벨과 char n-gram cosine 유사도 6.2"
-          ]
-        },
-        {
-          "instrument_key": "coco_t1",
-          "score": 5.39,
-          "reasons": [
-            "기존 coco_t1(조건부자본증권(신종/AT1)) 라벨과 char n-gram cosine 유사도 5.4"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000046",
-      "normalized_label": "이다.핵심자회사는하나은행(AAA/안정적)으로,동사연결기준총자산의약85%를",
-      "raw_labels": [
-        "이다. 핵심 자회사는 하나은행(AAA/안정적)으로, 동사 연결 기준 총자산의 약 85%를"
-      ],
-      "occurrence_ids": [
-        "d156e3cfc1e436796d37426758a22a5181fa83ff13c91770f9e18d52aab9c2b4|이다.핵심자회사는하나은행(AAA/안정적)으로,동사연결기준총자산의약85%를|p3|r2"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
-      "sample_files": [
-        "(주)하나금융지주_rs20260515-22.pdf"
-      ],
-      "sample_agencies": [
-        "한국신용평가"
-      ],
-      "sample_ratings": [
-        "AAA"
-      ],
-      "suggestions": [],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000047",
-      "normalized_label": "은2025년말업권내총자산기준으로하나증권(AA/안정적)8위,하나카드(AA/안",
-      "raw_labels": [
-        "은 2025년 말 업권 내 총자산 기준으로 하나증권(AA/안정적) 8위, 하나카드(AA/안"
-      ],
-      "occurrence_ids": [
-        "d156e3cfc1e436796d37426758a22a5181fa83ff13c91770f9e18d52aab9c2b4|은2025년말업권내총자산기준으로하나증권(AA/안정적)8위,하나카드(AA/안|p3|r3"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
-      "sample_files": [
-        "(주)하나금융지주_rs20260515-22.pdf"
-      ],
-      "sample_agencies": [
-        "한국신용평가"
-      ],
-      "sample_ratings": [],
-      "suggestions": [
-        {
-          "instrument_key": "coco_t1",
-          "score": 7.32,
-          "reasons": [
-            "기존 coco_t1(조건부자본증권(신종/AT1)) 라벨과 char n-gram cosine 유사도 7.3"
-          ]
-        },
-        {
-          "instrument_key": "coco_t2",
-          "score": 6.6,
-          "reasons": [
-            "기존 coco_t2(조건부자본증권(후순위/T2)) 라벨과 char n-gram cosine 유사도 6.6"
-          ]
-        },
-        {
-          "instrument_key": "structured_finance",
-          "score": 5.25,
-          "reasons": [
-            "기존 structured_finance(자산유동화증권(ABS)) 라벨과 char n-gram cosine 유사도 5.3"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000048",
-      "normalized_label": "나캐피탈(AA-/안정적)2위,하나저축은행9위,하나생명보험17위,하나손해보험12",
-      "raw_labels": [
-        "나캐피탈(AA-/안정적) 2위, 하나저축은행 9위, 하나생명보험 17위, 하나손해보험 12"
-      ],
-      "occurrence_ids": [
-        "d156e3cfc1e436796d37426758a22a5181fa83ff13c91770f9e18d52aab9c2b4|나캐피탈(AA-/안정적)2위,하나저축은행9위,하나생명보험17위,하나손해보험12|p3|r4"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
-      "sample_files": [
-        "(주)하나금융지주_rs20260515-22.pdf"
-      ],
-      "sample_agencies": [
-        "한국신용평가"
-      ],
-      "sample_ratings": [
-        "AA-"
-      ],
-      "suggestions": [
-        {
-          "instrument_key": "insurance_payment",
-          "score": 9.81,
-          "reasons": [
-            "기존 insurance_payment(보험금지급능력등급) 라벨과 char n-gram cosine 유사도 9.8"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000049",
-      "normalized_label": "권에서전반적으로중∙상위권의시장지위를보유하고있으나,카드및보험부문시장지",
-      "raw_labels": [
-        "권에서 전반적으로 중∙상위권의 시장지위를 보유하고 있으나, 카드 및 보험부문 시장지"
-      ],
-      "occurrence_ids": [
-        "d156e3cfc1e436796d37426758a22a5181fa83ff13c91770f9e18d52aab9c2b4|권에서전반적으로중∙상위권의시장지위를보유하고있으나,카드및보험부문시장지|p3|r5"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
-      "sample_files": [
-        "(주)하나금융지주_rs20260515-22.pdf"
-      ],
-      "sample_agencies": [
-        "한국신용평가"
-      ],
-      "sample_ratings": [],
-      "suggestions": [
-        {
-          "instrument_key": "insurance_payment",
-          "score": 6.2,
-          "reasons": [
-            "기존 insurance_payment(보험금지급능력등급) 라벨과 char n-gram cosine 유사도 6.2"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000050",
-      "normalized_label": "COCO(신종)19본AA-(안정적)",
-      "raw_labels": [
-        "COCO(신종) 19 본 AA-(안정적)"
-      ],
-      "occurrence_ids": [
-        "f54599e2377db00d0f1d05181f264bfd7c5c853f10e6a3df0b3ff5369c5d6e7f|COCO(신종)19본AA-(안정적)|p1|r0"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T14:55:17+09:00",
-      "sample_files": [
-        "(주)하나금융지주_본(2026-05-15).pdf"
-      ],
-      "sample_agencies": [
-        "한국기업평가"
-      ],
-      "sample_ratings": [
-        "AA-"
-      ],
-      "suggestions": [
-        {
-          "instrument_key": "coco_t1",
-          "score": 19.54,
-          "reasons": [
-            "기존 coco_t1(조건부자본증권(신종/AT1)) 라벨과 char n-gram cosine 유사도 19.5"
-          ]
-        },
-        {
-          "instrument_key": "coco_t2",
-          "score": 15.31,
-          "reasons": [
-            "기존 coco_t2(조건부자본증권(후순위/T2)) 라벨과 char n-gram cosine 유사도 15.3"
-          ]
-        },
-        {
-          "instrument_key": "commercial_paper",
-          "score": 7.67,
-          "reasons": [
-            "기존 commercial_paper(기업어음(CP)) 라벨과 char n-gram cosine 유사도 7.7"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000051",
+      "id": "U000021",
       "normalized_label": "무보증사채AAA(S)평가대상",
       "raw_labels": [
         "무보증사채 AAA(S) 평가대상"
@@ -2258,8 +928,8 @@
         "f54599e2377db00d0f1d05181f264bfd7c5c853f10e6a3df0b3ff5369c5d6e7f|무보증사채AAA(S)평가대상|p1|r0"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "(주)하나금융지주_본(2026-05-15).pdf"
       ],
@@ -2297,7 +967,7 @@
       "note": ""
     },
     {
-      "id": "U000052",
+      "id": "U000022",
       "normalized_label": "COCO(후)AA(S)COCO(신종)",
       "raw_labels": [
         "COCO(후) AA(S) COCO(신종)"
@@ -2306,8 +976,8 @@
         "f54599e2377db00d0f1d05181f264bfd7c5c853f10e6a3df0b3ff5369c5d6e7f|COCO(후)AA(S)COCO(신종)|p1|r1"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "(주)하나금융지주_본(2026-05-15).pdf"
       ],
@@ -2345,7 +1015,7 @@
       "note": ""
     },
     {
-      "id": "U000053",
+      "id": "U000023",
       "normalized_label": "COCO(신종)AA-(S)",
       "raw_labels": [
         "COCO(신종) AA-(S)"
@@ -2354,8 +1024,8 @@
         "f54599e2377db00d0f1d05181f264bfd7c5c853f10e6a3df0b3ff5369c5d6e7f|COCO(신종)AA-(S)|p1|r2"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "(주)하나금융지주_본(2026-05-15).pdf"
       ],
@@ -2393,7 +1063,7 @@
       "note": ""
     },
     {
-      "id": "U000054",
+      "id": "U000024",
       "normalized_label": "등급추이",
       "raw_labels": [
         "등급 추이"
@@ -2403,8 +1073,8 @@
         "7a00b5028dbd917e02e871283dd8f0c650a8566f529a9b4e77d2cc52abed2762|등급추이|p1|r5"
       ],
       "occurrence_count": 2,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "(주)하나금융지주_본(2026-05-15).pdf",
         "교보생명보험(주)_정기(2026-05-12).pdf"
@@ -2434,53 +1104,7 @@
       "note": ""
     },
     {
-      "id": "U000055",
-      "normalized_label": "(주)하나금융지주최근동향자산건전성부담지속되고있으나,우수한수익성및재무건전성유지2025년영업순수익은11조3,777억원으로전년(10조6,851억원)대비6.5%증가하였다.은행부문을중심으로이자순이익이증가(2024년8조7,610억원→2025년9조1,634억원)하고,파생관련손익및수수료손익증가등영향으로비이자순이익이15.1%증가한2조2,142억원을기록하였다.지배주주순이익은4조29억원으로전년(3조7,388억원)대비7.1%증가하였다.판관비및충당금적립이증가하고하나은행에서ELS및LTV과징금관련영업외손실을인식하였으나,전년하나은행의H지수기초상품자율배상관련영업외손실기저효과로일부상쇄되었다.2025년말고정이하여신비율및대손충당금/고정이하여신이각각0.6%,126.5%를기록하는등자산건전성이매우우수한수준이나,I2022년이후부실여신규모증가세가이어지면서자산건전성지표저하가지속되고있다.2025년말BIS기준보통주자본비율및총자본비율은각각13.4%,15.6%로자본적정성이우수하다.확대된주주환원에도불구하고계열사이익창출력을기반으로BIS기준보통주자본이증가하였고,전사적인자산포트폴리오관리노력에힘입어위험가중자산증가세가둔화되었다.한편,2025년말별도기준이중레버리지비율및부채비율은각각123.6%,36.5%로,주주환원확대영향으로회계상자기자본이감소하여전년말(각각120.5%,29.0%)대비상승하였다.경쟁지주회사대비재무레버리지비율이높은수준으로자회사추가출자부담및이에따른이중레버리지비율추이를모니터링할예정이다.주요이슈와KR'SVIEW거시환경변화가실적에미칠영향2026년경제성장률은재정확대와전년도저성장에따른기저효과에힘입어다소회복될것으로예상된다.다만미국의관세정책이수출경기에부담요인으로작용하는가운데민간소비및설비투자회복수준은절대적으로크지않을전망으로,여신성장률은낮은수준에머물것으로예상된다.당분간기준금리인하가능성은높지않은수준이며,최근금리강세로NIM이개선될것으로예상된다.주력자회사인하나은행은매우우수한시장지위,차주별ᆞ업종별로분산된여신포트폴리오,견고한수신기반등을바탕으로영업환경불확실성에대응할것으로예상된다.미국-이란전쟁이장기화될경우실적에부정적으로작용할전망이다.중동지역의지정학적긴장이고조되면서국제유가가큰폭으로상승하였고환율및금리변동성이커졌다.유가증권관련손익등비이자순이익변동성이확대될전망이며,환율상승은외환파생상품관련손익에는긍정적으로작용하는반면,BIS비율,LCR등재무건전성지표에부정적으로작용할것으로예상된다.충당금적립추이에대해모니터링이필요하다.부실채권이지속증가하고있으나충당금증가폭은상대적으로크지않아충당금적립부담이확대될수있다.부실자산증가우려와재무건전성추이2025년이전대비완만한경기회복이예상되나,경제전반의양극화가심화되고있고일반적으로부실채권발생이경기에후행하는점을감안하여부동산금융과,자영업자ᆞ가계신용대출에대한모니터링이필요하다.부동산PF의경우금융당국주도의건전성분류강화와경공매ᆞ채권상각이진행중이며,건설ᆞ부동산개발업권에서기업회생신청사례가증가하고있는점,부동산금융대부분이거액여신으로구성되어있는점,비수도권의주택경기침체가지속될것으로WWW.KOREARATINGS.COM2",
-      "raw_labels": [
-        "(주)하나금융지주 최근 동향 자산건전성 부담 지속되고 있으나, 우수한 수익성 및 재무건전성 유지 2025년 영업순수익은 11조 3,777억원으로 전년(10조 6,851억원) 대비 6.5% 증가하 였다. 은행 부문을 중심으로 이자순이익이 증가(2024년 8조 7,610억원 → 2025년 9 조 1,634억원)하고, 파생관련손익 및 수수료손익 증가 등 영향으로 비이자순이익이 15.1% 증가한 2조 2,142억원을 기록하였다. 지배주주순이익은 4조 29억원으로 전년 (3조 7,388억원) 대비 7.1% 증가하였다. 판관비 및 충당금 적립이 증가하고 하나은행 에서 ELS 및 LTV 과징금 관련 영업외손실을 인식하였으나, 전년 하나은행의 H지수 기 초 상품 자율배상 관련 영업외손실 기저효과로 일부 상쇄되었다. 2025년말 고정이하여신비율 및 대손충당금/고정이하여신이 각각 0.6%, 126.5%를 기 록하는 등 자산건전성이 매우 우수한 수준이나,I2022년 이후 부실여신 규모 증가세가 이어지면서 자산건전성 지표 저하가 지속되고 있다. 2025년말 BIS 기준 보통주자본비 율 및 총자본비율은 각각 13.4%, 15.6%로 자본적정성이 우수하다. 확대된 주주환원에 도 불구하고 계열사 이익창출력을 기반으로 BIS기준 보통주자본이 증가하였고, 전사적 인 자산포트폴리오 관리 노력에 힘입어 위험가중자산 증가세가 둔화되었다. 한편, 2025년말 별도 기준 이중레버리지비율 및 부채비율은 각각 123.6%, 36.5%로, 주주환원 확대 영향으로 회계상 자기자본이 감소하여 전년말(각각 120.5%, 29.0%) 대 비 상승하였다. 경쟁 지주회사 대비 재무레버리지비율이 높은 수준으로 자회사 추가 출 자 부담 및 이에 따른 이중레버리지비율 추이를 모니터링할 예정이다. 주요 이슈와 KR'S VIEW 거시환경 변화가 실적에 미칠 영향 2026년 경제성장률은 재정 확대와 전년도 저성장에 따른 기저효과에 힘입어 다소 회 복될 것으로 예상된다. 다만 미국의 관세 정책이 수출경기에 부담 요인으로 작용하는 가운데 민간소비 및 설비투자 회복 수준은 절대적으로 크지 않을 전망으로, 여신 성장 률은 낮은 수준에 머물 것으로 예상된다. 당분간 기준금리 인하 가능성은 높지 않은 수 준이며, 최근 금리 강세로 NIM이 개선될 것으로 예상된다. 주력 자회사인 하나은행은 매우 우수한 시장지위, 차주별ᆞ업종별로 분산된 여신포트폴리오, 견고한 수신기반 등 을 바탕으로 영업환경 불확실성에 대응할 것으로 예상된다. 미국-이란 전쟁이 장기화될 경우 실적에 부정적으로 작용할 전망이다. 중동지역의 지정 학적 긴장이 고조되면서 국제 유가가 큰 폭으로 상승하였고 환율 및 금리 변동성이 커 졌다. 유가증권관련손익 등 비이자순이익 변동성이 확대될 전망이며, 환율 상승은 외환 파생상품관련손익에는 긍정적으로 작용하는 반면, BIS 비율, LCR 등 재무건전성 지표에 부정적으로 작용할 것으로 예상된다. 충당금 적립 추이에 대해 모니터링이 필요하다. 부실채권이 지속 증가하고 있으나 충당 금 증가 폭은 상대적으로 크지 않아 충당금 적립 부담이 확대될 수 있다. 부실자산 증가 우려와 재무건전성 추이 2025년 이전 대비 완만한 경기 회복이 예상되나, 경제 전반의 양극화가 심화되고 있고 일반적으로 부실채권 발생이 경기에 후행하는 점을 감안하여 부동산금융과, 자영업자ᆞ 가계 신용대출에 대한 모니터링이 필요하다. 부동산PF의 경우 금융당국 주도의 건전성 분류 강화와 경공매ᆞ채권 상각이 진행 중이 며, 건설ᆞ부동산개발업권에서 기업회생 신청 사례가 증가하고 있는 점, 부동산금융 대 부분이 거액 여신으로 구성되어 있는 점, 비수도권의 주택경기 침체가 지속될 것으로 WWW.KOREARATINGS.COM 2"
-      ],
-      "occurrence_ids": [
-        "f54599e2377db00d0f1d05181f264bfd7c5c853f10e6a3df0b3ff5369c5d6e7f|(주)하나금융지주최근동향자산건전성부담지속되고있으나,우수한수익성및재무건전성유지2025년영업순수익은11조3,777억원으로전년(10조6,851억원)대비6.5%증가하였다.은행부문을중심으로이자순이익이증가(2024년8조7,610억원→2025년9조1,634억원)하고,파생관련손익및수수료손익증가등영향으로비이자순이익이15.1%증가한2조2,142억원을기록하였다.지배주주순이익은4조29억원으로전년(3조7,388억원)대비7.1%증가하였다.판관비및충당금적립이증가하고하나은행에서ELS및LTV과징금관련영업외손실을인식하였으나,전년하나은행의H지수기초상품자율배상관련영업외손실기저효과로일부상쇄되었다.2025년말고정이하여신비율및대손충당금/고정이하여신이각각0.6%,126.5%를기록하는등자산건전성이매우우수한수준이나,I2022년이후부실여신규모증가세가이어지면서자산건전성지표저하가지속되고있다.2025년말BIS기준보통주자본비율및총자본비율은각각13.4%,15.6%로자본적정성이우수하다.확대된주주환원에도불구하고계열사이익창출력을기반으로BIS기준보통주자본이증가하였고,전사적인자산포트폴리오관리노력에힘입어위험가중자산증가세가둔화되었다.한편,2025년말별도기준이중레버리지비율및부채비율은각각123.6%,36.5%로,주주환원확대영향으로회계상자기자본이감소하여전년말(각각120.5%,29.0%)대비상승하였다.경쟁지주회사대비재무레버리지비율이높은수준으로자회사추가출자부담및이에따른이중레버리지비율추이를모니터링할예정이다.주요이슈와KR'SVIEW거시환경변화가실적에미칠영향2026년경제성장률은재정확대와전년도저성장에따른기저효과에힘입어다소회복될것으로예상된다.다만미국의관세정책이수출경기에부담요인으로작용하는가운데민간소비및설비투자회복수준은절대적으로크지않을전망으로,여신성장률은낮은수준에머물것으로예상된다.당분간기준금리인하가능성은높지않은수준이며,최근금리강세로NIM이개선될것으로예상된다.주력자회사인하나은행은매우우수한시장지위,차주별ᆞ업종별로분산된여신포트폴리오,견고한수신기반등을바탕으로영업환경불확실성에대응할것으로예상된다.미국-이란전쟁이장기화될경우실적에부정적으로작용할전망이다.중동지역의지정학적긴장이고조되면서국제유가가큰폭으로상승하였고환율및금리변동성이커졌다.유가증권관련손익등비이자순이익변동성이확대될전망이며,환율상승은외환파생상품관련손익에는긍정적으로작용하는반면,BIS비율,LCR등재무건전성지표에부정적으로작용할것으로예상된다.충당금적립추이에대해모니터링이필요하다.부실채권이지속증가하고있으나충당금증가폭은상대적으로크지않아충당금적립부담이확대될수있다.부실자산증가우려와재무건전성추이2025년이전대비완만한경기회복이예상되나,경제전반의양극화가심화되고있고일반적으로부실채권발생이경기에후행하는점을감안하여부동산금융과,자영업자ᆞ가계신용대출에대한모니터링이필요하다.부동산PF의경우금융당국주도의건전성분류강화와경공매ᆞ채권상각이진행중이며,건설ᆞ부동산개발업권에서기업회생신청사례가증가하고있는점,부동산금융대부분이거액여신으로구성되어있는점,비수도권의주택경기침체가지속될것으로WWW.KOREARATINGS.COM2|p2|r0"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
-      "sample_files": [
-        "(주)하나금융지주_본(2026-05-15).pdf"
-      ],
-      "sample_agencies": [
-        "한국기업평가"
-      ],
-      "sample_ratings": [],
-      "suggestions": [
-        {
-          "instrument_key": "coco_t1",
-          "score": 4.83,
-          "reasons": [
-            "기존 coco_t1(조건부자본증권(신종/AT1)) 라벨과 char n-gram cosine 유사도 4.8"
-          ]
-        },
-        {
-          "instrument_key": "issuer",
-          "score": 4.13,
-          "reasons": [
-            "기존 issuer(발행자 신용등급) 라벨과 char n-gram cosine 유사도 4.1"
-          ]
-        },
-        {
-          "instrument_key": "coco_t2",
-          "score": 3.98,
-          "reasons": [
-            "기존 coco_t2(조건부자본증권(후순위/T2)) 라벨과 char n-gram cosine 유사도 4.0"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000056",
+      "id": "U000025",
       "normalized_label": "조건부자본증권(신종)제19회본",
       "raw_labels": [
         "조건부자본증권(신종) 제19회 본"
@@ -2489,8 +1113,8 @@
         "f1a56302459a29e93388436e681018c16e01ec2f648255825ea0df3f29c348bb|조건부자본증권(신종)제19회본|p1|r0"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "(주)하나금융지주_회사채_본_20260515_요지 PDF.pdf"
       ],
@@ -2528,55 +1152,7 @@
       "note": ""
     },
     {
-      "id": "U000057",
-      "normalized_label": "조건부자본증권(신종)제19회본AA-/STABLE상각형",
-      "raw_labels": [
-        "조건부자본증권(신종) 제19회 본 AA-/STABLE 상각형"
-      ],
-      "occurrence_ids": [
-        "f1a56302459a29e93388436e681018c16e01ec2f648255825ea0df3f29c348bb|조건부자본증권(신종)제19회본AA-/STABLE상각형|p1|r1"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T14:55:17+09:00",
-      "sample_files": [
-        "(주)하나금융지주_회사채_본_20260515_요지 PDF.pdf"
-      ],
-      "sample_agencies": [
-        "NICE신용평가"
-      ],
-      "sample_ratings": [
-        "AA-"
-      ],
-      "suggestions": [
-        {
-          "instrument_key": "coco_t1",
-          "score": 40.97,
-          "reasons": [
-            "기존 coco_t1(조건부자본증권(신종/AT1)) 라벨과 char n-gram cosine 유사도 41.0"
-          ]
-        },
-        {
-          "instrument_key": "coco_t2",
-          "score": 38.24,
-          "reasons": [
-            "기존 coco_t2(조건부자본증권(후순위/T2)) 라벨과 char n-gram cosine 유사도 38.2"
-          ]
-        },
-        {
-          "instrument_key": "structured_finance",
-          "score": 14.04,
-          "reasons": [
-            "기존 structured_finance(자산유동화증권(ABS)) 라벨과 char n-gram cosine 유사도 14.0"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000058",
+      "id": "U000026",
       "normalized_label": "무보증사채AAA/STABLE이중레버리지비율*(%)",
       "raw_labels": [
         "무보증사채 AAA/STABLE 이중레버리지비율*(%)"
@@ -2585,8 +1161,8 @@
         "f1a56302459a29e93388436e681018c16e01ec2f648255825ea0df3f29c348bb|무보증사채AAA/STABLE이중레버리지비율*(%)|p1|r0"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "(주)하나금융지주_회사채_본_20260515_요지 PDF.pdf"
       ],
@@ -2624,7 +1200,7 @@
       "note": ""
     },
     {
-      "id": "U000059",
+      "id": "U000027",
       "normalized_label": "COCO(후)AA/STABLEROA(PEER)(%)",
       "raw_labels": [
         "COCO(후) AA/STABLE ROA(PEER)(%)"
@@ -2633,8 +1209,8 @@
         "f1a56302459a29e93388436e681018c16e01ec2f648255825ea0df3f29c348bb|COCO(후)AA/STABLEROA(PEER)(%)|p1|r1"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "(주)하나금융지주_회사채_본_20260515_요지 PDF.pdf"
       ],
@@ -2672,7 +1248,7 @@
       "note": ""
     },
     {
-      "id": "U000060",
+      "id": "U000028",
       "normalized_label": "COCO(HB)AA-/STABLE부채비율과이중레버리지비율은별도재무",
       "raw_labels": [
         "COCO(HB) AA-/STABLE 부채비율과 이중레버리지비율은 별도재무"
@@ -2681,8 +1257,8 @@
         "f1a56302459a29e93388436e681018c16e01ec2f648255825ea0df3f29c348bb|COCO(HB)AA-/STABLE부채비율과이중레버리지비율은별도재무|p1|r2"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "(주)하나금융지주_회사채_본_20260515_요지 PDF.pdf"
       ],
@@ -2720,7 +1296,7 @@
       "note": ""
     },
     {
-      "id": "U000061",
+      "id": "U000029",
       "normalized_label": "(*):보험사의경우2023년부터IFRS17,IF",
       "raw_labels": [
         "(*): 보험사의 경우 2023년부터 IFRS17, IF"
@@ -2729,8 +1305,8 @@
         "f1a56302459a29e93388436e681018c16e01ec2f648255825ea0df3f29c348bb|(*):보험사의경우2023년부터IFRS17,IF|p1|r3"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "(주)하나금융지주_회사채_본_20260515_요지 PDF.pdf"
       ],
@@ -2752,53 +1328,7 @@
       "note": ""
     },
     {
-      "id": "U000062",
-      "normalized_label": "(주)하나금융지주등급논거핵심자회사인하나은행의안정적인사업기반을바탕으로한우수한수익성•핵심자회사인하나은행의최상위권시장지위,전국적인영업네트워크를바탕으로한우수한사업기반•하나은행의2025년ROA0.7%,양호한수익성유지•은행,신용카드,보험,증권등금융업전반에걸쳐다변화된사업포트폴리오를구축하여사업기반이우수함.비은행자회사에대해적극적인투자가이어지면서비은행부문으로의사업다각화노력지속•정부지원가능성이존재하는은행부문을중심으로한계열의극히우수한신인도,은행및주요계열사의100%지분보유와높은경영통제수준을토대로회사와계열이사실상경제적단일체로운영되고있는점등을감안하면지주회사로서의구조적후순위성은완화우수한수준의자본완충력으로자산건전성관리부담대응가능•2025년12월말고정이하여신비율0.6%,은행금융지주평균대비양호•2025년12월말BIS자본비율15.6%,보통주자본비율13.4%로우수한수준•여신규모성장에따른위험가중자산증가에도불구하고,안정적이익창출력,회사의보수적인리스크관리기조,신종자본증권등자본조달능력등을감안할때,현수준의자본적정성유지전망중점검토사항하나은행및비은행계열사의자산건전성저하추세•은행의중소기업여신을중심으로전년말대비기업여신부실이확대된가운데,주요비은행계열사(저축은행제외)에서도부동산PF등과관련하여고정이하여신규모가전년말대비증가하는등건전성저하가지속되는점은부담요인•고정이하여신비율,관련충당금적립률‘22년말0.3%/200.8%→‘25년말0.6%/126.5%•하나은행고정이하여신비율‘21년말0.2%→‘25년말0.3%•그룹의보수적인리스크관리기조,충분한상각여력등을감안하면우수한자산건전성유지판단•다만,내수경기회복지연등에따른취약차주의가처분소득감소와부동산경기불확실성지속등으로인해추가적으로자산건전성이저하될우려가존재.이에향후부실률변화추이를모니터링할예정2",
-      "raw_labels": [
-        "(주)하나금융지주 등급논거 핵심자회사인 하나은행의 안정적인 사업기반을 바탕으로 한 우수한 수익성 • 핵심 자회사인 하나은행의 최상위권 시장지위, 전국적인 영업네트워크를 바탕으로 한 우 수한 사업기반 • 하나은행의 2025년 ROA 0.7%, 양호한 수익성 유지 • 은행, 신용카드, 보험, 증권 등 금융업 전반에 걸쳐 다변화된 사업포트폴리오를 구축하여 사업기반이 우수함. 비은행 자회사에 대해 적극적인 투자가 이어지면서 비은행부문으로 의 사업다각화 노력 지속 • 정부지원가능성이 존재하는 은행부문을 중심으로 한 계열의 극히 우수한 신인도, 은행 및 주요 계열사의 100% 지분 보유와 높은 경영통제수준을 토대로 회사와 계열이 사실 상 경제적 단일체로 운영되고 있는 점 등을 감안하면 지주회사로서의 구조적 후순위성 은 완화 우수한 수준의 자본완충력으로 자산건전성 관리 부담 대응 가능 • 2025년 12월말 고정이하여신비율 0.6%, 은행금융지주 평균 대비 양호 • 2025년 12월말 BIS자본비율 15.6%, 보통주자본비율 13.4%로 우수한 수준 • 여신규모 성장에 따른 위험가중자산 증가에도 불구하고, 안정적 이익창출력, 회사의 보 수적인 리스크 관리 기조, 신종자본증권 등 자본조달능력 등을 감안할 때, 현 수준의 자 본적정성 유지 전망 중점 검토사항 하나은행 및 비은행 계열사의 자산건전성 저하 추세 • 은행의 중소기업여신을 중심으로 전년 말 대비 기업여신 부실이 확대된 가운데, 주요 비 은행 계열사(저축은행 제외)에서도 부동산 PF 등과 관련하여 고정이하여신 규모가 전년 말 대비 증가하는 등 건전성 저하가 지속되는 점은 부담요인 • 고정이하여신비율, 관련 충당금적립률 ‘22년말 0.3%/200.8% → ‘25년말 0.6%/126.5% • 하나은행 고정이하여신비율 ‘21년말 0.2% → ‘25년말 0.3% • 그룹의 보수적인 리스크관리 기조, 충분한 상각 여력 등을 감안하면 우수한 자산건전성 유지 판단 • 다만, 내수경기회복 지연 등에 따른 취약차주의 가처분소득 감소와 부동산경기 불확실성 지속 등으로 인해 추가적으로 자산건전성이 저하될 우려가 존재. 이에 향후 부실률 변화 추이를 모니터링 할 예정 2"
-      ],
-      "occurrence_ids": [
-        "f1a56302459a29e93388436e681018c16e01ec2f648255825ea0df3f29c348bb|(주)하나금융지주등급논거핵심자회사인하나은행의안정적인사업기반을바탕으로한우수한수익성•핵심자회사인하나은행의최상위권시장지위,전국적인영업네트워크를바탕으로한우수한사업기반•하나은행의2025년ROA0.7%,양호한수익성유지•은행,신용카드,보험,증권등금융업전반에걸쳐다변화된사업포트폴리오를구축하여사업기반이우수함.비은행자회사에대해적극적인투자가이어지면서비은행부문으로의사업다각화노력지속•정부지원가능성이존재하는은행부문을중심으로한계열의극히우수한신인도,은행및주요계열사의100%지분보유와높은경영통제수준을토대로회사와계열이사실상경제적단일체로운영되고있는점등을감안하면지주회사로서의구조적후순위성은완화우수한수준의자본완충력으로자산건전성관리부담대응가능•2025년12월말고정이하여신비율0.6%,은행금융지주평균대비양호•2025년12월말BIS자본비율15.6%,보통주자본비율13.4%로우수한수준•여신규모성장에따른위험가중자산증가에도불구하고,안정적이익창출력,회사의보수적인리스크관리기조,신종자본증권등자본조달능력등을감안할때,현수준의자본적정성유지전망중점검토사항하나은행및비은행계열사의자산건전성저하추세•은행의중소기업여신을중심으로전년말대비기업여신부실이확대된가운데,주요비은행계열사(저축은행제외)에서도부동산PF등과관련하여고정이하여신규모가전년말대비증가하는등건전성저하가지속되는점은부담요인•고정이하여신비율,관련충당금적립률‘22년말0.3%/200.8%→‘25년말0.6%/126.5%•하나은행고정이하여신비율‘21년말0.2%→‘25년말0.3%•그룹의보수적인리스크관리기조,충분한상각여력등을감안하면우수한자산건전성유지판단•다만,내수경기회복지연등에따른취약차주의가처분소득감소와부동산경기불확실성지속등으로인해추가적으로자산건전성이저하될우려가존재.이에향후부실률변화추이를모니터링할예정2|p2|r0"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
-      "sample_files": [
-        "(주)하나금융지주_회사채_본_20260515_요지 PDF.pdf"
-      ],
-      "sample_agencies": [
-        "NICE신용평가"
-      ],
-      "sample_ratings": [],
-      "suggestions": [
-        {
-          "instrument_key": "coco_t1",
-          "score": 7.75,
-          "reasons": [
-            "기존 coco_t1(조건부자본증권(신종/AT1)) 라벨과 char n-gram cosine 유사도 7.7"
-          ]
-        },
-        {
-          "instrument_key": "coco_t2",
-          "score": 6.56,
-          "reasons": [
-            "기존 coco_t2(조건부자본증권(후순위/T2)) 라벨과 char n-gram cosine 유사도 6.6"
-          ]
-        },
-        {
-          "instrument_key": "structured_finance",
-          "score": 4.53,
-          "reasons": [
-            "기존 structured_finance(자산유동화증권(ABS)) 라벨과 char n-gram cosine 유사도 4.5"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000063",
+      "id": "U000030",
       "normalized_label": "보험금지급능력평가후순위사채신종자본증권",
       "raw_labels": [
         "보험금지급능력평가 후순위사채 신종자본증권"
@@ -2807,8 +1337,8 @@
         "0baec2daa2f4f521f4463f86b0997776bc23be889bc8378fb45381d7330b6bea|보험금지급능력평가후순위사채신종자본증권|p1|r0"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "교보생명보험(주)_rs20260511-11.pdf"
       ],
@@ -2844,145 +1374,7 @@
       "note": ""
     },
     {
-      "id": "U000064",
-      "normalized_label": "보험금지급능력평가본AAA/안정적AAA/안정적유지원화및외화",
-      "raw_labels": [
-        "보험금지급능력평가 본 AAA/안정적 AAA/안정적 유지 원화 및 외화"
-      ],
-      "occurrence_ids": [
-        "0baec2daa2f4f521f4463f86b0997776bc23be889bc8378fb45381d7330b6bea|보험금지급능력평가본AAA/안정적AAA/안정적유지원화및외화|p1|r0"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T14:55:17+09:00",
-      "sample_files": [
-        "교보생명보험(주)_rs20260511-11.pdf"
-      ],
-      "sample_agencies": [
-        "한국신용평가"
-      ],
-      "sample_ratings": [],
-      "suggestions": [
-        {
-          "instrument_key": "insurance_payment",
-          "score": 33.28,
-          "reasons": [
-            "기존 insurance_payment(보험금지급능력등급) 라벨과 char n-gram cosine 유사도 33.3"
-          ]
-        },
-        {
-          "instrument_key": "commercial_paper",
-          "score": 2.43,
-          "reasons": [
-            "기존 commercial_paper(기업어음(CP)) 라벨과 char n-gram cosine 유사도 2.4"
-          ]
-        },
-        {
-          "instrument_key": "issuer",
-          "score": 1.04,
-          "reasons": [
-            "기존 issuer(발행자 신용등급) 라벨과 char n-gram cosine 유사도 1.0"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000065",
-      "normalized_label": "후순위사채정기AA+/안정적AA+/안정적유지제5회",
-      "raw_labels": [
-        "후순위사채 정기 AA+/안정적 AA+/안정적 유지 제5회"
-      ],
-      "occurrence_ids": [
-        "0baec2daa2f4f521f4463f86b0997776bc23be889bc8378fb45381d7330b6bea|후순위사채정기AA+/안정적AA+/안정적유지제5회|p1|r1"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T14:55:17+09:00",
-      "sample_files": [
-        "교보생명보험(주)_rs20260511-11.pdf"
-      ],
-      "sample_agencies": [
-        "한국신용평가"
-      ],
-      "sample_ratings": [],
-      "suggestions": [
-        {
-          "instrument_key": "subordinated",
-          "score": 18.32,
-          "reasons": [
-            "기존 subordinated(후순위사채) 라벨과 char n-gram cosine 유사도 18.3"
-          ]
-        },
-        {
-          "instrument_key": "senior_unsecured",
-          "score": 13.0,
-          "reasons": [
-            "기존 senior_unsecured(선순위 무보증사채) 라벨과 char n-gram cosine 유사도 13.0"
-          ]
-        },
-        {
-          "instrument_key": "structured_finance",
-          "score": 9.16,
-          "reasons": [
-            "기존 structured_finance(자산유동화증권(ABS)) 라벨과 char n-gram cosine 유사도 9.2"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000066",
-      "normalized_label": "신종자본증권정기AA/안정적AA/안정적유지제6회외",
-      "raw_labels": [
-        "신종자본증권 정기 AA/안정적 AA/안정적 유지 제6회 외"
-      ],
-      "occurrence_ids": [
-        "0baec2daa2f4f521f4463f86b0997776bc23be889bc8378fb45381d7330b6bea|신종자본증권정기AA/안정적AA/안정적유지제6회외|p1|r2"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T14:55:17+09:00",
-      "sample_files": [
-        "교보생명보험(주)_rs20260511-11.pdf"
-      ],
-      "sample_agencies": [
-        "한국신용평가"
-      ],
-      "sample_ratings": [],
-      "suggestions": [
-        {
-          "instrument_key": "coco_t1",
-          "score": 20.24,
-          "reasons": [
-            "기존 coco_t1(조건부자본증권(신종/AT1)) 라벨과 char n-gram cosine 유사도 20.2"
-          ]
-        },
-        {
-          "instrument_key": "coco_t2",
-          "score": 14.73,
-          "reasons": [
-            "기존 coco_t2(조건부자본증권(후순위/T2)) 라벨과 char n-gram cosine 유사도 14.7"
-          ]
-        },
-        {
-          "instrument_key": "structured_finance",
-          "score": 6.28,
-          "reasons": [
-            "기존 structured_finance(자산유동화증권(ABS)) 라벨과 char n-gram cosine 유사도 6.3"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000067",
+      "id": "U000031",
       "normalized_label": "보험금지급능력평가AAA/안정적총자산(억원)",
       "raw_labels": [
         "보험금지급능력평가 AAA/안정적 총자산(억원)"
@@ -2991,8 +1383,8 @@
         "0baec2daa2f4f521f4463f86b0997776bc23be889bc8378fb45381d7330b6bea|보험금지급능력평가AAA/안정적총자산(억원)|p1|r0"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "교보생명보험(주)_rs20260511-11.pdf"
       ],
@@ -3030,7 +1422,7 @@
       "note": ""
     },
     {
-      "id": "U000068",
+      "id": "U000032",
       "normalized_label": "후순위사채AA+/안정적자기자본(억원)",
       "raw_labels": [
         "후순위사채 AA+/안정적 자기자본(억원)"
@@ -3039,8 +1431,8 @@
         "0baec2daa2f4f521f4463f86b0997776bc23be889bc8378fb45381d7330b6bea|후순위사채AA+/안정적자기자본(억원)|p1|r1"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "교보생명보험(주)_rs20260511-11.pdf"
       ],
@@ -3078,7 +1470,7 @@
       "note": ""
     },
     {
-      "id": "U000069",
+      "id": "U000033",
       "normalized_label": "신종자본증권AA/안정적",
       "raw_labels": [
         "신종자본증권 AA/안정적"
@@ -3087,8 +1479,8 @@
         "0baec2daa2f4f521f4463f86b0997776bc23be889bc8378fb45381d7330b6bea|신종자본증권AA/안정적|p1|r2"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "교보생명보험(주)_rs20260511-11.pdf"
       ],
@@ -3126,7 +1518,7 @@
       "note": ""
     },
     {
-      "id": "U000070",
+      "id": "U000034",
       "normalized_label": "보험수익(억원)",
       "raw_labels": [
         "보험수익(억원)"
@@ -3135,8 +1527,8 @@
         "0baec2daa2f4f521f4463f86b0997776bc23be889bc8378fb45381d7330b6bea|보험수익(억원)|p1|r3"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "교보생명보험(주)_rs20260511-11.pdf"
       ],
@@ -3165,7 +1557,7 @@
       "note": ""
     },
     {
-      "id": "U000071",
+      "id": "U000035",
       "normalized_label": "보험계약마진(억원)",
       "raw_labels": [
         "보험계약마진(억원)"
@@ -3174,8 +1566,8 @@
         "0baec2daa2f4f521f4463f86b0997776bc23be889bc8378fb45381d7330b6bea|보험계약마진(억원)|p1|r4"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "교보생명보험(주)_rs20260511-11.pdf"
       ],
@@ -3197,177 +1589,7 @@
       "note": ""
     },
     {
-      "id": "U000072",
-      "normalized_label": "후순위사채⚫채권상환순위의후순위성IFSR1대비1NOTCHDOWN",
-      "raw_labels": [
-        "후순위사채 ⚫ 채권상환순위의 후순위성 IFSR1 대비 1 NOTCH DOWN"
-      ],
-      "occurrence_ids": [
-        "0baec2daa2f4f521f4463f86b0997776bc23be889bc8378fb45381d7330b6bea|후순위사채⚫채권상환순위의후순위성IFSR1대비1NOTCHDOWN|p2|r0"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
-      "sample_files": [
-        "교보생명보험(주)_rs20260511-11.pdf"
-      ],
-      "sample_agencies": [
-        "한국신용평가"
-      ],
-      "sample_ratings": [],
-      "suggestions": [
-        {
-          "instrument_key": "subordinated",
-          "score": 37.7,
-          "reasons": [
-            "기존 subordinated(후순위사채) 라벨과 char n-gram cosine 유사도 37.7"
-          ]
-        },
-        {
-          "instrument_key": "structured_finance",
-          "score": 23.2,
-          "reasons": [
-            "기존 structured_finance(자산유동화증권(ABS)) 라벨과 char n-gram cosine 유사도 23.2"
-          ]
-        },
-        {
-          "instrument_key": "senior_unsecured",
-          "score": 22.22,
-          "reasons": [
-            "기존 senior_unsecured(선순위 무보증사채) 라벨과 char n-gram cosine 유사도 22.2"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000073",
-      "normalized_label": "신종자본증권IFSR대비2NOTCHDOWN",
-      "raw_labels": [
-        "신종자본증권 IFSR 대비 2 NOTCH DOWN"
-      ],
-      "occurrence_ids": [
-        "0baec2daa2f4f521f4463f86b0997776bc23be889bc8378fb45381d7330b6bea|신종자본증권IFSR대비2NOTCHDOWN|p2|r2"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
-      "sample_files": [
-        "교보생명보험(주)_rs20260511-11.pdf"
-      ],
-      "sample_agencies": [
-        "한국신용평가"
-      ],
-      "sample_ratings": [],
-      "suggestions": [
-        {
-          "instrument_key": "coco_t1",
-          "score": 27.54,
-          "reasons": [
-            "기존 coco_t1(조건부자본증권(신종/AT1)) 라벨과 char n-gram cosine 유사도 27.5"
-          ]
-        },
-        {
-          "instrument_key": "coco_t2",
-          "score": 20.38,
-          "reasons": [
-            "기존 coco_t2(조건부자본증권(후순위/T2)) 라벨과 char n-gram cosine 유사도 20.4"
-          ]
-        },
-        {
-          "instrument_key": "structured_finance",
-          "score": 8.1,
-          "reasons": [
-            "기존 structured_finance(자산유동화증권(ABS)) 라벨과 char n-gram cosine 유사도 8.1"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000074",
-      "normalized_label": "-손실계약비용증가등으로보험손익전년대비17%감소",
-      "raw_labels": [
-        "- 손실계약비용 증가 등으로 보험손익 전년 대비 17% 감소"
-      ],
-      "occurrence_ids": [
-        "0baec2daa2f4f521f4463f86b0997776bc23be889bc8378fb45381d7330b6bea|-손실계약비용증가등으로보험손익전년대비17%감소|p2|r3"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
-      "sample_files": [
-        "교보생명보험(주)_rs20260511-11.pdf"
-      ],
-      "sample_agencies": [
-        "한국신용평가"
-      ],
-      "sample_ratings": [],
-      "suggestions": [
-        {
-          "instrument_key": "insurance_payment",
-          "score": 8.01,
-          "reasons": [
-            "기존 insurance_payment(보험금지급능력등급) 라벨과 char n-gram cosine 유사도 8.0"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000075",
-      "normalized_label": "1IFSR:보험금지급능력평가(INSURANCEFINANCIALSTRENGTHRATING)",
-      "raw_labels": [
-        "1 IFSR: 보험금지급능력평가(INSURANCE FINANCIAL STRENGTH RATING)"
-      ],
-      "occurrence_ids": [
-        "0baec2daa2f4f521f4463f86b0997776bc23be889bc8378fb45381d7330b6bea|1IFSR:보험금지급능력평가(INSURANCEFINANCIALSTRENGTHRATING)|p2|r4"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
-      "sample_files": [
-        "교보생명보험(주)_rs20260511-11.pdf"
-      ],
-      "sample_agencies": [
-        "한국신용평가"
-      ],
-      "sample_ratings": [],
-      "suggestions": [
-        {
-          "instrument_key": "issuer",
-          "score": 34.45,
-          "reasons": [
-            "기존 issuer(발행자 신용등급) 라벨과 char n-gram cosine 유사도 34.5"
-          ]
-        },
-        {
-          "instrument_key": "insurance_payment",
-          "score": 29.89,
-          "reasons": [
-            "기존 insurance_payment(보험금지급능력등급) 라벨과 char n-gram cosine 유사도 29.9"
-          ]
-        },
-        {
-          "instrument_key": "subordinated",
-          "score": 14.15,
-          "reasons": [
-            "기존 subordinated(후순위사채) 라벨과 char n-gram cosine 유사도 14.1"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000076",
+      "id": "U000036",
       "normalized_label": "IFSR",
       "raw_labels": [
         "IFSR"
@@ -3376,138 +1598,24 @@
         "7a00b5028dbd917e02e871283dd8f0c650a8566f529a9b4e77d2cc52abed2762|IFSR|p1|r0"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "교보생명보험(주)_정기(2026-05-12).pdf"
       ],
       "sample_agencies": [
         "한국기업평가"
       ],
-      "sample_ratings": [],
+      "sample_ratings": [
+        "AAA"
+      ],
       "suggestions": [],
       "review_status": "pending",
       "chosen_instrument_key": null,
       "note": ""
     },
     {
-      "id": "U000077",
-      "normalized_label": "IFSR본AAA(안정적)AAA(안정적)",
-      "raw_labels": [
-        "IFSR 본 AAA(안정적) AAA(안정적)"
-      ],
-      "occurrence_ids": [
-        "7a00b5028dbd917e02e871283dd8f0c650a8566f529a9b4e77d2cc52abed2762|IFSR본AAA(안정적)AAA(안정적)|p1|r0"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T14:55:17+09:00",
-      "sample_files": [
-        "교보생명보험(주)_정기(2026-05-12).pdf"
-      ],
-      "sample_agencies": [
-        "한국기업평가"
-      ],
-      "sample_ratings": [],
-      "suggestions": [],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000078",
-      "normalized_label": "후순위사채005정기AA+(안정적)AA+(안정적)",
-      "raw_labels": [
-        "후순위사채 005 정기 AA+(안정적) AA+(안정적)"
-      ],
-      "occurrence_ids": [
-        "7a00b5028dbd917e02e871283dd8f0c650a8566f529a9b4e77d2cc52abed2762|후순위사채005정기AA+(안정적)AA+(안정적)|p1|r1"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T14:55:17+09:00",
-      "sample_files": [
-        "교보생명보험(주)_정기(2026-05-12).pdf"
-      ],
-      "sample_agencies": [
-        "한국기업평가"
-      ],
-      "sample_ratings": [],
-      "suggestions": [
-        {
-          "instrument_key": "subordinated",
-          "score": 17.84,
-          "reasons": [
-            "기존 subordinated(후순위사채) 라벨과 char n-gram cosine 유사도 17.8"
-          ]
-        },
-        {
-          "instrument_key": "senior_unsecured",
-          "score": 12.66,
-          "reasons": [
-            "기존 senior_unsecured(선순위 무보증사채) 라벨과 char n-gram cosine 유사도 12.7"
-          ]
-        },
-        {
-          "instrument_key": "structured_finance",
-          "score": 8.92,
-          "reasons": [
-            "기존 structured_finance(자산유동화증권(ABS)) 라벨과 char n-gram cosine 유사도 8.9"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000079",
-      "normalized_label": "신종자본증권006외정기AA(안정적)AA(안정적)",
-      "raw_labels": [
-        "신종자본증권 006 외 정기 AA(안정적) AA(안정적)"
-      ],
-      "occurrence_ids": [
-        "7a00b5028dbd917e02e871283dd8f0c650a8566f529a9b4e77d2cc52abed2762|신종자본증권006외정기AA(안정적)AA(안정적)|p1|r2"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T14:55:17+09:00",
-      "sample_files": [
-        "교보생명보험(주)_정기(2026-05-12).pdf"
-      ],
-      "sample_agencies": [
-        "한국기업평가"
-      ],
-      "sample_ratings": [],
-      "suggestions": [
-        {
-          "instrument_key": "coco_t1",
-          "score": 19.68,
-          "reasons": [
-            "기존 coco_t1(조건부자본증권(신종/AT1)) 라벨과 char n-gram cosine 유사도 19.7"
-          ]
-        },
-        {
-          "instrument_key": "coco_t2",
-          "score": 14.33,
-          "reasons": [
-            "기존 coco_t2(조건부자본증권(후순위/T2)) 라벨과 char n-gram cosine 유사도 14.3"
-          ]
-        },
-        {
-          "instrument_key": "structured_finance",
-          "score": 6.11,
-          "reasons": [
-            "기존 structured_finance(자산유동화증권(ABS)) 라벨과 char n-gram cosine 유사도 6.1"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000080",
+      "id": "U000037",
       "normalized_label": "후순위사채AA+(S)평가대상",
       "raw_labels": [
         "후순위사채 AA+(S) 평가대상"
@@ -3516,8 +1624,8 @@
         "7a00b5028dbd917e02e871283dd8f0c650a8566f529a9b4e77d2cc52abed2762|후순위사채AA+(S)평가대상|p1|r0"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "교보생명보험(주)_정기(2026-05-12).pdf"
       ],
@@ -3555,7 +1663,7 @@
       "note": ""
     },
     {
-      "id": "U000081",
+      "id": "U000038",
       "normalized_label": "신종자본증권AA(S)IFSR",
       "raw_labels": [
         "신종자본증권 AA(S) IFSR"
@@ -3564,8 +1672,8 @@
         "7a00b5028dbd917e02e871283dd8f0c650a8566f529a9b4e77d2cc52abed2762|신종자본증권AA(S)IFSR|p1|r1"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "교보생명보험(주)_정기(2026-05-12).pdf"
       ],
@@ -3603,7 +1711,7 @@
       "note": ""
     },
     {
-      "id": "U000082",
+      "id": "U000039",
       "normalized_label": "IFSRAAA(S)",
       "raw_labels": [
         "IFSR AAA(S)"
@@ -3612,8 +1720,8 @@
         "7a00b5028dbd917e02e871283dd8f0c650a8566f529a9b4e77d2cc52abed2762|IFSRAAA(S)|p1|r2"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "교보생명보험(주)_정기(2026-05-12).pdf"
       ],
@@ -3637,7 +1745,7 @@
       "note": ""
     },
     {
-      "id": "U000083",
+      "id": "U000040",
       "normalized_label": "보험계약마진(CSM)",
       "raw_labels": [
         "보험계약마진(CSM)"
@@ -3646,8 +1754,8 @@
         "7a00b5028dbd917e02e871283dd8f0c650a8566f529a9b4e77d2cc52abed2762|보험계약마진(CSM)|p1|r6"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "교보생명보험(주)_정기(2026-05-12).pdf"
       ],
@@ -3669,7 +1777,7 @@
       "note": ""
     },
     {
-      "id": "U000084",
+      "id": "U000041",
       "normalized_label": "보험료수입142",
       "raw_labels": [
         "보험료수입 142"
@@ -3678,8 +1786,8 @@
         "7a00b5028dbd917e02e871283dd8f0c650a8566f529a9b4e77d2cc52abed2762|보험료수입142|p1|r7"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "교보생명보험(주)_정기(2026-05-12).pdf"
       ],
@@ -3701,7 +1809,7 @@
       "note": ""
     },
     {
-      "id": "U000085",
+      "id": "U000042",
       "normalized_label": "보험이익률",
       "raw_labels": [
         "보험이익률"
@@ -3710,8 +1818,8 @@
         "7a00b5028dbd917e02e871283dd8f0c650a8566f529a9b4e77d2cc52abed2762|보험이익률|p1|r8"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "교보생명보험(주)_정기(2026-05-12).pdf"
       ],
@@ -3733,7 +1841,7 @@
       "note": ""
     },
     {
-      "id": "U000086",
+      "id": "U000043",
       "normalized_label": "다각화된보험상품믹스,",
       "raw_labels": [
         "다각화된 보험상품믹스,"
@@ -3742,8 +1850,8 @@
         "7a00b5028dbd917e02e871283dd8f0c650a8566f529a9b4e77d2cc52abed2762|다각화된보험상품믹스,|p1|r9"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "교보생명보험(주)_정기(2026-05-12).pdf"
       ],
@@ -3765,7 +1873,7 @@
       "note": ""
     },
     {
-      "id": "U000087",
+      "id": "U000044",
       "normalized_label": "후순위사채,신종자본증권",
       "raw_labels": [
         "후순위사채, 신종자본증권"
@@ -3774,8 +1882,8 @@
         "7a00b5028dbd917e02e871283dd8f0c650a8566f529a9b4e77d2cc52abed2762|후순위사채,신종자본증권|p1|r10"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "교보생명보험(주)_정기(2026-05-12).pdf"
       ],
@@ -3811,7 +1919,7 @@
       "note": ""
     },
     {
-      "id": "U000088",
+      "id": "U000045",
       "normalized_label": "1958년대한교육보험으로",
       "raw_labels": [
         "1958년 대한교육보험으로"
@@ -3820,8 +1928,8 @@
         "7a00b5028dbd917e02e871283dd8f0c650a8566f529a9b4e77d2cc52abed2762|1958년대한교육보험으로|p1|r11"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "교보생명보험(주)_정기(2026-05-12).pdf"
       ],
@@ -3843,53 +1951,7 @@
       "note": ""
     },
     {
-      "id": "U000089",
-      "normalized_label": "교보생명보험(주)최근동향우수한수익성시현,자본적정성유지2025년에는해지율상승등으로경험조정효과가확대되었으나,안정적인신계약CSM확보를통해보험계약마진(CSM)규모를유지('24년말6.4조원→'25년말6.5조원)하였다.견조한CSM상각이익에도불구하고손실부담계약관련비용증가로보험이익률이하락('24년11.8%→'25년9.0%)하였으나,금융상품평가·매매손익증가로투자손익이개선되면서총자산세전이익률은상승('24년0.7%→'25년0.8%)하였다.유가증권의고정이하분류증가로2025년말고정이하자산비율이0.7%로전년말(0.2%)대비상승하였다.2025년말K-ICS비율(경과조치후)은226.0%로보험부채할인율강화에따른부담이있었으나,운용손익개선에따른가용자본증가와신계약CSM확보등에힘입어전년말(220.8%)수준을유지하였다.주요이슈와KR'SVIEWCSM및수익성추이CSM확보와수익성제고를위한보장성영업강화가예상된다.2025년말CSM은6.5조원으로PEER대비작은수준이며,보험부채대비비중도7.1%로PEER대비낮다.소급기간및계리적가정차이,CSM확보에용이한보장성보험비중이낮은점이주원인이다.보장성상품라인업을확대할계획이다.다만경기부진에따라신계약증가폭이크지않을수있고,유지율하락및해지율상승가능성이있다.2025년에도견조한CSM상각이익과예실차손익개선,금융상품평가·매매손익증가로우수한수익성을시현하였다.다만손실부담계약관련비용증가와보험금융비용상승,종속기업투자주식손상차손등이이익제약요인으로작용하였다.보험비용통제수준,금융시장변동성확대에대한대응능력,자회사관련추가손상차손발생여부에대해모니터링할계획이다.자본적정성관리부담2025년말K-ICS비율이경과조치적용후226.0%,적용전165.7%로우수한수준이다.보험부채산출관련규제강화에따른지표하방압력에도불구하고,가용자본확충과신계약CSM확보등으로지표를방어하고있다.기본자본K-ICS비율(경과조치후130%)도규제수준(50%)및권고수준(80%)을상회하고있다.K-ICS비율관련제도변화와ALM수준에대해서는모니터링이필요하다.보험부채할인율산출기준적용일정이장기로분산되어자본관리부담이일부경감되겠지만,2026년6월말손해율·사업비가정관련가이드라인적용시CSM감소,K-ICS비율하락효과가있을것으로예상된다.동사는금리상승시K-ICS비율이하락(경과조치적용후기준금리50BP상승시18%P하락,100BP상승시47%P하락)하는재무구조를보이고있으나,최근국내금리가상승한반면한-미금리차이는축소되어시장금리상승으로인한부담은완화될것으로예상된다.SBI저축은행의지분취득(주식수:50%+1주,인수대금:9,000억원)을완료하였으며,2026년4월6일자로자회사로편입하였다.자회사지분취득에따른요구자본증가로K-ICS비율이일정수준하락할것이나,자본성증권발행여력(잔여한도1.9조원)과재보험출재확대를통한보험위험관리계획등을감안할때안정적인지표관리가이어질전망이다.WWW.KOREARATINGS.COM2",
-      "raw_labels": [
-        "교보생명보험(주) 최근 동향 우수한 수익성 시현, 자본적정성 유지 2025년에는 해지율 상승 등으로 경험조정 효과가 확대되었으나, 안정적인 신계약 CSM 확보를 통해 보험계약마진(CSM) 규모를 유지('24년말 6.4조원→'25년말 6.5조원 )하였다. 견조한 CSM 상각이익에도 불구하고 손실부담계약 관련 비용 증가로 보험이익 률이 하락('24년 11.8%→'25년 9.0%)하였으나, 금융상품평가·매매손익 증가로 투자손 익이 개선되면서 총자산세전이익률은 상승('24년 0.7%→'25년 0.8%)하였다. 유가증권의 고정이하 분류 증가로 2025년말 고정이하자산비율이 0.7%로 전년말 (0.2%) 대비 상승하였다. 2025년말 K-ICS비율(경과조치후)은 226.0%로 보험부채 할인 율 강화에 따른 부담이 있었으나, 운용손익 개선에 따른 가용자본 증가와 신계약 CSM 확보 등에 힘입어 전년말(220.8%) 수준을 유지하였다. 주요 이슈와 KR'S VIEW CSM 및 수익성 추이 CSM 확보와 수익성 제고를 위한 보장성 영업 강화가 예상된다. 2025년말 CSM은 6.5 조원으로 PEER 대비 작은 수준이며, 보험부채 대비 비중도 7.1%로 PEER 대비 낮다. 소급기간 및 계리적 가정 차이, CSM 확보에 용이한 보장성보험 비중이 낮은 점이 주 원인이다. 보장성상품 라인업을 확대할 계획이다. 다만 경기 부진에 따라 신계약 증가 폭이 크지 않을 수 있고, 유지율 하락 및 해지율 상승 가능성이 있다. 2025년에도 견조한 CSM 상각이익과 예실차손익 개선, 금융상품평가·매매손익 증가로 우수한 수익성을 시현하였다. 다만 손실부담계약 관련 비용 증가와 보험금융비용 상승, 종속기업투자주식 손상차손 등이 이익 제약 요인으로 작용하였다. 보험비용 통제 수준, 금융시장 변동성 확대에 대한 대응능력, 자회사 관련 추가 손상차손 발생 여부에 대해 모니터링할 계획이다. 자본적정성 관리 부담 2025년말 K-ICS비율이 경과조치 적용 후 226.0%, 적용 전 165.7%로 우수한 수준이 다. 보험부채 산출 관련 규제 강화에 따른 지표 하방 압력에도 불구하고, 가용자본 확 충과 신계약 CSM 확보 등으로 지표를 방어하고 있다. 기본자본 K-ICS비율(경과조치 후 130%)도 규제 수준(50%) 및 권고 수준(80%)을 상회하고 있다. K-ICS비율 관련 제도 변화와 ALM 수준에 대해서는 모니터링이 필요하다. 보험부채 할 인율 산출기준 적용 일정이 장기로 분산되어 자본관리 부담이 일부 경감되겠지만, 2026 년 6월말 손해율·사업비 가정 관련 가이드라인 적용 시 CSM 감소, K-ICS비율 하락 효 과가 있을 것으로 예상된다. 동사는 금리 상승 시 K-ICS비율이 하락(경과조치 적용 후 기준 금리 50BP 상승 시 18%P 하락, 100BP 상승 시 47%P 하락)하는 재무구조를 보이고 있으나, 최근 국내 금리가 상승한 반면 한-미 금리 차이는 축소되어 시장금리 상승으로 인한 부담은 완화될 것으로 예상된다. SBI저축은행의 지분 취득(주식수: 50%+1주, 인수대금: 9,000억원)을 완료하였으며, 2026년 4월 6일자로 자회사로 편입하였다. 자회사 지분 취득에 따른 요구자본 증가로 K-ICS비율이 일정수준 하락할 것이나, 자본성증권 발행 여력(잔여한도 1.9조원)과 재보 험 출재 확대를 통한 보험 위험 관리 계획 등을 감안할 때 안정적인 지표 관리가 이어 질 전망이다. WWW.KOREARATINGS.COM 2"
-      ],
-      "occurrence_ids": [
-        "7a00b5028dbd917e02e871283dd8f0c650a8566f529a9b4e77d2cc52abed2762|교보생명보험(주)최근동향우수한수익성시현,자본적정성유지2025년에는해지율상승등으로경험조정효과가확대되었으나,안정적인신계약CSM확보를통해보험계약마진(CSM)규모를유지('24년말6.4조원→'25년말6.5조원)하였다.견조한CSM상각이익에도불구하고손실부담계약관련비용증가로보험이익률이하락('24년11.8%→'25년9.0%)하였으나,금융상품평가·매매손익증가로투자손익이개선되면서총자산세전이익률은상승('24년0.7%→'25년0.8%)하였다.유가증권의고정이하분류증가로2025년말고정이하자산비율이0.7%로전년말(0.2%)대비상승하였다.2025년말K-ICS비율(경과조치후)은226.0%로보험부채할인율강화에따른부담이있었으나,운용손익개선에따른가용자본증가와신계약CSM확보등에힘입어전년말(220.8%)수준을유지하였다.주요이슈와KR'SVIEWCSM및수익성추이CSM확보와수익성제고를위한보장성영업강화가예상된다.2025년말CSM은6.5조원으로PEER대비작은수준이며,보험부채대비비중도7.1%로PEER대비낮다.소급기간및계리적가정차이,CSM확보에용이한보장성보험비중이낮은점이주원인이다.보장성상품라인업을확대할계획이다.다만경기부진에따라신계약증가폭이크지않을수있고,유지율하락및해지율상승가능성이있다.2025년에도견조한CSM상각이익과예실차손익개선,금융상품평가·매매손익증가로우수한수익성을시현하였다.다만손실부담계약관련비용증가와보험금융비용상승,종속기업투자주식손상차손등이이익제약요인으로작용하였다.보험비용통제수준,금융시장변동성확대에대한대응능력,자회사관련추가손상차손발생여부에대해모니터링할계획이다.자본적정성관리부담2025년말K-ICS비율이경과조치적용후226.0%,적용전165.7%로우수한수준이다.보험부채산출관련규제강화에따른지표하방압력에도불구하고,가용자본확충과신계약CSM확보등으로지표를방어하고있다.기본자본K-ICS비율(경과조치후130%)도규제수준(50%)및권고수준(80%)을상회하고있다.K-ICS비율관련제도변화와ALM수준에대해서는모니터링이필요하다.보험부채할인율산출기준적용일정이장기로분산되어자본관리부담이일부경감되겠지만,2026년6월말손해율·사업비가정관련가이드라인적용시CSM감소,K-ICS비율하락효과가있을것으로예상된다.동사는금리상승시K-ICS비율이하락(경과조치적용후기준금리50BP상승시18%P하락,100BP상승시47%P하락)하는재무구조를보이고있으나,최근국내금리가상승한반면한-미금리차이는축소되어시장금리상승으로인한부담은완화될것으로예상된다.SBI저축은행의지분취득(주식수:50%+1주,인수대금:9,000억원)을완료하였으며,2026년4월6일자로자회사로편입하였다.자회사지분취득에따른요구자본증가로K-ICS비율이일정수준하락할것이나,자본성증권발행여력(잔여한도1.9조원)과재보험출재확대를통한보험위험관리계획등을감안할때안정적인지표관리가이어질전망이다.WWW.KOREARATINGS.COM2|p2|r0"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
-      "sample_files": [
-        "교보생명보험(주)_정기(2026-05-12).pdf"
-      ],
-      "sample_agencies": [
-        "한국기업평가"
-      ],
-      "sample_ratings": [],
-      "suggestions": [
-        {
-          "instrument_key": "coco_t1",
-          "score": 8.5,
-          "reasons": [
-            "기존 coco_t1(조건부자본증권(신종/AT1)) 라벨과 char n-gram cosine 유사도 8.5"
-          ]
-        },
-        {
-          "instrument_key": "insurance_payment",
-          "score": 8.15,
-          "reasons": [
-            "기존 insurance_payment(보험금지급능력등급) 라벨과 char n-gram cosine 유사도 8.1"
-          ]
-        },
-        {
-          "instrument_key": "coco_t2",
-          "score": 7.11,
-          "reasons": [
-            "기존 coco_t2(조건부자본증권(후순위/T2)) 라벨과 char n-gram cosine 유사도 7.1"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000090",
+      "id": "U000046",
       "normalized_label": "보험금지급능력본무보증사채(후순위)제5회정기신종자본증권제3회외정기",
       "raw_labels": [
         "보험금지급능력 본 무보증사채(후순위) 제 5회 정기 신종자본증권 제 3회 외 정기"
@@ -3898,15 +1960,17 @@
         "0c0981e13420bdeb0a0837f592d9a01e6467c16fa074172eabe7e9ab7d1a1a07|보험금지급능력본무보증사채(후순위)제5회정기신종자본증권제3회외정기|p1|r0"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "교보생명보험(주)_회사채_정기_20260512_요지 PDF.pdf"
       ],
       "sample_agencies": [
         "NICE신용평가"
       ],
-      "sample_ratings": [],
+      "sample_ratings": [
+        "AAA"
+      ],
       "suggestions": [
         {
           "instrument_key": "insurance_payment",
@@ -3935,7 +1999,7 @@
       "note": ""
     },
     {
-      "id": "U000091",
+      "id": "U000047",
       "normalized_label": "AA+/STABLE",
       "raw_labels": [
         "AA+/STABLE"
@@ -3944,8 +2008,8 @@
         "0c0981e13420bdeb0a0837f592d9a01e6467c16fa074172eabe7e9ab7d1a1a07|AA+/STABLE|p1|r1"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T16:47:30+09:00",
       "sample_files": [
         "교보생명보험(주)_회사채_정기_20260512_요지 PDF.pdf"
       ],
@@ -3976,7 +2040,7 @@
       "note": ""
     },
     {
-      "id": "U000092",
+      "id": "U000048",
       "normalized_label": "AA/STABLE",
       "raw_labels": [
         "AA/STABLE"
@@ -3985,8 +2049,8 @@
         "0c0981e13420bdeb0a0837f592d9a01e6467c16fa074172eabe7e9ab7d1a1a07|AA/STABLE|p1|r2"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T16:47:30+09:00",
       "sample_files": [
         "교보생명보험(주)_회사채_정기_20260512_요지 PDF.pdf"
       ],
@@ -4017,179 +2081,7 @@
       "note": ""
     },
     {
-      "id": "U000093",
-      "normalized_label": "교보생명보험(주)",
-      "raw_labels": [
-        "교보생명보험(주)"
-      ],
-      "occurrence_ids": [
-        "0c0981e13420bdeb0a0837f592d9a01e6467c16fa074172eabe7e9ab7d1a1a07|교보생명보험(주)|p1|r0"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T14:55:17+09:00",
-      "sample_files": [
-        "교보생명보험(주)_회사채_정기_20260512_요지 PDF.pdf"
-      ],
-      "sample_agencies": [
-        "NICE신용평가"
-      ],
-      "sample_ratings": [],
-      "suggestions": [
-        {
-          "instrument_key": "insurance_payment",
-          "score": 13.87,
-          "reasons": [
-            "기존 insurance_payment(보험금지급능력등급) 라벨과 char n-gram cosine 유사도 13.9"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000094",
-      "normalized_label": "보험금지급능력본AAA/STABLE",
-      "raw_labels": [
-        "보험금지급능력 본 AAA/STABLE"
-      ],
-      "occurrence_ids": [
-        "0c0981e13420bdeb0a0837f592d9a01e6467c16fa074172eabe7e9ab7d1a1a07|보험금지급능력본AAA/STABLE|p1|r2"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T14:55:17+09:00",
-      "sample_files": [
-        "교보생명보험(주)_회사채_정기_20260512_요지 PDF.pdf"
-      ],
-      "sample_agencies": [
-        "NICE신용평가"
-      ],
-      "sample_ratings": [
-        "AAA"
-      ],
-      "suggestions": [
-        {
-          "instrument_key": "insurance_payment",
-          "score": 53.99,
-          "reasons": [
-            "기존 insurance_payment(보험금지급능력등급) 라벨과 char n-gram cosine 유사도 54.0"
-          ]
-        },
-        {
-          "instrument_key": "short_term_bond",
-          "score": 10.81,
-          "reasons": [
-            "기존 short_term_bond(전자단기사채) 라벨과 char n-gram cosine 유사도 10.8"
-          ]
-        },
-        {
-          "instrument_key": "structured_finance",
-          "score": 8.52,
-          "reasons": [
-            "기존 structured_finance(자산유동화증권(ABS)) 라벨과 char n-gram cosine 유사도 8.5"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000095",
-      "normalized_label": "무보증사채(후순위)제5회정기AA+/STABLEAA+/STABLE",
-      "raw_labels": [
-        "무보증사채(후순위) 제 5회 정기 AA+/STABLE AA+/STABLE"
-      ],
-      "occurrence_ids": [
-        "0c0981e13420bdeb0a0837f592d9a01e6467c16fa074172eabe7e9ab7d1a1a07|무보증사채(후순위)제5회정기AA+/STABLEAA+/STABLE|p1|r3"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T14:55:17+09:00",
-      "sample_files": [
-        "교보생명보험(주)_회사채_정기_20260512_요지 PDF.pdf"
-      ],
-      "sample_agencies": [
-        "NICE신용평가"
-      ],
-      "sample_ratings": [],
-      "suggestions": [
-        {
-          "instrument_key": "senior_unsecured",
-          "score": 25.22,
-          "reasons": [
-            "기존 senior_unsecured(선순위 무보증사채) 라벨과 char n-gram cosine 유사도 25.2"
-          ]
-        },
-        {
-          "instrument_key": "short_term_bond",
-          "score": 19.61,
-          "reasons": [
-            "기존 short_term_bond(전자단기사채) 라벨과 char n-gram cosine 유사도 19.6"
-          ]
-        },
-        {
-          "instrument_key": "subordinated",
-          "score": 18.03,
-          "reasons": [
-            "기존 subordinated(후순위사채) 라벨과 char n-gram cosine 유사도 18.0"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000096",
-      "normalized_label": "신종자본증권제3회외정기AA/STABLEAA/STABLE",
-      "raw_labels": [
-        "신종자본증권 제 3회 외 정기 AA/STABLE AA/STABLE"
-      ],
-      "occurrence_ids": [
-        "0c0981e13420bdeb0a0837f592d9a01e6467c16fa074172eabe7e9ab7d1a1a07|신종자본증권제3회외정기AA/STABLEAA/STABLE|p1|r4"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T14:55:17+09:00",
-      "sample_files": [
-        "교보생명보험(주)_회사채_정기_20260512_요지 PDF.pdf"
-      ],
-      "sample_agencies": [
-        "NICE신용평가"
-      ],
-      "sample_ratings": [],
-      "suggestions": [
-        {
-          "instrument_key": "coco_t1",
-          "score": 17.85,
-          "reasons": [
-            "기존 coco_t1(조건부자본증권(신종/AT1)) 라벨과 char n-gram cosine 유사도 17.8"
-          ]
-        },
-        {
-          "instrument_key": "structured_finance",
-          "score": 16.61,
-          "reasons": [
-            "기존 structured_finance(자산유동화증권(ABS)) 라벨과 char n-gram cosine 유사도 16.6"
-          ]
-        },
-        {
-          "instrument_key": "short_term_bond",
-          "score": 14.05,
-          "reasons": [
-            "기존 short_term_bond(전자단기사채) 라벨과 char n-gram cosine 유사도 14.1"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000097",
+      "id": "U000049",
       "normalized_label": "보험금지급능력AAA/STABLE유동성비율(%)",
       "raw_labels": [
         "보험금지급능력 AAA/STABLE 유동성비율(%)"
@@ -4198,8 +2090,8 @@
         "0c0981e13420bdeb0a0837f592d9a01e6467c16fa074172eabe7e9ab7d1a1a07|보험금지급능력AAA/STABLE유동성비율(%)|p1|r0"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "교보생명보험(주)_회사채_정기_20260512_요지 PDF.pdf"
       ],
@@ -4237,7 +2129,7 @@
       "note": ""
     },
     {
-      "id": "U000098",
+      "id": "U000050",
       "normalized_label": "무보증사채(후)AA+/STABLE주1:2018년~2022년까지IFRS4기준,R",
       "raw_labels": [
         "무보증사채(후) AA+/STABLE 주1: 2018 년~2022 년까지 IFRS 4 기준, R"
@@ -4246,8 +2138,8 @@
         "0c0981e13420bdeb0a0837f592d9a01e6467c16fa074172eabe7e9ab7d1a1a07|무보증사채(후)AA+/STABLE주1:2018년~2022년까지IFRS4기준,R|p1|r1"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "교보생명보험(주)_회사채_정기_20260512_요지 PDF.pdf"
       ],
@@ -4285,7 +2177,7 @@
       "note": ""
     },
     {
-      "id": "U000099",
+      "id": "U000051",
       "normalized_label": "신종자본증권AA/STABLE주2:2023년부터주요재무지표(자산,자",
       "raw_labels": [
         "신종자본증권 AA/STABLE 주2: 2023 년부터 주요 재무지표(자산, 자"
@@ -4294,8 +2186,8 @@
         "0c0981e13420bdeb0a0837f592d9a01e6467c16fa074172eabe7e9ab7d1a1a07|신종자본증권AA/STABLE주2:2023년부터주요재무지표(자산,자|p1|r2"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "교보생명보험(주)_회사채_정기_20260512_요지 PDF.pdf"
       ],
@@ -4333,7 +2225,7 @@
       "note": ""
     },
     {
-      "id": "U000100",
+      "id": "U000052",
       "normalized_label": "(국공채+특수채+보험약관대출/운용",
       "raw_labels": [
         "(국공채+특수채+보험약관대출/운용"
@@ -4342,8 +2234,8 @@
         "0c0981e13420bdeb0a0837f592d9a01e6467c16fa074172eabe7e9ab7d1a1a07|(국공채+특수채+보험약관대출/운용|p1|r3"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T15:42:19+09:00",
+      "last_seen_at": "2026-07-20T15:42:19+09:00",
       "sample_files": [
         "교보생명보험(주)_회사채_정기_20260512_요지 PDF.pdf"
       ],
@@ -4365,90 +2257,39 @@
       "note": ""
     },
     {
-      "id": "U000101",
-      "normalized_label": "교보생명보험(주)등급논거선두권의우수한시장지위를기반으로다각화된보험포트폴리오보유•업계선두권의시장지위보유(순책임준비금기준2023년:14%,2024년14.2%,2025년14.7%)•다각화된보험포트폴리오보유(2025년결산기준수입보험료구성:보장성34.2%,저축성26.6%,특별계정38.4%)안정적인이익창출력보유•IFRS17이도입된2023년이후,회사는안정적인이익창출력유지중(ROA2023년0.6%,2024년0.6%,2025년0.6%)•보험부문에서손실부담계약관련비용이지속발생하고있으나,보험계약마진상각이익을기반으로보험이익시현(보험이익규모:2023년2,327억원,2024년4,736억원,2025년3,916억원)•유가증권관련이익규모에따른이익변동성잔존하나,이자및배당수익등을기반으로연간4,000억원이상의투자이익시현(투자이익규모:2023년6,010억원,2024년4,114억원,2025년5,745억원)우수한자본적정성유지•2025년말경과조치전규제자본비율은165.7%,경과조치비율은226%•회사는자본성증권발행,신계약CSM및요구자본축소등으로자본적정성관리•다만,SBI저축은행인수,신종자본증권조기상환만기대거도래,경과조치효과의점진적경감,기본자본비율도입등으로향후자본관련부담이추가로가중될가능성이있음•이에금리변동,ALM관리수준등회사전반적자본관리능력및규제자본비율에대한모니터링을강화할예정중점검토사항2027년부터기본자본K-ICS비율제도시행•2027년1월부터기본자본K-ICS비율제도시행될예정•기본자본K-ICS비율은적기시정조치및기본자본성증권조기상환요건의기준으로활용될예정이며,경과규정은9년간적용됨•단기적으로기본자본K-ICS비율제고는요구자본축소,유상증자를통해이루어질전망이며,중장기적으로는이익유보의중요성이확대될전망•2025년말회사의경과조치전기본자본K-ICS비율은82%로,경과조치후비율은130%로적기시정조치기준(50%)를상회하고있음•다만,신종자본증권조기상환만기대거도래(2026년4,700억원,2027년6,400억원),SBI저축은행인수,경과조치효과의점진적경감등으로인해자본적정성관리부담이증가할것으로예상.이에향후회사의기본자본K-ICS비율및기본자본관리방안에대한모니터링을강화할예정2",
+      "id": "U000053",
+      "normalized_label": "조건부자본증권(신종)경남은행조건부(상)-06이(신종)영구A-05",
       "raw_labels": [
-        "교보생명보험(주) 등급논거 선두권의 우수한 시장지위를 기반으로 다각화된 보험 포트폴리오 보유 • 업계 선두권의 시장지위 보유 (순책임준비금 기준 2023년: 14%, 2024년 14.2%, 2025년 14.7%) • 다각화된 보험 포트폴리오 보유 (2025년 결산 기준 수입보험료 구성: 보장성 34.2%, 저축성 26.6%, 특별계정 38.4%) 안정적인 이익창출력 보유 • IFRS 17이 도입된 2023년 이후, 회사는 안정적인 이익창출력 유지 중 (ROA 2023년 0.6%, 2024년 0.6%, 2025년 0.6%) • 보험 부문에서 손실부담계약 관련 비용이 지속 발생하고 있으나, 보험계약마진 상각 이익을 기반으로 보험이익 시현 (보험이익 규모: 2023년 2,327억원, 2024년 4,736억원, 2025년 3,916억원) • 유가증권 관련 이익규모에 따른 이익변동성 잔존하나, 이자 및 배당수익 등을 기반으 로 연간 4,000억원 이상의 투자이익 시현 (투자이익 규모: 2023년 6,010억원, 2024년 4,114억원, 2025년 5,745억원) 우수한 자본적정성 유지 • 2025년말 경과조치 전 규제자본비율은 165.7%, 경과조치 비율은 226% • 회사는 자본성 증권 발행, 신계약 CSM 및 요구자본 축소 등으로 자본적정성 관리 • 다만, SBI저축은행 인수, 신종자본증권 조기상환 만기 대거 도래, 경과조치 효과의 점진 적 경감, 기본자본비율 도입 등으로 향후 자본 관련 부담이 추가로 가중될 가능성이 있 음 • 이에 금리 변동, ALM 관리 수준 등 회사 전반적 자본관리능력 및 규제자본비율에 대한 모니터링을 강화할 예정 중점 검토사항 2027년부터 기본자본 K-ICS 비율 제도 시행 • 2027년 1월부터 기본자본 K-ICS 비율 제도 시행될 예정 • 기본자본 K-ICS 비율은 적기시정조치 및 기본자본성증권 조기상환 요건의 기준으로 활 용될 예정이며, 경과규정은 9년간 적용됨 • 단기적으로 기본자본 K-ICS 비율 제고는 요구자본 축소, 유상증자를 통해 이루어질 전망 이며, 중장기적으로는 이익 유보의 중요성이 확대될 전망 • 2025년말 회사의 경과조치 전 기본자본 K-ICS 비율은 82%로, 경과조치 후 비율은 130%로 적기시정조치 기준(50%)를 상회하고 있음 • 다만, 신종자본증권 조기상환 만기 대거 도래(2026년 4,700억원, 2027년 6,400억원), SBI저축은행 인수, 경과조치 효과의 점진적 경감 등으로 인해 자본적정성 관리 부담이 증가할 것으로 예상. 이에 향후 회사의 기본자본 K-ICS 비율 및 기본자본 관리방안에 대 한 모니터링을 강화할 예정 2"
+        "조건부자본증권(신종) 경남은행 조건부(상) -06이(신종)영구A-05"
       ],
       "occurrence_ids": [
-        "0c0981e13420bdeb0a0837f592d9a01e6467c16fa074172eabe7e9ab7d1a1a07|교보생명보험(주)등급논거선두권의우수한시장지위를기반으로다각화된보험포트폴리오보유•업계선두권의시장지위보유(순책임준비금기준2023년:14%,2024년14.2%,2025년14.7%)•다각화된보험포트폴리오보유(2025년결산기준수입보험료구성:보장성34.2%,저축성26.6%,특별계정38.4%)안정적인이익창출력보유•IFRS17이도입된2023년이후,회사는안정적인이익창출력유지중(ROA2023년0.6%,2024년0.6%,2025년0.6%)•보험부문에서손실부담계약관련비용이지속발생하고있으나,보험계약마진상각이익을기반으로보험이익시현(보험이익규모:2023년2,327억원,2024년4,736억원,2025년3,916억원)•유가증권관련이익규모에따른이익변동성잔존하나,이자및배당수익등을기반으로연간4,000억원이상의투자이익시현(투자이익규모:2023년6,010억원,2024년4,114억원,2025년5,745억원)우수한자본적정성유지•2025년말경과조치전규제자본비율은165.7%,경과조치비율은226%•회사는자본성증권발행,신계약CSM및요구자본축소등으로자본적정성관리•다만,SBI저축은행인수,신종자본증권조기상환만기대거도래,경과조치효과의점진적경감,기본자본비율도입등으로향후자본관련부담이추가로가중될가능성이있음•이에금리변동,ALM관리수준등회사전반적자본관리능력및규제자본비율에대한모니터링을강화할예정중점검토사항2027년부터기본자본K-ICS비율제도시행•2027년1월부터기본자본K-ICS비율제도시행될예정•기본자본K-ICS비율은적기시정조치및기본자본성증권조기상환요건의기준으로활용될예정이며,경과규정은9년간적용됨•단기적으로기본자본K-ICS비율제고는요구자본축소,유상증자를통해이루어질전망이며,중장기적으로는이익유보의중요성이확대될전망•2025년말회사의경과조치전기본자본K-ICS비율은82%로,경과조치후비율은130%로적기시정조치기준(50%)를상회하고있음•다만,신종자본증권조기상환만기대거도래(2026년4,700억원,2027년6,400억원),SBI저축은행인수,경과조치효과의점진적경감등으로인해자본적정성관리부담이증가할것으로예상.이에향후회사의기본자본K-ICS비율및기본자본관리방안에대한모니터링을강화할예정2|p2|r0"
+        "35cc7d5d8f1b5e16f46d4c54e21e2c50fe9cc127f149624a5b3fe1635d487ecb|조건부자본증권(신종)경남은행조건부(상)-06이(신종)영구A-05|p1|r0"
       ],
       "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
+      "first_seen_at": "2026-07-20T16:05:12+09:00",
+      "last_seen_at": "2026-07-20T16:05:12+09:00",
       "sample_files": [
-        "교보생명보험(주)_회사채_정기_20260512_요지 PDF.pdf"
+        "(주)경남은행_회사채_본_20260520_요지 PDF.pdf"
       ],
       "sample_agencies": [
-        "NICE신용평가"
+        "NICE신용평가㈜"
       ],
-      "sample_ratings": [],
+      "sample_ratings": [
+        "A+"
+      ],
       "suggestions": [
         {
           "instrument_key": "coco_t1",
-          "score": 18.8,
+          "score": 45.37,
           "reasons": [
-            "기존 coco_t1(조건부자본증권(신종/AT1)) 라벨과 char n-gram cosine 유사도 18.8"
+            "기존 coco_t1(조건부자본증권(신종/AT1)) 라벨과 char n-gram cosine 유사도 45.4"
           ]
         },
         {
           "instrument_key": "coco_t2",
-          "score": 13.34,
+          "score": 39.93,
           "reasons": [
-            "기존 coco_t2(조건부자본증권(후순위/T2)) 라벨과 char n-gram cosine 유사도 13.3"
-          ]
-        },
-        {
-          "instrument_key": "insurance_payment",
-          "score": 5.85,
-          "reasons": [
-            "기존 insurance_payment(보험금지급능력등급) 라벨과 char n-gram cosine 유사도 5.9"
-          ]
-        }
-      ],
-      "review_status": "pending",
-      "chosen_instrument_key": null,
-      "note": ""
-    },
-    {
-      "id": "U000102",
-      "normalized_label": "교보생명보험(주)등급변동검토요인표│등급변동검토요인구분등급변동검토요인▪순책임준비금기준시장지위가크게저하되거나하향조정▪규제자본비율이큰폭으로하락하는등전반적인자본적정성이현저히약화된것으로검토판단되는경우주:실제등급및등급전망조정은상기의등급변동검토요인이외에도다양한정량·정성요인들을기초로수행됨.표│주요등급조정검토요인지표추이단위:%구분2021.122022.122023.122024.122025.12순책임준비금점유율(%)N.A.N.A.14.014.214.7규제자본비율(%)266.6180.6193.8164.2165.7주1:회사공시및제시자료를토대로NICE신용평가재구성주2:2022년이전규제자본비율:RBC비율,2023년이후는선택적경과조치적용전K-ICS비율3",
-      "raw_labels": [
-        "교보생명보험(주) 등급변동 검토요인 표│등급변동 검토 요인 구분 등급변동 검토 요인 ▪ 순책임준비금 기준 시장지위가 크게 저하되거나 하향조정 ▪ 규제자본비율이 큰 폭으로 하락하는 등 전반적인 자본적정성이 현저히 약화된 것으로 검 토 판단되는 경우 주: 실제 등급 및 등급전망 조정은 상기의 등급변동 검토 요인 이외에도 다양한 정량·정성 요인들을 기초로 수행됨. 표│주요 등급조정 검토요인 지표 추이 단위: % 구분 2021.12 2022.12 2023.12 2024.12 2025.12 순책임준비금 점유율(%) N.A. N.A. 14.0 14.2 14.7 규제자본비율(%) 266.6 180.6 193.8 164.2 165.7 주1: 회사 공시 및 제시 자료를 토대로 NICE신용평가 재구성 주2: 2022년 이전 규제자본비율: RBC 비율, 2023년 이후는 선택적 경과조치 적용 전 K-ICS비율 3"
-      ],
-      "occurrence_ids": [
-        "0c0981e13420bdeb0a0837f592d9a01e6467c16fa074172eabe7e9ab7d1a1a07|교보생명보험(주)등급변동검토요인표│등급변동검토요인구분등급변동검토요인▪순책임준비금기준시장지위가크게저하되거나하향조정▪규제자본비율이큰폭으로하락하는등전반적인자본적정성이현저히약화된것으로검토판단되는경우주:실제등급및등급전망조정은상기의등급변동검토요인이외에도다양한정량·정성요인들을기초로수행됨.표│주요등급조정검토요인지표추이단위:%구분2021.122022.122023.122024.122025.12순책임준비금점유율(%)N.A.N.A.14.014.214.7규제자본비율(%)266.6180.6193.8164.2165.7주1:회사공시및제시자료를토대로NICE신용평가재구성주2:2022년이전규제자본비율:RBC비율,2023년이후는선택적경과조치적용전K-ICS비율3|p3|r0"
-      ],
-      "occurrence_count": 1,
-      "first_seen_at": "2026-07-20T14:55:17+09:00",
-      "last_seen_at": "2026-07-20T15:31:03+09:00",
-      "sample_files": [
-        "교보생명보험(주)_회사채_정기_20260512_요지 PDF.pdf"
-      ],
-      "sample_agencies": [
-        "NICE신용평가"
-      ],
-      "sample_ratings": [],
-      "suggestions": [
-        {
-          "instrument_key": "issuer",
-          "score": 7.46,
-          "reasons": [
-            "기존 issuer(발행자 신용등급) 라벨과 char n-gram cosine 유사도 7.5"
-          ]
-        },
-        {
-          "instrument_key": "insurance_payment",
-          "score": 6.19,
-          "reasons": [
-            "기존 insurance_payment(보험금지급능력등급) 라벨과 char n-gram cosine 유사도 6.2"
-          ]
-        },
-        {
-          "instrument_key": "coco_t1",
-          "score": 5.45,
-          "reasons": [
-            "기존 coco_t1(조건부자본증권(신종/AT1)) 라벨과 char n-gram cosine 유사도 5.5"
+            "기존 coco_t2(조건부자본증권(후순위/T2)) 라벨과 char n-gram cosine 유사도 39.9"
           ]
         }
       ],

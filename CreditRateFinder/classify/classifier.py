@@ -45,6 +45,7 @@ class LabelClassifier:
                 classification_status="matched",
                 rating=row.rating,
                 outlook=row.outlook,
+                raw_outlook=row.raw_outlook,
                 rating_status=row.rating_status,
                 page=row.page,
                 row_index=row.row_index,
@@ -52,6 +53,9 @@ class LabelClassifier:
                 source=row.source,
                 suggestions=[],
                 evaluation_type=row.evaluation_type,
+                issue_name=row.issue_name,
+                remark=row.remark,
+                label_text=row.label_text,
             )
 
         suggestions = recommend_instruments(normalized, self.config)
@@ -62,6 +66,7 @@ class LabelClassifier:
             classification_status="undefined",
             rating=row.rating,
             outlook=row.outlook,
+            raw_outlook=row.raw_outlook,
             rating_status=row.rating_status,
             page=row.page,
             row_index=row.row_index,
@@ -69,6 +74,9 @@ class LabelClassifier:
             source=row.source,
             suggestions=suggestions,
             evaluation_type=row.evaluation_type,
+            issue_name=row.issue_name,
+            remark=row.remark,
+            label_text=row.label_text,
         )
 
     def classify_rows(

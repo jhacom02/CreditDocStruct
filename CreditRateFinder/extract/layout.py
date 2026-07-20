@@ -24,6 +24,41 @@ from extract.visual import (
     text_in_x_range,
 )
 
+_VALID_NOISE_PATTERNS = (
+    r"BIS\s*자본",
+    r"BIS자본",
+    r"ROA\s*\(",
+    r"ROA\(",
+    r"ROE\s*\(",
+    r"총자산",
+    r"등급\s*추이",
+    r"자기자본",
+    r"부채비율",
+    r"Peer",
+)
+
+
+def truncate_valid_row_text(text: str) -> str:
+    """유효등급 행에서 재무지표·등급추이 등 노이즈 이전까지만 유지."""
+    normalized = normalize_text(text)
+    if not normalized:
+        return ""
+
+    cut_index = len(normalized)
+    for pattern in _VALID_NOISE_PATTERNS:
+        match = re.search(pattern, normalized, re.IGNORECASE)
+        if match:
+            cut_index = min(cut_index, match.start())
+
+    trimmed = normalize_text(normalized[:cut_index])
+    if not trimmed:
+        return normalized
+
+    if find_rating_tokens_in_text(trimmed):
+        return trimmed
+
+    return normalized
+
 
 def extract_primary_rows_from_visual_layout(
     page: pymupdf.Page,
@@ -189,17 +224,26 @@ def extract_valid_rating_rows(
         if not looks_like_rating_row(line.text):
             continue
 
-        row_parts = [line.text]
-        parsed_tokens = find_rating_tokens_in_text(" ".join(row_parts))
+        row_text = truncate_valid_row_text(line.text)
+        if not row_text:
+            continue
+
+        row_parts = [row_text]
+        parsed_tokens = find_rating_tokens_in_text(row_text)
 
         if not parsed_tokens and index + 1 < len(section_lines):
             next_line = section_lines[index + 1]
+            next_text = truncate_valid_row_text(next_line.text)
             if (
-                not looks_like_rating_row(next_line.text)
-                or not looks_like_instrument_label(next_line.text)
-            ) and next_line.y0 - line.y1 <= 30:
-                if not looks_like_instrument_label(next_line.text):
-                    row_parts.append(next_line.text)
+                next_text
+                and (
+                    not looks_like_rating_row(next_text)
+                    or not looks_like_instrument_label(next_text)
+                )
+                and next_line.y0 - line.y1 <= 30
+            ):
+                if not looks_like_instrument_label(next_text):
+                    row_parts.append(next_text)
 
         record = parse_rating_row_values(
             values=row_parts,
@@ -208,6 +252,8 @@ def extract_valid_rating_rows(
             section="valid_ratings",
             source="valid_rating_section",
         )
+        if record and record.rating_status == "none" and not record.rating:
+            continue
         if record:
             records.append(record)
             row_index += 1

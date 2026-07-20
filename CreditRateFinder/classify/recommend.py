@@ -43,6 +43,7 @@ def recommend_instruments(
     recommendation = config.recommendation or {}
     n = int(recommendation.get("ngram_size", 2))
     k = int(top_k if top_k is not None else recommendation.get("top_k", 3))
+    min_score = float(recommendation.get("min_score", 0))
 
     query = _char_ngrams(normalized_label, n)
 
@@ -69,6 +70,8 @@ def recommend_instruments(
 
     suggestions: list[Suggestion] = []
     for instrument_key, score in scored[:k]:
+        if score < min_score:
+            continue
         display = config.instruments[instrument_key].display_name
         suggestions.append(
             Suggestion(

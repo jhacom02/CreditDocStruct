@@ -70,9 +70,10 @@ result = extract_credit_report("report.pdf")  # dict
  └─ PDF 순회
     ├─ 텍스트·표 추출 → ExtractedRatingRow[] (rating_status: none/single/ambiguous)
     │    · 현재·직전 등급이 함께 있으면 헤더의 「현재등급」열만 사용
-    ├─ 회사명·신평사 (agency)
+    ├─ 회사명(`company_name`)·신평사(`agency`, 3사 표준명 ㈜)
     ├─ 라벨 exact match → RatingRecord (matched/undefined)
-    ├─ source 병합 (pdf_table > visual_layout > valid_rating > fallback)
+    ├─ Primary·유효등급 동시 추출 → YAML 라벨 분리·행 전체 등급 탐색
+    ├─ canonical 병합 (`confirmed_by`, `validation_warnings`)
     ├─ selected 자동 확정 (「본」/「본평가」 우선) + success/fail·fail_reason
     ├─ undefined 발생 건 수집
     └─ 배치 종료 후 원자적 저장
@@ -83,11 +84,20 @@ result = extract_credit_report("report.pdf")  # dict
 
 ### 표·행 선택 우선순위
 
-1. **Primary:** `평가 개요`/`평가 등급` 표 (`pdf_table`). 행이 있으면 같은 페이지의 `visual_layout`은 쓰지 않음.
-2. **Fallback primary:** `visual_layout` (표 추출 실패 시).
-3. **Valid:** 좌측 `유효 등급`은 primary에 없는 상품만 보완.
-4. **Selected:** primary에 `종류=본`/`본평가`이고 등급이 확정(`single`)된 행이 정확히 1상품이면 그것을 `selected`. `정기` 등은 `records`/`ratings`에 보존.
-5. `본`이 없으면 기존처럼 rating 있는 matched 상품 수로 판정.
+1. **Primary:** `평가 개요`/`평가 등급` 표 (`pdf_table`). 행이 있으면 같은 페이지 `visual_layout`은 스킵.
+2. **유효등급:** Primary 유무와 관계없이 **항상** 추출 (`valid_rating_section`). `selected`에는 사용하지 않음.
+3. **Fallback:** Primary·유효등급 모두 없을 때만 `plain_text`.
+4. **라벨 분리:** 평가대상 셀 앞부분 YAML 최장 alias → `raw_label`, 나머지 → `issue_name`.
+5. **등급 탐색:** 행 전체 후보 → 1개면 채택, 2개+면 `현재등급` 열. 종목코드(`영구A-05` 등) 오탐 제외.
+6. **병합:** `instrument_key`별 canonical. Primary 우선, 유효등급 일치 시 `confirmed_by`. 불일치 시 `validation_warnings`.
+7. **Selected:** Primary만 (`본` 우선). 유효등급 복수 상품이어도 `multiple_instruments` 아님.
+
+### 신평사·회사명
+
+| 필드 | 값 |
+|------|-----|
+| `agency` / Excel `신평사` | `NICE신용평가㈜` · `한국신용평가㈜` · `한국기업평가㈜` 중 하나만 |
+| `company_name` / Excel `회사명` | 평가대상 기업명 (`CREDIT OPINION` 등 제외, 파일명 fallback) |
 
 ### 파일 상태
 
@@ -120,13 +130,14 @@ result = extract_credit_report("report.pdf")  # dict
 
 | 필드 | 설명 |
 |------|------|
-| `result_id` | `R000001` 형식 |
-| `company_name` / `agency` | 회사명·신평사 |
+| `result_id` | `A0001` 형식 (배치 내 순번, 코드 고정) |
+| `company_name` / `agency` | 평가대상 회사명 · 신평사(3사 표준명 ㈜) |
 | `status` / `fail_reason` | `success` 또는 `fail` + `{code, message}` |
 | `selected` | 확정 레코드(실패 시 `null`, `evaluation_type` 포함) |
-| `ratings` | 검출된 matched 상품만 sparse. 값 미확정이면 `null` |
-| `records` | 전체 `RatingRecord` |
-| `undefined_records` | YAML 미등록 라벨 + `suggestions` |
+| `ratings` | canonical matched 상품 sparse (valid-only 상품 포함) |
+| `records` | 전체 `RatingRecord` (`issue_name`, `confirmed_by`, `raw_outlook` 등) |
+| `validation_warnings` | Primary·유효등급 등급 불일치 등 (`conflicting_rating_sources`) |
+| `undefined_records` | YAML 미등록 라벨 + `suggestions` (이메일·재무지표·rating none 제외) |
 | `file_hash` | SHA-256 (undefined 중복 방지용) |
 
 Excel(`신용등급_결과`)은 `selected` 기준 PDF당 1행입니다.  
@@ -142,7 +153,7 @@ Excel(`신용등급_결과`)은 `selected` 기준 PDF당 1행입니다.
 라벨 추가·수정은 `label_dictionary`에만 등록하면 됩니다.  
 동일 정규화 라벨이 서로 다른 `instrument_key`로 매핑되면 기동 시 거부됩니다.
 
-undefined 라벨에는 char n-gram cosine 추천(`suggestions`)이 붙지만 **자동 확정에는 사용하지 않습니다**.  
+undefined 라벨에는 char n-gram cosine 추천(`suggestions`, `min_score` 15 미만 제외)이 붙지만 **자동 확정에는 사용하지 않습니다**.  
 수동으로 YAML에 등록한 뒤 재실행하세요.
 
 ---
@@ -162,8 +173,8 @@ CreditRateFinder/
     ├── config/instruments.yaml
     ├── common/             # settings, models, fail_reasons, text_utils, rating_tokens
     ├── agency/             # 신평사·레이아웃·회사명
-    ├── classify/           # exact match + undefined 추천
-    ├── extract/            # tables, visual, layout, fallback, row_parser, merge
+    ├── classify/           # exact match, undefined 추천·필터
+    ├── extract/            # tables, visual, layout, fallback, row_parser, row_rebuild, label_fields, merge
     ├── export/             # json_io, excel, undefined_store
     ├── admin/undefined.json
     ├── result/
@@ -194,7 +205,6 @@ cd C:\mycode\CreditRateFinder\CreditRateFinder
 | `ADMIN_DIR` / `UNDEFINED_JSON` | undefined 누적 저장소 |
 | `MAX_PDF_PAGES` | 스캔 페이지 상한 (기본 3) |
 | `MIN_EXTRACTED_TEXT_CHARS` | 텍스트 추출 실패 판정용 문자 수 하한 (기본 50) |
-| `RESULT_ID_PREFIX` / `RESULT_ID_WIDTH` | 결과 ID (`R000001`) |
 
 ---
 

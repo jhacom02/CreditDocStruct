@@ -11,5 +11,6 @@ alwaysApply: false
 - 상품·라벨 매핑은 `config/instruments.yaml`에만 둔다.
 - 분류는 `label_dictionary` exact match만 사용한다. 점수형 feature taxonomy는 쓰지 않는다.
 - 라벨 status: `matched` | `undefined` (`unknown`/`ambiguous` 삭제).
-- undefined 추천(`classify/recommend.py`)은 검토용이며 `instrument_key`를 자동 확정하지 않는다.
+- undefined 추천(`classify/recommend.py`)은 검토용이며 `instrument_key`를 자동 확정하지 않는다. `min_score` 미만 suggestion은 제외.
+- `classify/undefined_filter.py`로 이메일·재무지표·rating none 등 undefined 후보를 필터한다.
 - 기동 시: 동일 정규화 라벨의 상충 매핑 거부, 미등록 `instrument_key` 참조 거부.

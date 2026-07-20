@@ -1,10 +1,4 @@
-"""등급·전망 토큰 파싱 및 셀 내부 rating 토큰 개수 카운팅.
-
-`extract/row_parser.py`가 셀당 rating 토큰 개수로 `rating_status`
-(`none`/`single`/`ambiguous`)를 판정할 때 사용한다.
-
-Plan: creditratefinder_restructure_43c68190 섹션 D/E 참고.
-"""
+"""등급·전망 토큰 파싱 및 셀 내부 rating 토큰 개수 카운팅."""
 
 from __future__ import annotations
 
@@ -22,11 +16,17 @@ _OUTLOOK_VALUE_PATTERN = (
     r"(?:Stable|Positive|Negative|Developing|안정적|긍정적|부정적|유동적)"
 )
 
+_OUTLOOK_SHORT_PATTERN = r"S|P|N|D"
+
 _OUTLOOK_MAP = {
-    "stable": "Stable",
-    "positive": "Positive",
-    "negative": "Negative",
-    "developing": "Developing",
+    "stable": "안정적",
+    "positive": "긍정적",
+    "negative": "부정적",
+    "developing": "유동적",
+    "s": "안정적",
+    "p": "긍정적",
+    "n": "부정적",
+    "d": "유동적",
     "안정적": "안정적",
     "긍정적": "긍정적",
     "부정적": "부정적",
@@ -36,18 +36,24 @@ _OUTLOOK_MAP = {
 RATING_TOKEN_RE = re.compile(
     rf"^(?P<rating>{_RATING_VALUE_PATTERN})"
     rf"(?P<sf>\(sf\))?"
-    rf"(?:/(?P<outlook>{_OUTLOOK_VALUE_PATTERN}))?$",
+    rf"(?:/(?P<outlook_slash>{_OUTLOOK_VALUE_PATTERN}))?"
+    rf"(?:\((?P<outlook_paren>{_OUTLOOK_VALUE_PATTERN}|{_OUTLOOK_SHORT_PATTERN})\))?$",
     re.IGNORECASE,
 )
 
 OUTLOOK_TOKEN_RE = re.compile(
-    rf"^(?P<outlook>{_OUTLOOK_VALUE_PATTERN})$",
+    rf"^(?P<outlook>{_OUTLOOK_VALUE_PATTERN}|{_OUTLOOK_SHORT_PATTERN})$",
     re.IGNORECASE,
 )
 
+_RATING_BOUNDARY_BEFORE = r"(?<![A-Z0-9가-힣])"
+_RATING_BOUNDARY_AFTER = r"(?![A-Z0-9가-힣])"
+
 RATING_SEARCH_RE = re.compile(
-    rf"(?<![A-Z0-9])(?P<rating>{_RATING_VALUE_PATTERN})(?P<sf>\(sf\))?"
-    rf"(?:\s*/\s*(?P<outlook>{_OUTLOOK_VALUE_PATTERN}))?(?![A-Z0-9+-])",
+    rf"{_RATING_BOUNDARY_BEFORE}(?P<rating>{_RATING_VALUE_PATTERN})(?P<sf>\(sf\))?"
+    rf"(?:\s*/\s*(?P<outlook_slash>{_OUTLOOK_VALUE_PATTERN}))?"
+    rf"(?:\s*\((?P<outlook_paren>{_OUTLOOK_VALUE_PATTERN}|{_OUTLOOK_SHORT_PATTERN})\))?"
+    rf"{_RATING_BOUNDARY_AFTER}",
     re.IGNORECASE,
 )
 
@@ -57,17 +63,41 @@ class RatingToken:
     rating: str
     outlook: str | None
     rating_display: str
+    raw_outlook: str | None = None
 
 
 def normalize_outlook(value: str | None) -> str | None:
     if not value:
         return None
-    normalized = normalize_text(value)
+    normalized = normalize_text(value).strip("()")
     return _OUTLOOK_MAP.get(normalized.lower(), normalized)
 
 
+def _build_token(
+    rating: str,
+    *,
+    sf: str | None,
+    outlook_slash: str | None,
+    outlook_paren: str | None,
+) -> RatingToken:
+    if sf:
+        rating = f"{rating}(sf)"
+    raw_outlook = outlook_slash or outlook_paren
+    if raw_outlook and not outlook_slash and outlook_paren:
+        raw_outlook = f"({outlook_paren})"
+    elif raw_outlook and outlook_slash:
+        raw_outlook = outlook_slash
+    outlook = normalize_outlook(raw_outlook)
+    rating_display = f"{rating}/{outlook}" if outlook else rating
+    return RatingToken(
+        rating=rating,
+        outlook=outlook,
+        rating_display=rating_display,
+        raw_outlook=raw_outlook,
+    )
+
+
 def parse_rating_value(value: str | None) -> RatingToken | None:
-    """단일 토큰 전체(예: `AA+/Stable`, `A+`)를 등급·전망으로 분해한다."""
     if not value:
         return None
 
@@ -77,22 +107,15 @@ def parse_rating_value(value: str | None) -> RatingToken | None:
         return None
 
     rating = match.group("rating").upper()
-    if match.group("sf"):
-        rating = f"{rating}(sf)"
-    outlook = normalize_outlook(match.group("outlook"))
-    rating_display = f"{rating}/{outlook}" if outlook else rating
-
-    return RatingToken(
-        rating=rating, outlook=outlook, rating_display=rating_display
+    return _build_token(
+        rating,
+        sf=match.group("sf"),
+        outlook_slash=match.group("outlook_slash"),
+        outlook_paren=match.group("outlook_paren"),
     )
 
 
 def find_rating_tokens_in_text(text: str | None) -> list[RatingToken]:
-    """셀/문자열 내부에서 검출되는 모든 rating 토큰(등급[/전망])을 찾는다.
-
-    한 셀 안에 토큰이 2개 이상이면 row_parser가 해당 행을 `ambiguous`로
-    판정하는 근거가 된다.
-    """
     if not text:
         return []
 
@@ -103,11 +126,26 @@ def find_rating_tokens_in_text(text: str | None) -> list[RatingToken]:
         rating = match.group("rating").upper()
         if match.group("sf"):
             rating = f"{rating}(sf)"
-        outlook = normalize_outlook(match.group("outlook"))
-        rating_display = f"{rating}/{outlook}" if outlook else rating
+        end_pos = match.end("rating")
+        if end_pos < len(normalized):
+            next_char = normalized[end_pos]
+            if next_char == "-" and end_pos + 1 < len(normalized):
+                if normalized[end_pos + 1].isdigit():
+                    continue
+            if (
+                len(rating) == 1
+                and rating in {"A", "B", "C"}
+                and next_char == "-"
+                and end_pos + 1 < len(normalized)
+                and normalized[end_pos + 1].isdigit()
+            ):
+                continue
         tokens.append(
-            RatingToken(
-                rating=rating, outlook=outlook, rating_display=rating_display
+            _build_token(
+                rating,
+                sf=match.group("sf"),
+                outlook_slash=match.group("outlook_slash"),
+                outlook_paren=match.group("outlook_paren"),
             )
         )
 
@@ -115,5 +153,4 @@ def find_rating_tokens_in_text(text: str | None) -> list[RatingToken]:
 
 
 def count_rating_tokens_in_cell(cell_text: str | None) -> int:
-    """셀 하나에 포함된 rating 토큰 개수(모호성 판정의 기초 단위)."""
     return len(find_rating_tokens_in_text(cell_text))

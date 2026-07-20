@@ -173,6 +173,14 @@ label_dictionary:
     instrument_key: coco_t1
     active: true
     note: "instrument_taxonomy.yaml 마이그레이션"
+  "CoCo(신종)":
+    instrument_key: coco_t1
+    active: true
+    note: "3사 실제 표기"
+  "COCO(신종)":
+    instrument_key: coco_t1
+    active: true
+    note: "3사 실제 표기"
   "CoCo(T1)":
     instrument_key: coco_t1
     active: true
@@ -325,6 +333,14 @@ label_dictionary:
     instrument_key: insurance_payment
     active: true
     note: "instrument_taxonomy.yaml 마이그레이션"
+  "보험금지급능력평가":
+    instrument_key: insurance_payment
+    active: true
+    note: "3사 실제 표기"
+  "IFSR":
+    instrument_key: insurance_payment
+    active: true
+    note: "3사 실제 표기"
 
   "ABS":
     instrument_key: structured_finance
@@ -357,6 +373,7 @@ recommendation:
   similarity_method: char_ngram_cosine
   ngram_size: 2
   top_k: 3
+  min_score: 15
   keyword_rules: []
 
 # classifier/기동 검증 동작 스위치(모두 고정 true, 문서화 목적).

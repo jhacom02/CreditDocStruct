@@ -38,8 +38,6 @@ class Settings:
     undefined_json: str = "undefined.json"
     max_pdf_pages: int = 3
     min_extracted_text_chars: int = 50
-    result_id_prefix: str = "R"
-    result_id_width: int = 6
 
     @staticmethod
     def _resolve_path(value: str) -> Path:
@@ -100,8 +98,6 @@ def get_settings() -> Settings:
         min_extracted_text_chars=int(
             os.environ.get("MIN_EXTRACTED_TEXT_CHARS", "50")
         ),
-        result_id_prefix=os.environ.get("RESULT_ID_PREFIX", "R"),
-        result_id_width=int(os.environ.get("RESULT_ID_WIDTH", "6")),
     )
 
 
