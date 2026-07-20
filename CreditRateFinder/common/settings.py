@@ -28,6 +28,8 @@ APP_ROOT = Path(__file__).resolve().parent.parent
 class Settings:
     """`.env`에서 로드한 애플리케이션 설정."""
 
+    # PDF 입력 폴더. 코드 기본값 없음 — .env INPUT_DIR에만 지정.
+    input_dir: str | None
     config_dir: str = "config"
     instruments_yaml: str = "instruments.yaml"
     result_dir: str = "result"
@@ -35,13 +37,27 @@ class Settings:
     admin_dir: str = "admin"
     undefined_json: str = "undefined.json"
     max_pdf_pages: int = 3
-    ocr_text_min_chars: int = 50
+    min_extracted_text_chars: int = 50
     result_id_prefix: str = "R"
     result_id_width: int = 6
 
+    @staticmethod
+    def _resolve_path(value: str) -> Path:
+        path = Path(value)
+        return path if path.is_absolute() else APP_ROOT / path
+
+    @property
+    def input_dir_path(self) -> Path:
+        if not self.input_dir:
+            raise ValueError(
+                ".env에 INPUT_DIR을 지정하세요. "
+                "PDF가 모여 있는 폴더 경로입니다(코드 기본값 없음)."
+            )
+        return self._resolve_path(self.input_dir)
+
     @property
     def config_dir_path(self) -> Path:
-        return APP_ROOT / self.config_dir
+        return self._resolve_path(self.config_dir)
 
     @property
     def instruments_yaml_path(self) -> Path:
@@ -49,11 +65,11 @@ class Settings:
 
     @property
     def result_dir_path(self) -> Path:
-        return APP_ROOT / self.result_dir
+        return self._resolve_path(self.result_dir)
 
     @property
     def admin_dir_path(self) -> Path:
-        return APP_ROOT / self.admin_dir
+        return self._resolve_path(self.admin_dir)
 
     @property
     def undefined_json_path(self) -> Path:
@@ -67,7 +83,9 @@ def _load_dotenv_once() -> None:
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
     _load_dotenv_once()
+    input_dir = (os.environ.get("INPUT_DIR") or "").strip() or None
     return Settings(
+        input_dir=input_dir,
         config_dir=os.environ.get("CONFIG_DIR", "config"),
         instruments_yaml=os.environ.get(
             "INSTRUMENTS_YAML", "instruments.yaml"
@@ -79,7 +97,9 @@ def get_settings() -> Settings:
         admin_dir=os.environ.get("ADMIN_DIR", "admin"),
         undefined_json=os.environ.get("UNDEFINED_JSON", "undefined.json"),
         max_pdf_pages=int(os.environ.get("MAX_PDF_PAGES", "3")),
-        ocr_text_min_chars=int(os.environ.get("OCR_TEXT_MIN_CHARS", "50")),
+        min_extracted_text_chars=int(
+            os.environ.get("MIN_EXTRACTED_TEXT_CHARS", "50")
+        ),
         result_id_prefix=os.environ.get("RESULT_ID_PREFIX", "R"),
         result_id_width=int(os.environ.get("RESULT_ID_WIDTH", "6")),
     )

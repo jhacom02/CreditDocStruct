@@ -1,24 +1,16 @@
 ---
-description: PDFScanner 추출 파이프라인 — 구조 우선, unknown 보존
-globs: credit_scanner/extract/**,credit_scanner/pipeline.py,main.py
+description: PDF 추출·rating_status 판정 규칙
+globs:
+  - CreditRateFinder/extract/**/*
+  - CreditRateFinder/agency/**/*
 alwaysApply: false
 ---
 
-# Extraction Pipeline
+# Extraction
 
-## 2단계 분리
-
-1. **구조 추출**: 표/시각에서 레이블+등급 행 수집
-2. **의미 분류**: taxonomy로 `instrument_type` 부여
-
-등급이 있으면 분류 실패해도 `unknown`으로 보존한다.
-
-## 추출 경로
-
-tables → visual layout → valid ratings → (비어 있을 때만) fallback
-
-## 수정 위치
-
-- 헤더/섹션 → `agency.py`
-- 상품 워딩 → `instrument_taxonomy.yaml`
-- 등급 토큰 → `rating_tokens.py` / `constants.py`
+- `extract/row_parser.py`는 `ExtractedRatingRow`만 생성한다. 분류를 호출하지 않는다.
+- rating 셀 0개 → `none`, 1개(토큰 1개) → `single`.
+- 셀 2개 이상(또는 셀 내부 토큰 2개 이상)이면 헤더/`현재등급` 열(또는 x좌표 범위)로 재파싱한다. 정확히 1토큰이면 `single`, 아니면 `ambiguous`.
+- 동일 등급이 현재·직전에 있어도 중복 제거로 `single` 만들지 말고 현재등급 열을 쓴다.
+- `pdf_table`이 성공하면 같은 페이지 `visual_layout`은 쓰지 않는다. `valid_ratings`는 primary에 없는 상품만 보완.
+- `classify/classifier.py`는 rating·evaluation_type 필드를 재계산하지 않고 그대로 이전한다.

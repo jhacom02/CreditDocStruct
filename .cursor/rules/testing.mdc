@@ -1,12 +1,12 @@
 ---
-description: PDFScanner 테스트·회귀 — 기관×워딩 fixture 유지
-globs: tests/**
+description: 테스트 규칙
+globs:
+  - CreditRateFinder/tests/**/*
 alwaysApply: false
 ---
 
 # Testing
 
-- taxonomy/classifier/row_parser 변경 후 `pytest tests/ -v` 실행
-- 새 워딩은 `tests/fixtures/label_variants.json`에 `label` / `expected` / `agency` 추가
-- 검증: matched 정확도, unknown 행 보존, CoCo vs 후순위 오분류, 기관별 헤더
-- fixture 없이 패턴만 추가하고 끝내지 말 것
+- `label_variants.json`: exact match → matched/key, 미등록 → undefined + suggestions, 자동 key 확정 없음.
+- 현재등급 열 선택·본 우선 selected·source 병합·fail_reason·Excel·occurrence_id dedup·원자적 저장 단위 테스트를 유지한다.
+- 구 `credit_scanner` / `unknown` / `--target` / `ocr_required` API를 테스트에서 참조하지 않는다.

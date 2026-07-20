@@ -1,137 +1,29 @@
 [
-  {
-    "label": "발행자",
-    "expected": "issuer",
-    "agency": "NICE신용평가"
-  },
-  {
-    "label": "발행자 신용등급",
-    "expected": "issuer",
-    "agency": "한국신용평가"
-  },
-  {
-    "label": "발행자신용등급",
-    "expected": "issuer",
-    "agency": "한국기업평가"
-  },
-  {
-    "label": "기업신용등급",
-    "expected": "issuer",
-    "agency": "NICE신용평가"
-  },
-  {
-    "label": "Issuer Rating",
-    "expected": "issuer",
-    "agency": "NICE신용평가"
-  },
-  {
-    "label": "ICR",
-    "expected": "issuer",
-    "agency": "한국신용평가"
-  },
-  {
-    "label": "무보증사채",
-    "expected": "senior_unsecured",
-    "agency": "NICE신용평가"
-  },
-  {
-    "label": "무보증사채(일반)",
-    "expected": "senior_unsecured",
-    "agency": "한국기업평가"
-  },
-  {
-    "label": "선순위 무보증사채",
-    "expected": "senior_unsecured",
-    "agency": "한국신용평가"
-  },
-  {
-    "label": "일반사채",
-    "expected": "senior_unsecured",
-    "agency": "NICE신용평가"
-  },
-  {
-    "label": "Senior Unsecured",
-    "expected": "senior_unsecured",
-    "agency": "NICE신용평가"
-  },
-  {
-    "label": "조건부자본증권(T1)",
-    "expected": "coco_t1",
-    "agency": "NICE신용평가"
-  },
-  {
-    "label": "조건부자본증권(신종)",
-    "expected": "coco_t1",
-    "agency": "한국신용평가"
-  },
-  {
-    "label": "신종자본증권",
-    "expected": "coco_t1",
-    "agency": "한국기업평가"
-  },
-  {
-    "label": "CoCo(T1)",
-    "expected": "coco_t1",
-    "agency": "NICE신용평가"
-  },
-  {
-    "label": "AT1",
-    "expected": "coco_t1",
-    "agency": "한국신용평가"
-  },
-  {
-    "label": "조건부자본증권(T2)",
-    "expected": "coco_t2",
-    "agency": "NICE신용평가"
-  },
-  {
-    "label": "조건부자본증권(후순위)",
-    "expected": "coco_t2",
-    "agency": "한국신용평가"
-  },
-  {
-    "label": "조건부후순위사채",
-    "expected": "coco_t2",
-    "agency": "한국기업평가"
-  },
-  {
-    "label": "CoCo Tier 2",
-    "expected": "coco_t2",
-    "agency": "NICE신용평가"
-  },
-  {
-    "label": "후순위사채",
-    "expected": "subordinated",
-    "agency": "한국신용평가"
-  },
-  {
-    "label": "기업어음",
-    "expected": "commercial_paper",
-    "agency": "NICE신용평가"
-  },
-  {
-    "label": "CP",
-    "expected": "commercial_paper",
-    "agency": "한국기업평가"
-  },
-  {
-    "label": "전자단기사채",
-    "expected": "short_term_bond",
-    "agency": "한국신용평가"
-  },
-  {
-    "label": "보험금지급능력등급",
-    "expected": "insurance_payment",
-    "agency": "NICE신용평가"
-  },
-  {
-    "label": "ABS",
-    "expected": "structured_finance",
-    "agency": "한국기업평가"
-  },
-  {
-    "label": "신규형특수채권상품XYZ",
-    "expected": "unknown",
-    "agency": "NICE신용평가"
-  }
+  {"label": "발행자", "expected": "issuer", "agency": "NICE신용평가"},
+  {"label": "발행자 신용등급", "expected": "issuer", "agency": "한국신용평가"},
+  {"label": "발행자신용등급", "expected": "issuer", "agency": "한국기업평가"},
+  {"label": "기업신용등급", "expected": "issuer", "agency": "NICE신용평가"},
+  {"label": "Issuer Rating", "expected": "issuer", "agency": "NICE신용평가"},
+  {"label": "ICR", "expected": "issuer", "agency": "한국신용평가"},
+  {"label": "무보증사채", "expected": "senior_unsecured", "agency": "NICE신용평가"},
+  {"label": "무보증사채(일반)", "expected": "senior_unsecured", "agency": "한국기업평가"},
+  {"label": "선순위 무보증사채", "expected": "senior_unsecured", "agency": "한국신용평가"},
+  {"label": "일반사채", "expected": "senior_unsecured", "agency": "NICE신용평가"},
+  {"label": "Senior Unsecured", "expected": "senior_unsecured", "agency": "NICE신용평가"},
+  {"label": "조건부자본증권(T1)", "expected": "coco_t1", "agency": "NICE신용평가"},
+  {"label": "조건부자본증권(신종)", "expected": "coco_t1", "agency": "한국신용평가"},
+  {"label": "신종자본증권", "expected": "coco_t1", "agency": "한국기업평가"},
+  {"label": "CoCo(T1)", "expected": "coco_t1", "agency": "NICE신용평가"},
+  {"label": "AT1", "expected": "coco_t1", "agency": "한국신용평가"},
+  {"label": "조건부자본증권(T2)", "expected": "coco_t2", "agency": "NICE신용평가"},
+  {"label": "조건부자본증권(후순위)", "expected": "coco_t2", "agency": "한국신용평가"},
+  {"label": "조건부후순위사채", "expected": "coco_t2", "agency": "한국기업평가"},
+  {"label": "CoCo Tier 2", "expected": "coco_t2", "agency": "NICE신용평가"},
+  {"label": "후순위사채", "expected": "subordinated", "agency": "한국신용평가"},
+  {"label": "기업어음", "expected": "commercial_paper", "agency": "NICE신용평가"},
+  {"label": "CP", "expected": "commercial_paper", "agency": "한국기업평가"},
+  {"label": "전자단기사채", "expected": "short_term_bond", "agency": "한국신용평가"},
+  {"label": "보험금지급능력등급", "expected": "insurance_payment", "agency": "NICE신용평가"},
+  {"label": "ABS", "expected": "structured_finance", "agency": "한국기업평가"},
+  {"label": "신규형특수채권상품XYZ", "expected": "undefined", "agency": "NICE신용평가"}
 ]

@@ -1,24 +1,15 @@
 ---
-description: PDFScanner 평가대상 분류 — taxonomy YAML 확장, 하드코딩 금지
-globs: credit_scanner/config/**,credit_scanner/classifier.py,credit_scanner/agency.py
+description: instruments.yaml exact-match 분류 규칙
+globs:
+  - CreditRateFinder/config/**/*
+  - CreditRateFinder/classify/**/*
 alwaysApply: false
 ---
 
-# Taxonomy & Classification
+# Taxonomy / Classification
 
-## 새 워딩 추가
-
-코드/정규식 하드코딩으로 동의어를 늘리지 않는다.  
-`credit_scanner/config/instrument_taxonomy.yaml`의 `aliases` 또는 `features`만 수정한다.
-
-## 분류 원칙
-
-- first-match 정규식 체인 대신 scoring(`InstrumentClassifier`)을 유지한다.
-- `agency.py`는 표 헤더·섹션 경계(레이아웃)만 담당. 상품 타입 분류에 쓰지 않는다.
-- 동점/임계값 미만 → `unknown` 또는 `ambiguous` (행 폐기 금지).
-
-## 운영 사이클
-
-1. Excel `needs_review`에서 `raw_label` 확인
-2. taxonomy `aliases`에 canonical 타입으로 추가
-3. `pytest tests/` 회귀 확인
+- 상품·라벨 매핑은 `config/instruments.yaml`에만 둔다.
+- 분류는 `label_dictionary` exact match만 사용한다. 점수형 feature taxonomy는 쓰지 않는다.
+- 라벨 status: `matched` | `undefined` (`unknown`/`ambiguous` 삭제).
+- undefined 추천(`classify/recommend.py`)은 검토용이며 `instrument_key`를 자동 확정하지 않는다.
+- 기동 시: 동일 정규화 라벨의 상충 매핑 거부, 미등록 `instrument_key` 참조 거부.
