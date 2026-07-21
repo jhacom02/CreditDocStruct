@@ -2,14 +2,22 @@
 
 from __future__ import annotations
 
-import re
 from dataclasses import replace
 
 from common.models import ExtractedRatingRow
+from common.rating_tokens import RatingToken
 from common.settings import InstrumentsConfig
 from common.text_utils import normalize_label, normalize_text
 from extract.label_fields import decompose_label_fields
-from extract.row_parser import EVALUATION_TYPES
+from extract.row_parser import (
+    EVALUATION_TYPES,
+    apply_rating_token_to_cells,
+    infer_evaluation_types_from_column,
+    is_evaluation_only_primary_row,
+    is_orphan_rating_row,
+    ordered_rating_tokens_from_columns,
+    rating_token_for_split_index,
+)
 
 EVALUATION_ONLY_LABELS = frozenset(EVALUATION_TYPES)
 
@@ -79,34 +87,116 @@ def _split_text_by_spans(
     return [normalized for _s, _e, normalized, _key in spans]
 
 
+def _evaluation_type_after_first_span(
+    label_source: str,
+    spans: list[tuple[int, int, str, str]],
+) -> str | None:
+    if not spans:
+        return None
+
+    compact = normalize_label(label_source)
+    _start, end, _normalized, _key = spans[0]
+    remainder = compact[end:]
+    for eval_type in ("본평가", "본"):
+        if remainder.startswith(normalize_label(eval_type)):
+            return "본평가" if eval_type == "본평가" else "본"
+    return None
+
+
+def _apply_split_rating(
+    row: ExtractedRatingRow,
+    token: RatingToken,
+) -> ExtractedRatingRow:
+    cells = apply_rating_token_to_cells(row.cells, token, row.header_cells)
+    return replace(
+        row,
+        cells=cells,
+        rating=token.rating,
+        outlook=token.outlook,
+        raw_outlook=token.raw_outlook,
+        rating_status="single",
+        rating_cells=[token.rating_display],
+    )
+
+
 def split_merged_row(
     row: ExtractedRatingRow,
     config: InstrumentsConfig,
+    *,
+    orphan_tokens: list[RatingToken] | None = None,
 ) -> list[ExtractedRatingRow]:
-    """merged 라벨을 상품별 ExtractedRatingRow로 분할한다."""
+    """merged 라벨을 상품별 ExtractedRatingRow로 분할하고 등급을 1:1 매핑한다."""
     label_source = row.label_text or row.raw_label or " ".join(row.cells)
     spans = find_registered_label_spans(label_source, config)
     if len({item[3] for item in spans}) < 2:
         return [row]
 
     labels = _split_text_by_spans(label_source, spans)
+    current_tokens, previous_tokens = ordered_rating_tokens_from_columns(
+        row.cells, row.header_cells
+    )
+    inherited_eval = row.evaluation_type or _evaluation_type_after_first_span(
+        label_source, spans
+    )
+    eval_types = infer_evaluation_types_from_column(row.cells, row.header_cells)
+
     rebuilt: list[ExtractedRatingRow] = []
-    for offset, label in enumerate(labels):
+    child_index = 0
+    for label in labels:
         if label in EVALUATION_ONLY_LABELS:
             continue
+
         child = replace(
             row,
             raw_label=label,
             label_text=label,
-            row_index=row.row_index + offset,
+            row_index=row.row_index + child_index,
         )
+        if child_index < len(eval_types):
+            child = replace(child, evaluation_type=eval_types[child_index])
+        elif child_index == 0 and inherited_eval in EVALUATION_ONLY_LABELS:
+            child = replace(child, evaluation_type=inherited_eval)
+
+        token = rating_token_for_split_index(
+            child_index,
+            current_tokens,
+            previous_tokens,
+            orphan_tokens=orphan_tokens,
+        )
+        if token is not None:
+            child = _apply_split_rating(child, token)
+        else:
+            child = replace(
+                child,
+                rating=None,
+                outlook=None,
+                raw_outlook=None,
+                rating_status="none",
+                rating_cells=[],
+            )
+
         rebuilt.append(child)
+        child_index += 1
+
     return rebuilt or [row]
 
 
 def _is_bon_only_label(row: ExtractedRatingRow) -> bool:
-    label = normalize_text(row.raw_label)
-    return label in EVALUATION_ONLY_LABELS
+    return is_evaluation_only_primary_row(row)
+
+
+def _collect_orphan_tokens(
+    rows: list[ExtractedRatingRow],
+    start_index: int,
+) -> tuple[list[RatingToken], int]:
+    from common.rating_tokens import find_rating_tokens_in_text
+
+    tokens: list[RatingToken] = []
+    index = start_index
+    while index < len(rows) and is_orphan_rating_row(rows[index]):
+        tokens.extend(find_rating_tokens_in_text(rows[index].raw_label))
+        index += 1
+    return tokens, index
 
 
 def rebuild_merged_rows(
@@ -115,28 +205,58 @@ def rebuild_merged_rows(
 ) -> tuple[list[ExtractedRatingRow], str | None]:
     """분류 전 merged 행을 복원한다. 복원 불가 시 오류 메시지를 반환."""
     rebuilt: list[ExtractedRatingRow] = []
+    index = 0
 
-    for row in rows:
-        decomposed = decompose_label_fields(row, config=config)
+    while index < len(rows):
+        row = rows[index]
 
-        if _is_bon_only_label(decomposed):
-            return [], "evaluation_type_only_label"
-
-        label_text = decomposed.label_text or decomposed.raw_label
-        if is_merged_label_suspect(label_text, config):
-            split_rows = split_merged_row(decomposed, config)
-            if len(split_rows) <= 1:
-                return [], "merged_row_rebuild_failed"
-            rebuilt.extend(split_rows)
+        if is_orphan_rating_row(row):
+            index += 1
             continue
 
-        if is_merged_label_suspect(decomposed.raw_label, config):
-            split_rows = split_merged_row(decomposed, config)
+        decomposed = decompose_label_fields(
+            row,
+            header_cells=row.header_cells,
+            config=config,
+        )
+
+        if _is_bon_only_label(decomposed):
+            index += 1
+            continue
+
+        if "@" in normalize_text(decomposed.raw_label):
+            index += 1
+            continue
+
+        label_text = decomposed.label_text or decomposed.raw_label
+        merged = is_merged_label_suspect(label_text, config) or (
+            is_merged_label_suspect(decomposed.raw_label, config)
+        )
+        if (
+            decomposed.source == "visual_layout"
+            and decomposed.rating_status == "single"
+        ):
+            # visual 한 줄에는 평가대상 뒤의 종목명이 함께 붙는다.
+            # 종목명에 등록 alias가 있어도 단일 등급 행이면 별도 상품이 아니다.
+            merged = False
+
+        if merged:
+            orphan_tokens, next_index = _collect_orphan_tokens(rows, index + 1)
+            split_rows = split_merged_row(
+                decomposed,
+                config,
+                orphan_tokens=orphan_tokens,
+            )
             if len(split_rows) <= 1:
                 return [], "merged_row_rebuild_failed"
             rebuilt.extend(split_rows)
+            index = next_index
             continue
 
         rebuilt.append(decomposed)
+        index += 1
+
+    if not rebuilt:
+        return [], "no_valid_rows"
 
     return rebuilt, None

@@ -12,6 +12,7 @@ from common.rating_tokens import (
     count_rating_tokens_in_cell,
     find_rating_tokens_in_text,
     normalize_outlook,
+    parse_rating_value,
 )
 from common.text_utils import normalize_text
 
@@ -193,6 +194,15 @@ def infer_evaluation_type(
         value = normalize_text(cell)
         if value in EVALUATION_TYPES:
             return value
+
+    # visual_layout은 표 한 행 전체가 단일 cell로 들어올 수 있다.
+    combined = normalize_text(" ".join(cells))
+    for eval_type in sorted(EVALUATION_TYPES, key=len, reverse=True):
+        if re.search(
+            rf"(?<![A-Za-z가-힣]){re.escape(eval_type)}(?![A-Za-z가-힣])",
+            combined,
+        ):
+            return eval_type
     return None
 
 
@@ -237,6 +247,146 @@ def _token_from_candidate(
     return rating, outlook, raw_outlook
 
 
+def infer_evaluation_types_from_column(
+    cells: list[str],
+    header_cells: list[str] | None,
+) -> list[str]:
+    """종류 열에 '본 정기'처럼 복수 값이 있으면 순서대로 반환한다."""
+    type_index = find_header_column_index(header_cells, EVAL_TYPE_HEADER_NAMES)
+    if type_index is None or type_index >= len(cells):
+        return []
+
+    cell = normalize_text(cells[type_index])
+    if not cell:
+        return []
+
+    if cell in EVALUATION_TYPES:
+        return [cell]
+
+    found: list[str] = []
+    for part in re.split(r"[\s/]+", cell):
+        value = normalize_text(part)
+        if value in EVALUATION_TYPES:
+            found.append(value)
+    return found
+
+
+def ordered_rating_tokens_from_columns(
+    cells: list[str],
+    header_cells: list[str] | None,
+) -> tuple[list[RatingToken], list[RatingToken]]:
+    """현재등급·직전등급 열에서 순서대로 rating 토큰을 추출한다."""
+    current_index = find_header_column_index(
+        header_cells, CURRENT_RATING_HEADER_NAMES
+    )
+    previous_index = find_header_column_index(
+        header_cells, PREVIOUS_RATING_HEADER_NAMES
+    )
+
+    current_tokens: list[RatingToken] = []
+    if current_index is not None and current_index < len(cells):
+        current_tokens = find_rating_tokens_in_text(cells[current_index])
+
+    previous_tokens: list[RatingToken] = []
+    if previous_index is not None and previous_index < len(cells):
+        previous_tokens = find_rating_tokens_in_text(cells[previous_index])
+
+    return current_tokens, previous_tokens
+
+
+def rating_token_for_split_index(
+    index: int,
+    current_tokens: list[RatingToken],
+    previous_tokens: list[RatingToken],
+    *,
+    orphan_tokens: list[RatingToken] | None = None,
+) -> RatingToken | None:
+    """merged row 분할 시 상품 index에 대응하는 등급 토큰을 고른다."""
+    if index < len(current_tokens):
+        return current_tokens[index]
+
+    overflow_index = index - len(current_tokens)
+    orphans = orphan_tokens or []
+    if overflow_index < len(orphans):
+        return orphans[overflow_index]
+    if overflow_index < len(previous_tokens):
+        return previous_tokens[overflow_index]
+    if index < len(previous_tokens):
+        return previous_tokens[index]
+
+    # 현재·직전 열에 동일 단일 등급만 있을 때 merged 상품 전체에 공통 적용
+    if (
+        len(current_tokens) == 1
+        and current_tokens[0]
+        and (
+            not previous_tokens
+            or (
+                len(previous_tokens) == 1
+                and previous_tokens[0].rating == current_tokens[0].rating
+                and previous_tokens[0].outlook == current_tokens[0].outlook
+            )
+        )
+    ):
+        return current_tokens[0]
+
+    return None
+
+
+def apply_rating_token_to_cells(
+    cells: list[str],
+    token: RatingToken,
+    header_cells: list[str] | None,
+) -> list[str]:
+    """현재등급 열에 단일 rating 토큰만 남기도록 cells를 갱신한다."""
+    current_index = find_header_column_index(
+        header_cells, CURRENT_RATING_HEADER_NAMES
+    )
+    updated = list(cells)
+    display = token.rating_display
+    if current_index is not None:
+        while len(updated) <= current_index:
+            updated.append("")
+        updated[current_index] = display
+    return updated
+
+
+def is_orphan_rating_row(row: ExtractedRatingRow) -> bool:
+    """평가대상 없이 등급 토큰만 있는 primary 표 행."""
+    if row.section != "primary_rating":
+        return False
+
+    label = normalize_text(row.raw_label)
+    if not label or looks_like_instrument_label(label):
+        return False
+
+    if parse_rating_value(label):
+        return True
+
+    tokens = find_rating_tokens_in_text(label)
+    if not tokens:
+        return False
+
+    from common.text_utils import normalize_label
+
+    return normalize_label(label) == normalize_label(tokens[0].rating_display)
+
+
+def is_evaluation_only_primary_row(row: ExtractedRatingRow) -> bool:
+    """평가대상이 종류(본·정기 등)만 있고 상품명이 없는 primary 행."""
+    if row.section != "primary_rating":
+        return False
+    label = normalize_text(row.raw_label)
+    if label in EVALUATION_TYPES:
+        return True
+    target_index = find_header_column_index(
+        row.header_cells, TARGET_LABEL_HEADER_NAMES
+    )
+    if target_index is None or target_index >= len(row.cells):
+        return False
+    target = normalize_text(row.cells[target_index])
+    return not target and label in EVALUATION_TYPES
+
+
 def _resolve_row_rating(
     cells: list[str],
     header_cells: list[str] | None,
@@ -248,6 +398,15 @@ def _resolve_row_rating(
         return None, None, None, "none", rating_cells
 
     if len(candidates) == 1:
+        rating, outlook, raw_outlook = _token_from_candidate(
+            candidates[0], cells
+        )
+        return rating, outlook, raw_outlook, "single", rating_cells
+
+    distinct_ratings = {
+        (item.token.rating, item.token.outlook) for item in candidates
+    }
+    if len(distinct_ratings) == 1:
         rating, outlook, raw_outlook = _token_from_candidate(
             candidates[0], cells
         )
@@ -335,4 +494,5 @@ def parse_rating_row_values(
         cells=scan_values,
         evaluation_type=evaluation_type,
         label_text=normalize_text(" ".join(scan_values)),
+        header_cells=list(header_cells) if header_cells else None,
     )

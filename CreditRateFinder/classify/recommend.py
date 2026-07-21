@@ -1,8 +1,7 @@
 """undefined 전용 추천 Key·점수 (자동 확정에 사용하지 않음).
 
 순수 Python char n-gram cosine 유사도.
-
-Plan: creditratefinder_restructure_43c68190 섹션 C 참고.
+추천 파라미터는 `common.matching_policy.RECOMMENDATION`이 단일 원천이다.
 """
 
 from __future__ import annotations
@@ -10,12 +9,12 @@ from __future__ import annotations
 import math
 from collections import Counter
 
+from common.matching_policy import RECOMMENDATION, normalize_label
 from common.models import Suggestion
 from common.settings import InstrumentsConfig
-from common.text_utils import normalize_label
 
 
-def _char_ngrams(text: str, n: int = 2) -> Counter[str]:
+def _char_ngrams(text: str, n: int) -> Counter[str]:
     if len(text) < n:
         return Counter([text] if text else [])
     return Counter(text[i : i + n] for i in range(len(text) - n + 1))
@@ -40,14 +39,12 @@ def recommend_instruments(
     top_k: int | None = None,
 ) -> list[Suggestion]:
     """undefined 라벨에 대해 instrument_key 추천 목록을 생성한다."""
-    recommendation = config.recommendation or {}
-    n = int(recommendation.get("ngram_size", 2))
-    k = int(top_k if top_k is not None else recommendation.get("top_k", 3))
-    min_score = float(recommendation.get("min_score", 0))
+    n = RECOMMENDATION.ngram_size
+    k = RECOMMENDATION.top_k if top_k is None else top_k
+    min_score = RECOMMENDATION.min_score
 
     query = _char_ngrams(normalized_label, n)
 
-    # 각 instrument_key의 등록 라벨 n-gram을 합쳐 대표 벡터로 사용
     key_vectors: dict[str, Counter[str]] = {
         key: Counter() for key in config.instruments
     }

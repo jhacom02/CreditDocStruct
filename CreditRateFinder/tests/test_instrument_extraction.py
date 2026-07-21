@@ -21,7 +21,6 @@ from extract.label_fields import decompose_label_fields
 from extract.row_rebuild import rebuild_merged_rows
 from classify.classifier import LabelClassifier
 from common.fail_reasons import (
-    MULTIPLE_INSTRUMENTS,
     MULTIPLE_RATING_COLUMNS,
     MULTIPLE_RATINGS,
     RATING_NOT_FOUND,
@@ -35,14 +34,13 @@ from extract.label_fields import decompose_label_fields, split_label_and_issue
 from extract.layout import truncate_valid_row_text
 from extract.merge import merge_canonical_records, merge_rating_records
 from extract.row_parser import parse_rating_row_values
-from export.excel import build_excel_row
+from export.excel import build_excel_row, build_excel_rows
+from admin.services.candidate_store import init_db, list_pending
 from export.undefined_store import (
-    load_undefined_store,
     make_occurrence_id,
-    merge_undefined_occurrences,
-    write_undefined_store_tmp,
+    persist_undefined_occurrences,
 )
-from main import _extract_rows_from_page, commit_batch_outputs, select_and_judge
+from main import _extract_rows_from_page, build_products, commit_batch_outputs
 
 
 @pytest.fixture(scope="module")
@@ -101,6 +99,22 @@ def test_row_parser_rating_status_single() -> None:
     assert row.evaluation_type == "본평가"
 
 
+def test_row_parser_infers_evaluation_type_from_visual_line() -> None:
+    row = parse_rating_row_values(
+        values=[
+            "조건부자본증권(신종) 농업금융채권(은행) "
+            "2026-04이-C(신종) 본 AA-/STABLE 상각형"
+        ],
+        page_number=1,
+        row_index=0,
+        section="primary_rating",
+        source="visual_layout",
+    )
+    assert row is not None
+    assert row.rating == "AA-"
+    assert row.evaluation_type == "본"
+
+
 def test_row_parser_current_equals_previous_with_header() -> None:
     header = ["평가대상", "종류", "현재등급", "직전등급", "Rating Action"]
     row = parse_rating_row_values(
@@ -148,7 +162,7 @@ def test_row_parser_multiple_rating_cells_ambiguous_without_header() -> None:
     assert row.rating is None
 
 
-def test_row_parser_duplicate_same_rating_two_cells_ambiguous_without_header() -> None:
+def test_row_parser_duplicate_same_rating_two_cells_resolves_single() -> None:
     row = parse_rating_row_values(
         values=["조건부자본증권(신종)", "AA+", "AA+", "안정적"],
         page_number=1,
@@ -157,7 +171,8 @@ def test_row_parser_duplicate_same_rating_two_cells_ambiguous_without_header() -
         source="unit_test",
     )
     assert row is not None
-    assert row.rating_status == "ambiguous"
+    assert row.rating_status == "single"
+    assert row.rating == "AA+"
 
 
 def test_row_parser_current_cell_multi_token_ambiguous() -> None:
@@ -224,8 +239,8 @@ def _record(
     )
 
 
-def test_select_success_single_candidate() -> None:
-    status, fail_reason, selected, ratings = select_and_judge(
+def test_products_success_single_candidate() -> None:
+    products, status, fail_reason = build_products(
         [
             _record(key="coco_t1", status="matched", rating="A+"),
             _record(
@@ -238,26 +253,28 @@ def test_select_success_single_candidate() -> None:
     )
     assert status == "success"
     assert fail_reason is None
-    assert selected is not None
-    assert selected["instrument_key"] == "coco_t1"
-    assert "coco_t1" in ratings
+    assert len(products) == 1
+    assert products[0]["instrument_key"] == "coco_t1"
+    assert products[0]["rating"] == "A+"
 
 
-def test_select_multiple_instruments() -> None:
-    status, fail_reason, selected, _ = select_and_judge(
+def test_products_emits_all_instruments() -> None:
+    products, status, fail_reason = build_products(
         [
             _record(key="coco_t1", status="matched", rating="A+"),
-            _record(key="issuer", status="matched", rating="AAA"),
+            _record(key="issuer", status="matched", rating="AAA", row_index=1),
         ]
     )
-    assert status == "fail"
-    assert fail_reason is not None
-    assert fail_reason["code"] == MULTIPLE_INSTRUMENTS
-    assert selected is None
+    assert status == "success"
+    assert fail_reason is None
+    assert {item["instrument_key"] for item in products} == {
+        "coco_t1",
+        "issuer",
+    }
 
 
-def test_select_bon_over_regular() -> None:
-    status, fail_reason, selected, ratings = select_and_judge(
+def test_products_prefers_bon_over_regular_same_key() -> None:
+    products, status, fail_reason = build_products(
         [
             _record(
                 key="insurance_payment",
@@ -268,20 +285,20 @@ def test_select_bon_over_regular() -> None:
                 evaluation_type="본",
             ),
             _record(
+                key="insurance_payment",
+                status="matched",
+                rating="AA+",
+                outlook="안정적",
+                label="보험금지급능력평가",
+                evaluation_type="정기",
+                row_index=1,
+            ),
+            _record(
                 key="subordinated",
                 status="matched",
                 rating="AA+",
                 outlook="안정적",
                 label="후순위사채",
-                evaluation_type="정기",
-                row_index=1,
-            ),
-            _record(
-                key="coco_t1",
-                status="matched",
-                rating="AA",
-                outlook="안정적",
-                label="신종자본증권",
                 evaluation_type="정기",
                 row_index=2,
             ),
@@ -289,14 +306,14 @@ def test_select_bon_over_regular() -> None:
     )
     assert status == "success"
     assert fail_reason is None
-    assert selected is not None
-    assert selected["instrument_key"] == "insurance_payment"
-    assert selected["evaluation_type"] == "본"
-    assert set(ratings) == {"insurance_payment", "subordinated", "coco_t1"}
+    by_key = {item["instrument_key"]: item for item in products}
+    assert by_key["insurance_payment"]["rating"] == "AAA"
+    assert by_key["insurance_payment"]["evaluation_type"] == "본"
+    assert by_key["subordinated"]["evaluation_type"] == "정기"
 
 
-def test_select_multiple_bon_instruments() -> None:
-    status, fail_reason, selected, _ = select_and_judge(
+def test_products_multiple_bon_instruments_all_success() -> None:
+    products, status, fail_reason = build_products(
         [
             _record(
                 key="insurance_payment",
@@ -311,16 +328,52 @@ def test_select_multiple_bon_instruments() -> None:
                 evaluation_type="본",
                 row_index=1,
             ),
+            _record(
+                key="commercial_paper",
+                status="matched",
+                rating="A2",
+                evaluation_type="본",
+                row_index=2,
+            ),
         ]
     )
-    assert status == "fail"
-    assert fail_reason is not None
-    assert fail_reason["code"] == MULTIPLE_INSTRUMENTS
-    assert selected is None
+    assert status == "success"
+    assert fail_reason is None
+    assert len(products) == 3
+    assert all(item["status"] == "success" for item in products)
 
 
-def test_select_multiple_rating_columns() -> None:
-    status, fail_reason, selected, _ = select_and_judge(
+def test_products_duplicate_same_bon_keeps_first() -> None:
+    products, status, fail_reason = build_products(
+        [
+            _record(
+                key="senior_unsecured",
+                status="matched",
+                rating="A",
+                outlook="안정적",
+                evaluation_type="본",
+                label="무보증사채",
+            ),
+            _record(
+                key="senior_unsecured",
+                status="matched",
+                rating="A",
+                outlook="안정적",
+                evaluation_type="본",
+                label="무보증사채",
+                row_index=1,
+            ),
+        ]
+    )
+    assert status == "success"
+    assert fail_reason is None
+    assert len(products) == 1
+    assert products[0]["rating"] == "A"
+    assert products[0]["evaluation_type"] == "본"
+
+
+def test_products_multiple_rating_columns() -> None:
+    products, status, fail_reason = build_products(
         [
             _record(
                 key="coco_t1",
@@ -331,13 +384,13 @@ def test_select_multiple_rating_columns() -> None:
         ]
     )
     assert status == "fail"
-    assert fail_reason is not None
-    assert fail_reason["code"] == MULTIPLE_RATING_COLUMNS
-    assert selected is None
+    assert fail_reason is None
+    assert products[0]["status"] == "fail"
+    assert products[0]["fail_reason"]["code"] == MULTIPLE_RATING_COLUMNS
 
 
-def test_select_multiple_ratings() -> None:
-    status, fail_reason, selected, _ = select_and_judge(
+def test_products_multiple_ratings() -> None:
+    products, status, fail_reason = build_products(
         [
             _record(key="coco_t1", status="matched", rating="A+"),
             _record(
@@ -349,13 +402,37 @@ def test_select_multiple_ratings() -> None:
         ]
     )
     assert status == "fail"
-    assert fail_reason is not None
-    assert fail_reason["code"] == MULTIPLE_RATINGS
-    assert selected is None
+    assert fail_reason is None
+    assert products[0]["fail_reason"]["code"] == MULTIPLE_RATINGS
 
 
-def test_select_rating_not_found() -> None:
-    status, fail_reason, selected, _ = select_and_judge(
+def test_products_partial_when_one_fails() -> None:
+    products, status, fail_reason = build_products(
+        [
+            _record(
+                key="coco_t1",
+                status="matched",
+                rating="A+",
+                evaluation_type="본",
+            ),
+            _record(
+                key="issuer",
+                status="matched",
+                rating=None,
+                rating_status="ambiguous",
+                row_index=1,
+            ),
+        ]
+    )
+    assert status == "partial"
+    assert fail_reason is None
+    by_key = {item["instrument_key"]: item for item in products}
+    assert by_key["coco_t1"]["status"] == "success"
+    assert by_key["issuer"]["status"] == "fail"
+
+
+def test_products_rating_not_found() -> None:
+    products, status, fail_reason = build_products(
         [
             _record(
                 key="coco_t1",
@@ -366,13 +443,12 @@ def test_select_rating_not_found() -> None:
         ]
     )
     assert status == "fail"
-    assert fail_reason is not None
-    assert fail_reason["code"] == RATING_NOT_FOUND
-    assert selected is None
+    assert fail_reason is None
+    assert products[0]["fail_reason"]["code"] == RATING_NOT_FOUND
 
 
-def test_select_undefined_label() -> None:
-    status, fail_reason, selected, _ = select_and_judge(
+def test_products_undefined_label() -> None:
+    products, status, fail_reason = build_products(
         [
             _record(
                 key=None,
@@ -385,7 +461,25 @@ def test_select_undefined_label() -> None:
     assert status == "fail"
     assert fail_reason is not None
     assert fail_reason["code"] == UNDEFINED_LABEL
-    assert selected is None
+    assert products == []
+
+
+def test_products_valid_only_evaluation_type() -> None:
+    products, status, fail_reason = build_products(
+        [
+            _record(
+                key="issuer",
+                status="matched",
+                rating="AAA",
+                source="valid_rating_section",
+                section="valid_ratings",
+            )
+        ]
+    )
+    assert status == "success"
+    assert fail_reason is None
+    assert products[0]["evaluation_type"] == "유효등급"
+    assert products[0]["rating"] == "AAA"
 
 
 def test_merge_confirms_valid_when_same_rating() -> None:
@@ -488,76 +582,94 @@ def test_agency_layout_headers() -> None:
     assert not is_rating_table_header("회사개요주요재무", nice)
 
 
-def test_excel_row_uses_selected() -> None:
+def test_excel_rows_use_products() -> None:
     config = get_instruments_config()
     result = {
-        "result_id": "A0001",
+        "result_no": 1,
         "company_name": "테스트은행",
         "agency": "NICE신용평가㈜",
         "status": "success",
         "file_name": "a.pdf",
-        "selected": {
-            "instrument_key": "coco_t1",
-            "raw_label": "신종자본증권",
-            "rating": "A+",
-            "outlook": "안정적",
-        },
+        "products": [
+            {
+                "instrument_key": "coco_t1",
+                "raw_label": "신종자본증권",
+                "rating": "A+",
+                "outlook": "안정적",
+                "evaluation_type": "본",
+                "status": "success",
+                "fail_reason": None,
+            },
+            {
+                "instrument_key": "issuer",
+                "raw_label": "Issuer Rating",
+                "rating": "AAA",
+                "outlook": "안정적",
+                "evaluation_type": "정기",
+                "status": "success",
+                "fail_reason": None,
+            },
+        ],
     }
-    row = build_excel_row(result, config)
-    assert row["대분류_Key"] == "coco_t1"
-    assert row["대분류명"] == config.instruments["coco_t1"].major_category_name
-    assert row["소분류_원본라벨"] == "신종자본증권"
-    assert row["신용등급"] == "A+"
+    rows = build_excel_rows(result, config)
+    assert len(rows) == 2
+    assert rows[0]["No"] == 1
+    assert rows[0]["상품분류_Key"] == "coco_t1"
+    assert rows[0]["평가종류"] == "본"
+    assert rows[0]["신용등급"] == "A+"
+    assert rows[1]["상품분류_Key"] == "issuer"
+    assert rows[1]["평가종류"] == "정기"
 
 
 def test_excel_fail_blanks_fields() -> None:
     config = get_instruments_config()
     result = {
-        "result_id": "A0002",
+        "result_no": 2,
         "company_name": "테스트은행",
         "agency": "NICE신용평가㈜",
         "status": "fail",
         "file_name": "b.pdf",
-        "selected": None,
+        "products": [],
+        "fail_reason": {"code": "parse_error", "message": "x"},
     }
-    row = build_excel_row(result, config)
-    assert row["대분류_Key"] == ""
-    assert row["신용등급"] == ""
+    rows = build_excel_rows(result, config)
+    assert len(rows) == 1
+    assert rows[0]["No"] == 2
+    assert rows[0]["상품분류_Key"] == ""
+    assert rows[0]["신용등급"] == ""
+    assert rows[0]["실패사유"] == "parse_error"
 
 
 def test_undefined_occurrence_dedup(tmp_path: Path) -> None:
-    store = {"schema_version": 1, "updated_at": None, "entries": []}
+    db_path = tmp_path / "admin.db"
     occurrence_id = make_occurrence_id("abc123", "미등록상품", 1, 0)
     occurrence = {
         "occurrence_id": occurrence_id,
         "normalized_label": "미등록상품",
         "raw_label": "미등록상품",
         "file_name": "a.pdf",
+        "company_name": "테스트",
         "agency": "NICE신용평가㈜",
         "rating": "A+",
         "suggestions": [],
     }
 
-    merged1 = merge_undefined_occurrences(store, [occurrence])
-    assert merged1["entries"][0]["occurrence_count"] == 1
+    persist_undefined_occurrences([occurrence], db_path=db_path)
+    pending = list_pending(db_path=db_path)
+    assert pending[0]["occurrence_count"] == 1
 
-    merged2 = merge_undefined_occurrences(merged1, [occurrence])
-    assert merged2["entries"][0]["occurrence_count"] == 1
-    assert len(merged2["entries"][0]["occurrence_ids"]) == 1
+    persist_undefined_occurrences([occurrence], db_path=db_path)
+    pending = list_pending(db_path=db_path)
+    assert pending[0]["occurrence_count"] == 1
 
     occurrence2 = dict(occurrence)
     occurrence2["occurrence_id"] = make_occurrence_id(
         "def456", "미등록상품", 1, 0
     )
-    merged3 = merge_undefined_occurrences(merged2, [occurrence2])
-    assert merged3["entries"][0]["occurrence_count"] == 2
-
-    admin_path = tmp_path / "undefined.json"
-    tmp = write_undefined_store_tmp(merged3, admin_path)
-    assert tmp.exists()
-    tmp.replace(admin_path)
-    loaded = load_undefined_store(admin_path)
-    assert loaded["entries"][0]["occurrence_count"] == 2
+    persist_undefined_occurrences([occurrence2], db_path=db_path)
+    pending = list_pending(db_path=db_path)
+    assert pending[0]["occurrence_count"] == 2
+    assert init_db(db_path).exists()
 
 
 def test_commit_batch_atomic(
@@ -566,48 +678,59 @@ def test_commit_batch_atomic(
     from common import settings as settings_mod
 
     monkeypatch.setenv("RESULT_DIR", str(tmp_path / "result"))
-    monkeypatch.setenv("ADMIN_DIR", str(tmp_path / "admin"))
+    monkeypatch.setenv("ADMIN_DB_PATH", str(tmp_path / "admin.db"))
     settings_mod.get_settings.cache_clear()
 
     settings = settings_mod.get_settings()
     settings.result_dir_path.mkdir(parents=True, exist_ok=True)
-    settings.admin_dir_path.mkdir(parents=True, exist_ok=True)
-    (settings.admin_dir_path / "undefined.json").write_text(
-        '{"schema_version":1,"updated_at":null,"entries":[]}',
-        encoding="utf-8",
-    )
 
     results = [
         {
-            "result_id": "A0001",
+            "result_no": 1,
             "file_name": "a.pdf",
             "file_path": "a.pdf",
             "company_name": "테스트",
             "agency": "NICE신용평가㈜",
             "status": "success",
             "fail_reason": None,
-            "selected": {
-                "instrument_key": "coco_t1",
-                "raw_label": "신종자본증권",
-                "rating": "A+",
-                "outlook": None,
-            },
-            "ratings": {
-                "coco_t1": {"rating": "A+", "outlook": None, "page": 1}
-            },
+            "products": [
+                {
+                    "instrument_key": "coco_t1",
+                    "raw_label": "신종자본증권",
+                    "rating": "A+",
+                    "outlook": None,
+                    "evaluation_type": "본",
+                    "status": "success",
+                    "fail_reason": None,
+                }
+            ],
             "records": [],
             "undefined_records": [],
             "file_hash": "abc",
         }
     ]
 
-    json_path, excel_path, admin_path = commit_batch_outputs(
+    json_path, excel_path, db_path = commit_batch_outputs(
         results, stem="result_test"
     )
     assert json_path.exists()
     assert excel_path.exists()
-    assert admin_path.exists()
+    assert db_path.exists()
     assert not json_path.with_name(json_path.name + ".tmp").exists()
+
+    saved_results = json.loads(json_path.read_text(encoding="utf-8"))
+    assert saved_results[0]["result_no"] == 1
+    assert isinstance(saved_results[0]["result_no"], int)
+    assert "result_id" not in saved_results[0]
+
+    from openpyxl import load_workbook
+
+    workbook = load_workbook(excel_path, read_only=True, data_only=True)
+    sheet = workbook["신용등급_결과"]
+    assert sheet["A1"].value == "No"
+    assert sheet["A2"].value == 1
+    assert isinstance(sheet["A2"].value, int)
+    workbook.close()
 
     settings_mod.get_settings.cache_clear()
 
@@ -734,16 +857,16 @@ def test_kyongnam_bank_primary_success(classifier: LabelClassifier) -> None:
     records, warnings = merge_canonical_records(
         [classifier.classify_row(decomposed)]
     )
-    status, fail_reason, selected, _ratings = select_and_judge(records)
+    products, status, fail_reason = build_products(records)
     assert status == "success"
     assert fail_reason is None
-    assert selected is not None
-    assert selected["instrument_key"] == "coco_t1"
-    assert selected["evaluation_type"] == "본"
+    assert len(products) == 1
+    assert products[0]["instrument_key"] == "coco_t1"
+    assert products[0]["evaluation_type"] == "본"
     assert warnings == []
 
 
-def test_valid_multiple_does_not_fail_selected() -> None:
+def test_valid_multiple_emits_all_products() -> None:
     primary = _record(
         key="coco_t1",
         status="matched",
@@ -771,16 +894,15 @@ def test_valid_multiple_does_not_fail_selected() -> None:
         section="valid_ratings",
         row_index=2,
     )
-    merged, _warnings = merge_canonical_records(
+    products, status, fail_reason = build_products(
         [primary, valid_issuer, valid_sub]
     )
-    status, fail_reason, selected, ratings = select_and_judge(merged)
     assert status == "success"
     assert fail_reason is None
-    assert selected is not None
-    assert selected["instrument_key"] == "coco_t1"
-    assert "issuer" in ratings
-    assert "subordinated" in ratings
+    by_key = {item["instrument_key"]: item for item in products}
+    assert by_key["coco_t1"]["evaluation_type"] == "본"
+    assert by_key["issuer"]["evaluation_type"] == "유효등급"
+    assert by_key["subordinated"]["rating"] == "AA-"
 
 
 def test_truncate_valid_row_text() -> None:
@@ -799,6 +921,7 @@ def test_classifier_coco_ifsr_aliases(classifier: LabelClassifier) -> None:
 
 def test_rebuild_merged_three_products() -> None:
     config = get_instruments_config()
+    header = ["평가대상", "종류", "현재등급", "직전등급", "Rating Action"]
     merged_row = ExtractedRatingRow(
         raw_label="보험금지급능력평가 후순위사채 신종자본증권",
         label_text="보험금지급능력평가 후순위사채 신종자본증권",
@@ -814,8 +937,11 @@ def test_rebuild_merged_three_products() -> None:
             "보험금지급능력평가 후순위사채 신종자본증권",
             "본",
             "AAA/안정적",
+            "AAA/안정적",
+            "유지",
         ],
         evaluation_type="본",
+        header_cells=header,
     )
     rebuilt, error = rebuild_merged_rows([merged_row], config)
     assert error is None
@@ -824,6 +950,171 @@ def test_rebuild_merged_three_products() -> None:
     assert "보험금지급능력평가" in labels
     assert "후순위사채" in labels
     assert "신종자본증권" in labels
+    for item in rebuilt:
+        assert item.rating == "AAA"
+        assert item.rating_status == "single"
+
+
+def test_rebuild_merged_three_products_multi_rating_cells() -> None:
+    config = get_instruments_config()
+    header = ["평가대상", "종류", "현재등급", "직전등급", "Rating Action"]
+    merged_row = ExtractedRatingRow(
+        raw_label="보험금지급능력평가 후순위사채 신종자본증권",
+        label_text="보험금지급능력평가 후순위사채 신종자본증권",
+        rating_cells=[
+            "AAA/안정적 AA+/안정적 AA/안정적",
+        ],
+        rating_status="ambiguous",
+        rating=None,
+        outlook=None,
+        page=1,
+        row_index=0,
+        section="primary_rating",
+        source="pdf_table",
+        cells=[
+            "보험금지급능력평가 후순위사채 신종자본증권",
+            "본",
+            "AAA/안정적 AA+/안정적 AA/안정적",
+            "AAA/안정적 AA+/안정적 AA/안정적",
+            "유지",
+        ],
+        header_cells=header,
+    )
+    rebuilt, error = rebuild_merged_rows([merged_row], config)
+    assert error is None
+    assert len(rebuilt) == 3
+    by_label = {item.raw_label: item for item in rebuilt}
+    assert by_label["보험금지급능력평가"].rating == "AAA"
+    assert by_label["후순위사채"].rating == "AA+"
+    assert by_label["신종자본증권"].rating == "AA"
+    assert all(item.rating_status == "single" for item in rebuilt)
+
+
+def test_rebuild_merged_overflow_previous_column() -> None:
+    config = get_instruments_config()
+    header = ["종목", "종류", "현재등급", "직전등급", "비고"]
+    merged_row = ExtractedRatingRow(
+        raw_label="보험금지급능력 본 무보증사채(후순위) 신종자본증권",
+        label_text="보험금지급능력 본 무보증사채(후순위) 신종자본증권",
+        rating_cells=["AAA/STABLE", "AA+/STABLE AA/STABLE"],
+        rating_status="single",
+        rating="AAA",
+        outlook="안정적",
+        page=1,
+        row_index=0,
+        section="primary_rating",
+        source="pdf_table",
+        cells=[
+            "보험금지급능력 본 무보증사채(후순위) 신종자본증권",
+            "",
+            "AAA/STABLE",
+            "AA+/STABLE AA/STABLE",
+            "",
+        ],
+        header_cells=header,
+    )
+    rebuilt, error = rebuild_merged_rows([merged_row], config)
+    assert error is None
+    assert len(rebuilt) == 3
+    by_label = {item.raw_label: item for item in rebuilt}
+    assert by_label["보험금지급능력"].rating == "AAA"
+    assert by_label["보험금지급능력"].evaluation_type == "본"
+    assert by_label["무보증사채"].rating == "AA+"
+    assert by_label["신종자본증권"].rating == "AA"
+
+
+def test_rebuild_skips_orphan_rating_rows() -> None:
+    config = get_instruments_config()
+    header = ["종목", "종류", "현재등급", "직전등급", "비고"]
+    merged_row = ExtractedRatingRow(
+        raw_label="보험금지급능력 본 무보증사채(후순위) 신종자본증권",
+        label_text="보험금지급능력 본 무보증사채(후순위) 신종자본증권",
+        rating_cells=["AAA/STABLE"],
+        rating_status="single",
+        rating="AAA",
+        outlook="안정적",
+        page=1,
+        row_index=0,
+        section="primary_rating",
+        source="pdf_table",
+        cells=[
+            "보험금지급능력 본 무보증사채(후순위) 신종자본증권",
+            "",
+            "AAA/STABLE",
+            "",
+            "",
+        ],
+        header_cells=header,
+    )
+    orphan_aa_plus = ExtractedRatingRow(
+        raw_label="AA+/STABLE",
+        label_text="AA+/STABLE",
+        rating_cells=["AA+/STABLE"],
+        rating_status="single",
+        rating="AA+",
+        outlook="안정적",
+        page=1,
+        row_index=1,
+        section="primary_rating",
+        source="pdf_table",
+        cells=["", "", "AA+/STABLE", "", ""],
+        header_cells=header,
+    )
+    orphan_aa = ExtractedRatingRow(
+        raw_label="AA/STABLE",
+        label_text="AA/STABLE",
+        rating_cells=["AA/STABLE"],
+        rating_status="single",
+        rating="AA",
+        outlook="안정적",
+        page=1,
+        row_index=2,
+        section="primary_rating",
+        source="pdf_table",
+        cells=["", "", "AA/STABLE", "", ""],
+        header_cells=header,
+    )
+    rebuilt, error = rebuild_merged_rows(
+        [merged_row, orphan_aa_plus, orphan_aa], config
+    )
+    assert error is None
+    assert len(rebuilt) == 3
+    labels = {item.raw_label for item in rebuilt}
+    assert labels == {"보험금지급능력", "무보증사채", "신종자본증권"}
+
+
+def test_rebuild_keeps_single_visual_target_with_issue_alias() -> None:
+    config = get_instruments_config()
+    row = ExtractedRatingRow(
+        raw_label=(
+            "조건부자본증권(신종) 농업금융채권(은행) "
+            "2026-04이-C(신종) 본 AA-/STABLE 상각형"
+        ),
+        label_text=(
+            "조건부자본증권(신종) 농업금융채권(은행) "
+            "2026-04이-C(신종) 본 AA-/STABLE 상각형"
+        ),
+        rating_cells=["AA-/STABLE"],
+        rating_status="single",
+        rating="AA-",
+        outlook="안정적",
+        page=1,
+        row_index=0,
+        section="primary_rating",
+        source="visual_layout",
+        cells=[
+            "조건부자본증권(신종) 농업금융채권(은행) "
+            "2026-04이-C(신종) 본 AA-/STABLE 상각형"
+        ],
+        evaluation_type="본",
+    )
+
+    rebuilt, error = rebuild_merged_rows([row], config)
+    assert error is None
+    assert len(rebuilt) == 1
+    assert rebuilt[0].raw_label == "조건부자본증권(신종)"
+    assert rebuilt[0].rating == "AA-"
+    assert rebuilt[0].evaluation_type == "본"
 
 
 def test_rebuild_merged_failure_returns_error() -> None:
@@ -844,7 +1135,7 @@ def test_rebuild_merged_failure_returns_error() -> None:
     )
     rebuilt, error = rebuild_merged_rows([row], config)
     assert rebuilt == []
-    assert error == "evaluation_type_only_label"
+    assert error == "no_valid_rows"
 
 
 def test_undefined_filter_excludes_noise() -> None:
@@ -915,3 +1206,55 @@ def test_primary_and_valid_both_extracted(monkeypatch: pytest.MonkeyPatch) -> No
     assert len(rows) == 2
     assert rows[0].source == "pdf_table"
     assert rows[1].source == "valid_rating_section"
+
+
+def test_primary_orphan_table_row_falls_back_to_visual(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from unittest.mock import MagicMock
+
+    page = MagicMock()
+    header = ["구분", "종류", "현재등급", "직전등급", "비고"]
+    orphan = ExtractedRatingRow(
+        raw_label="AA-/STABLE",
+        rating_cells=["AA-/STABLE"],
+        rating_status="single",
+        rating="AA-",
+        outlook="안정적",
+        page=1,
+        row_index=0,
+        section="primary_rating",
+        source="pdf_table",
+        cells=["", "", "AA-/STABLE", "", ""],
+        header_cells=header,
+    )
+    visual = ExtractedRatingRow(
+        raw_label="조건부자본증권(신종)",
+        rating_cells=["AA-/STABLE"],
+        rating_status="single",
+        rating="AA-",
+        outlook="안정적",
+        page=1,
+        row_index=0,
+        section="primary_rating",
+        source="visual_layout",
+        cells=["조건부자본증권(신종) 본 AA-/STABLE 상각형"],
+        evaluation_type="본",
+    )
+
+    monkeypatch.setattr(
+        "main.extract_primary_rows_from_tables",
+        lambda **kwargs: [orphan],
+    )
+    monkeypatch.setattr(
+        "main.extract_primary_rows_from_visual_layout",
+        lambda **kwargs: [visual],
+    )
+    monkeypatch.setattr(
+        "main.extract_valid_rating_rows",
+        lambda **kwargs: [],
+    )
+
+    rows = _extract_rows_from_page(page, "nice")
+    assert rows == [visual]
+    assert rows[0].source == "visual_layout"

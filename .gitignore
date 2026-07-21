@@ -39,3 +39,11 @@ output/
 downloads/
 results/
 result/
+
+# Admin application runtime (CreditRateFinder/CreditRateFinder/)
+CreditRateFinder/admin/data/admin.db
+CreditRateFinder/admin/data/*.db
+CreditRateFinder/admin/backup/*.yaml
+CreditRateFinder/admin/backup/*.yml
+!CreditRateFinder/admin/data/.gitkeep
+!CreditRateFinder/admin/backup/.gitkeep

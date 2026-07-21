@@ -8,5 +8,5 @@ alwaysApply: false
 
 # Documentation
 
-- README·규칙 문서는 현재 계약(자동 selected 확정, ExtractedRatingRow/RatingRecord 분리, fail_reason 9코드, 현재등급·본 우선)과 일치해야 한다.
+- README·규칙 문서는 현재 계약(`products` 상품당 1건, ExtractedRatingRow/RatingRecord 분리, PDF `success/partial/fail`, 현재등급·평가종류 우선순위)과 일치해야 한다.
 - 삭제된 개념(`--target`, `needs_review` 시트, scoring taxonomy, `ocr_required`)을 문서에 남기지 않는다.

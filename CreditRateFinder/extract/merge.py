@@ -50,12 +50,37 @@ def _prefer_canonical(left: RatingRecord, right: RatingRecord) -> RatingRecord:
     if left_rank != right_rank:
         return left if left_rank < right_rank else right
 
+    left_eval = _evaluation_type_rank(left.evaluation_type)
+    right_eval = _evaluation_type_rank(right.evaluation_type)
+    if left_eval != right_eval:
+        return left if left_eval < right_eval else right
+
     left_single = 0 if left.rating_status == "single" else 1
     right_single = 0 if right.rating_status == "single" else 1
     if left_single != right_single:
         return left if left_single < right_single else right
 
     return left
+
+
+_EVAL_TYPE_RANK: dict[str, int] = {
+    "본": 0,
+    "본평가": 0,
+    "수시": 1,
+    "수시평가": 1,
+    "신규": 2,
+    "신규평가": 2,
+    "예비": 3,
+    "예비평가": 3,
+    "정기": 4,
+    "정기평가": 4,
+}
+
+
+def _evaluation_type_rank(evaluation_type: str | None) -> int:
+    if evaluation_type in _EVAL_TYPE_RANK:
+        return _EVAL_TYPE_RANK[evaluation_type]
+    return 5
 
 
 def _merge_pair(

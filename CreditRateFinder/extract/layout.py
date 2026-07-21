@@ -129,6 +129,9 @@ def extract_primary_rows_from_visual_layout(
         ):
             continue
 
+        if "@" in normalize_text(line.text):
+            continue
+
         # 헤더 줄 스킵
         compact_line = re.sub(r"\s+", "", normalize_text(line.text)).lower()
         if "현재등급" in compact_line and "직전" in compact_line:

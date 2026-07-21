@@ -8,5 +8,5 @@ alwaysApply: false
 # Testing
 
 - `label_variants.json`: exact match → matched/key, 미등록 → undefined + suggestions, 자동 key 확정 없음.
-- 현재등급 열 선택·본 우선 selected·source 병합·fail_reason·Excel·occurrence_id dedup·원자적 저장 단위 테스트를 유지한다.
+- 현재등급 열 선택·상품별 `products` 집계·source 병합·fail_reason·Excel 상품당 1행·occurrence_id dedup·원자적 저장 단위 테스트를 유지한다.
 - 구 `credit_scanner` / `unknown` / `--target` / `ocr_required` API를 테스트에서 참조하지 않는다.

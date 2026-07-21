@@ -187,6 +187,7 @@ def decompose_label_fields(
         issue_name=issue_name,
         remark=remark,
         label_text=label_text or row.raw_label,
+        header_cells=row.header_cells,
     )
 
 

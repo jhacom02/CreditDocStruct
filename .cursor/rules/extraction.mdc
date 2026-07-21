@@ -15,5 +15,5 @@ alwaysApply: false
 - 평가대상 셀은 `extract/label_fields.py` YAML 최장 prefix로 `raw_label`/`issue_name` 분리 후 분류.
 - merged 라벨은 `extract/row_rebuild.py`로 분할. 복원 실패 시 `parse_error`.
 - `extract/merge.py` `merge_canonical_records`: Primary canonical + `confirmed_by` + `validation_warnings`.
-- `selected`는 Primary만. 유효등급은 `ratings` 보완·교차검증용.
+- `build_products`는 상품(`instrument_key`)당 1건. 평가종류 우선순위 `본 > 수시 > 신규 > 정기 > 유효등급`.
 - `classify/classifier.py`는 rating·evaluation_type 필드를 재계산하지 않고 그대로 이전한다.

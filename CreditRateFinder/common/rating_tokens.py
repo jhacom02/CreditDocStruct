@@ -8,8 +8,7 @@ from dataclasses import dataclass
 from .text_utils import normalize_text
 
 _RATING_VALUE_PATTERN = (
-    r"(?:AAA|AA[+-]?|A1|A2[+-]?|A3[+-]?|A[+-]?|BBB[+-]?|BB[+-]?|B[+-]?|"
-    r"CCC[+-]?|CC|C|D)"
+    r"(?:AAA|AA[+-]?|A1|A2[+-]?|A3[+-]?|A[+-]?|BBB[+-]?|BB[+-]?|B[+-]?)"
 )
 
 _OUTLOOK_VALUE_PATTERN = (
@@ -134,7 +133,7 @@ def find_rating_tokens_in_text(text: str | None) -> list[RatingToken]:
                     continue
             if (
                 len(rating) == 1
-                and rating in {"A", "B", "C"}
+                and rating in {"A", "B"}
                 and next_char == "-"
                 and end_pos + 1 < len(normalized)
                 and normalized[end_pos + 1].isdigit()

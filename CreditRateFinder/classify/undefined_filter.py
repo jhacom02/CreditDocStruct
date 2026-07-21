@@ -40,7 +40,7 @@ def should_include_undefined_record(
     *,
     primary_matched_labels: set[str] | None = None,
 ) -> bool:
-    """admin/undefined 누적·undefined_records 출력에 포함할지 판단."""
+    """undefined_records 후보 필터링·SQLite 누적 대상 판단."""
     if record.classification_status != "undefined":
         return False
 

@@ -33,7 +33,6 @@ from classify.undefined_filter import should_include_undefined_record
 from common.fail_reasons import (
     FILE_ERROR,
     LABEL_NOT_FOUND,
-    MULTIPLE_INSTRUMENTS,
     MULTIPLE_RATING_COLUMNS,
     MULTIPLE_RATINGS,
     PARSE_ERROR,
@@ -44,7 +43,11 @@ from common.fail_reasons import (
 )
 from common.models import ExtractedRatingRow, RatingRecord
 from common.rating_tokens import find_rating_tokens_in_text
-from common.settings import get_instruments_config, get_settings
+from common.settings import (
+    RESULT_FILENAME_PREFIX,
+    get_instruments_config,
+    get_settings,
+)
 from extract import (
     extract_fallback_rows_from_text,
     extract_primary_rows_from_tables,
@@ -52,17 +55,30 @@ from extract import (
     extract_valid_rating_rows,
 )
 from extract.row_rebuild import rebuild_merged_rows
-from extract.row_parser import PRIMARY_EVAL_TYPES
-from extract.merge import is_primary_record, merge_canonical_records
+from extract.merge import is_primary_record, merge_canonical_records, source_rank
 from export.excel import write_results_excel_tmp
 from export.json_io import write_results_json_tmp
 from export.undefined_store import (
     file_sha256,
-    load_undefined_store,
     make_occurrence_id,
-    merge_undefined_occurrences,
-    write_undefined_store_tmp,
+    persist_undefined_occurrences,
 )
+
+VALID_ONLY_EVALUATION_TYPE = "유효등급"
+
+_EVALUATION_RANK: dict[str, int] = {
+    "본": 0,
+    "본평가": 0,
+    "수시": 1,
+    "수시평가": 1,
+    "신규": 2,
+    "신규평가": 2,
+    "예비": 3,
+    "예비평가": 3,
+    "정기": 4,
+    "정기평가": 4,
+}
+
 
 def _dedupe_records(records: list[RatingRecord]) -> list[RatingRecord]:
     unique: dict[tuple[Any, ...], RatingRecord] = {}
@@ -81,146 +97,152 @@ def _dedupe_records(records: list[RatingRecord]) -> list[RatingRecord]:
     return list(unique.values())
 
 
-def _selected_dict(record: RatingRecord) -> dict[str, Any]:
+def _evaluation_rank(record: RatingRecord) -> int:
+    if record.evaluation_type in _EVALUATION_RANK:
+        return _EVALUATION_RANK[record.evaluation_type]
+    if is_primary_record(record):
+        return 5
+    return 6
+
+
+def _display_evaluation_type(record: RatingRecord) -> str | None:
+    if record.evaluation_type:
+        return record.evaluation_type
+    if is_primary_record(record):
+        return None
+    return VALID_ONLY_EVALUATION_TYPE
+
+
+def _product_dict(
+    record: RatingRecord,
+    *,
+    status: str,
+    fail_reason: dict[str, str] | None = None,
+    evaluation_type: str | None = None,
+) -> dict[str, Any]:
     return {
+        "instrument_key": record.instrument_key,
         "raw_label": record.raw_label,
         "normalized_label": record.normalized_label,
-        "instrument_key": record.instrument_key,
-        "classification_status": record.classification_status,
-        "rating": record.rating,
-        "outlook": record.outlook,
-        "rating_status": record.rating_status,
+        "rating": record.rating if status == "success" else None,
+        "outlook": record.outlook if status == "success" else None,
+        "evaluation_type": (
+            evaluation_type
+            if evaluation_type is not None
+            else _display_evaluation_type(record)
+        ),
+        "status": status,
+        "fail_reason": fail_reason,
         "page": record.page,
-        "row_index": record.row_index,
-        "section": record.section,
         "source": record.source,
-        "evaluation_type": record.evaluation_type,
+        "rating_status": record.rating_status,
+        "section": record.section,
     }
 
 
-def _build_ratings_sparse(
-    rating_groups: dict[str, list[RatingRecord]],
-) -> dict[str, Any]:
-    ratings: dict[str, Any] = {}
-    for key, group in rating_groups.items():
-        if any(item.rating_status == "ambiguous" for item in group):
-            ratings[key] = None
-            continue
-        distinct = {(item.rating, item.outlook) for item in group}
-        if len(distinct) != 1:
-            ratings[key] = None
-        else:
-            chosen = group[0]
-            ratings[key] = {
-                "rating": chosen.rating,
-                "outlook": chosen.outlook,
-                "page": chosen.page,
-            }
-    return ratings
+def _resolve_product_group(group: list[RatingRecord]) -> dict[str, Any]:
+    best_rank = min(_evaluation_rank(item) for item in group)
+    candidates = [
+        item for item in group if _evaluation_rank(item) == best_rank
+    ]
+    candidates.sort(
+        key=lambda item: (
+            0 if is_primary_record(item) else 1,
+            source_rank(item.source),
+            item.row_index,
+        )
+    )
+    representative = candidates[0]
+    evaluation_type = _display_evaluation_type(representative)
+
+    if any(item.rating_status == "ambiguous" for item in candidates):
+        return _product_dict(
+            representative,
+            status="fail",
+            fail_reason=make_fail_reason(MULTIPLE_RATING_COLUMNS),
+            evaluation_type=evaluation_type,
+        )
+
+    rated = [
+        item
+        for item in candidates
+        if item.rating_status == "single" and item.rating
+    ]
+    if not rated:
+        return _product_dict(
+            representative,
+            status="fail",
+            fail_reason=make_fail_reason(RATING_NOT_FOUND),
+            evaluation_type=evaluation_type,
+        )
+
+    distinct = {(item.rating, item.outlook) for item in rated}
+    if len(distinct) >= 2:
+        return _product_dict(
+            representative,
+            status="fail",
+            fail_reason=make_fail_reason(MULTIPLE_RATINGS),
+            evaluation_type=evaluation_type,
+        )
+
+    chosen = rated[0]
+    return _product_dict(
+        chosen,
+        status="success",
+        evaluation_type=_display_evaluation_type(chosen),
+    )
 
 
-def select_and_judge(
+def build_products(
     records: list[RatingRecord],
-) -> tuple[str, dict[str, str] | None, dict[str, Any] | None, dict[str, Any]]:
-    """선택 알고리즘 + fail_reason 판정.
+) -> tuple[list[dict[str, Any]], str, dict[str, str] | None]:
+    """instrument_key별 상품 결과 + PDF 상태 집계.
 
     Returns:
-        status, fail_reason, selected_dict, ratings_sparse
+        products, status (`success`|`partial`|`fail`), fail_reason
     """
     matched = [
         record
         for record in records
-        if record.classification_status == "matched"
-    ]
-    primary_matched = [
-        record for record in matched if is_primary_record(record)
+        if record.classification_status == "matched" and record.instrument_key
     ]
 
-    # ratings sparse: canonical 전체 (valid-only 상품 포함)
     groups: dict[str, list[RatingRecord]] = defaultdict(list)
+    order: list[str] = []
     for record in matched:
-        if record.instrument_key and record.rating_status in {
-            "single",
-            "ambiguous",
-        }:
-            groups[record.instrument_key].append(record)
+        key = record.instrument_key or ""
+        if key not in groups:
+            order.append(key)
+        groups[key].append(record)
 
-    rating_groups = dict(groups)
-    ratings = _build_ratings_sparse(rating_groups)
+    products: list[dict[str, Any]] = []
+    rated_groups: list[list[RatingRecord]] = []
+    none_groups: list[list[RatingRecord]] = []
+    for key in order:
+        group = groups[key]
+        if any(
+            item.rating_status in {"single", "ambiguous"} or item.rating
+            for item in group
+        ):
+            rated_groups.append(group)
+        else:
+            none_groups.append(group)
 
-    # selected: Primary만
-    bon_candidates = [
-        record
-        for record in primary_matched
-        if record.evaluation_type in PRIMARY_EVAL_TYPES
-        and record.rating_status == "single"
-        and record.instrument_key
-        and record.rating
-    ]
-    if bon_candidates:
-        bon_keys = {record.instrument_key for record in bon_candidates}
-        if len(bon_keys) >= 2:
-            return (
-                "fail",
-                make_fail_reason(MULTIPLE_INSTRUMENTS),
-                None,
-                ratings,
-            )
-        if len(bon_candidates) >= 2 and len(bon_keys) == 1:
-            distinct = {
-                (item.rating, item.outlook) for item in bon_candidates
-            }
-            if len(distinct) >= 2:
-                return (
-                    "fail",
-                    make_fail_reason(MULTIPLE_RATINGS),
-                    None,
-                    ratings,
-                )
-        chosen = bon_candidates[0]
-        return "success", None, _selected_dict(chosen), ratings
+    for group in rated_groups or none_groups:
+        products.append(_resolve_product_group(group))
+    success_count = sum(1 for item in products if item["status"] == "success")
 
-    primary_groups: dict[str, list[RatingRecord]] = defaultdict(list)
-    for record in primary_matched:
-        if record.instrument_key and record.rating_status in {
-            "single",
-            "ambiguous",
-        }:
-            primary_groups[record.instrument_key].append(record)
-
-    primary_rating_groups = dict(primary_groups)
-
-    if len(primary_rating_groups) >= 2:
-        return "fail", make_fail_reason(MULTIPLE_INSTRUMENTS), None, ratings
-
-    if len(primary_rating_groups) == 1:
-        _instrument_key, group = next(iter(primary_rating_groups.items()))
-        if any(item.rating_status == "ambiguous" for item in group):
-            return (
-                "fail",
-                make_fail_reason(MULTIPLE_RATING_COLUMNS),
-                None,
-                ratings,
-            )
-
-        distinct = {(item.rating, item.outlook) for item in group}
-        if len(distinct) >= 2:
-            return "fail", make_fail_reason(MULTIPLE_RATINGS), None, ratings
-
-        chosen = group[0]
-        return "success", None, _selected_dict(chosen), ratings
-
-    if primary_matched:
-        return "fail", make_fail_reason(RATING_NOT_FOUND), None, ratings
-
-    if matched:
-        return "fail", make_fail_reason(RATING_NOT_FOUND), None, ratings
+    if products:
+        if success_count == len(products):
+            return products, "success", None
+        if success_count >= 1:
+            return products, "partial", None
+        return products, "fail", None
 
     rated_rows = [
         record
         for record in records
-        if record.rating_status in {"single", "ambiguous"}
-        or record.rating
+        if record.rating_status in {"single", "ambiguous"} or record.rating
     ]
     if rated_rows:
         label_missing = any(
@@ -229,30 +251,77 @@ def select_and_judge(
             for record in rated_rows
         )
         if label_missing:
-            return "fail", make_fail_reason(LABEL_NOT_FOUND), None, ratings
+            return [], "fail", make_fail_reason(LABEL_NOT_FOUND)
 
         if any(
             record.classification_status == "undefined"
             for record in rated_rows
         ):
-            return "fail", make_fail_reason(UNDEFINED_LABEL), None, ratings
+            return [], "fail", make_fail_reason(UNDEFINED_LABEL)
 
-        return "fail", make_fail_reason(LABEL_NOT_FOUND), None, ratings
+        return [], "fail", make_fail_reason(LABEL_NOT_FOUND)
 
-    return "fail", make_fail_reason(PARSE_ERROR), None, ratings
+    return [], "fail", make_fail_reason(PARSE_ERROR)
+
+
+def _empty_result(
+    *,
+    result_no: int | None,
+    file_name: str,
+    file_path: str,
+    company_name: str,
+    agency: str,
+    fail_reason: dict[str, str],
+    file_hash: str | None = None,
+    extracted_text_chars: int = 0,
+    extracted_word_count: int = 0,
+    rating_token_count: int = 0,
+) -> dict[str, Any]:
+    return {
+        "result_no": result_no,
+        "file_name": file_name,
+        "file_path": file_path,
+        "company_name": company_name,
+        "agency": agency,
+        "status": "fail",
+        "fail_reason": fail_reason,
+        "products": [],
+        "records": [],
+        "undefined_records": [],
+        "validation_warnings": [],
+        "extracted_text_chars": extracted_text_chars,
+        "extracted_word_count": extracted_word_count,
+        "rating_token_count": rating_token_count,
+        "file_hash": file_hash,
+    }
 
 
 def _extract_rows_from_page(
     page: pymupdf.Page,
     agency_key: str,
 ) -> list[ExtractedRatingRow]:
+    from extract.row_parser import (
+        is_evaluation_only_primary_row,
+        is_orphan_rating_row,
+    )
+
     table_rows = extract_primary_rows_from_tables(page=page, agency=agency_key)
-    if table_rows:
+    visual_rows = extract_primary_rows_from_visual_layout(
+        page=page, agency=agency_key
+    )
+
+    usable_table_rows = [
+        row
+        for row in table_rows
+        if not is_evaluation_only_primary_row(row)
+        and not is_orphan_rating_row(row)
+    ]
+    if usable_table_rows:
         primary_rows = table_rows
+    elif visual_rows:
+        primary_rows = visual_rows
     else:
-        primary_rows = extract_primary_rows_from_visual_layout(
-            page=page, agency=agency_key
-        )
+        primary_rows = table_rows
 
     valid_rows = extract_valid_rating_rows(page=page, agency=agency_key)
     rows = list(primary_rows) + list(valid_rows)
@@ -266,7 +335,7 @@ def _extract_rows_from_page(
 def extract_credit_report(
     pdf_path: str | Path,
     *,
-    result_id: str | None = None,
+    result_no: int | None = None,
     classifier: LabelClassifier | None = None,
 ) -> dict[str, Any]:
     """단일 PDF를 처리해 결과 객체를 반환한다."""
@@ -275,47 +344,27 @@ def extract_credit_report(
     active = classifier or LabelClassifier.from_yaml()
 
     if not pdf_path.exists():
-        return {
-            "result_id": result_id,
-            "file_name": pdf_path.name,
-            "file_path": str(pdf_path),
-            "company_name": pdf_path.stem,
-            "agency": format_agency_display(None),
-            "status": "fail",
-            "fail_reason": make_fail_reason(FILE_ERROR),
-            "selected": None,
-            "ratings": {},
-            "records": [],
-            "undefined_records": [],
-            "validation_warnings": [],
-            "extracted_text_chars": 0,
-            "extracted_word_count": 0,
-            "rating_token_count": 0,
-            "file_hash": None,
-        }
+        return _empty_result(
+            result_no=result_no,
+            file_name=pdf_path.name,
+            file_path=str(pdf_path),
+            company_name=pdf_path.stem,
+            agency=format_agency_display(None),
+            fail_reason=make_fail_reason(FILE_ERROR),
+        )
 
     try:
         file_hash = file_sha256(pdf_path)
         document = pymupdf.open(pdf_path)
     except Exception:
-        return {
-            "result_id": result_id,
-            "file_name": pdf_path.name,
-            "file_path": str(pdf_path),
-            "company_name": pdf_path.stem,
-            "agency": format_agency_display(None),
-            "status": "fail",
-            "fail_reason": make_fail_reason(FILE_ERROR),
-            "selected": None,
-            "ratings": {},
-            "records": [],
-            "undefined_records": [],
-            "validation_warnings": [],
-            "extracted_text_chars": 0,
-            "extracted_word_count": 0,
-            "rating_token_count": 0,
-            "file_hash": None,
-        }
+        return _empty_result(
+            result_no=result_no,
+            file_name=pdf_path.name,
+            file_path=str(pdf_path),
+            company_name=pdf_path.stem,
+            agency=format_agency_display(None),
+            fail_reason=make_fail_reason(FILE_ERROR),
+        )
 
     try:
         pages_to_check = min(settings.max_pdf_pages, len(document))
@@ -348,24 +397,18 @@ def extract_credit_report(
             extracted_rows, config
         )
         if rebuild_error:
-            return {
-                "result_id": result_id,
-                "file_name": pdf_path.name,
-                "file_path": str(pdf_path),
-                "company_name": company_name,
-                "agency": agency,
-                "status": "fail",
-                "fail_reason": make_fail_reason(PARSE_ERROR),
-                "selected": None,
-                "ratings": {},
-                "records": [],
-                "undefined_records": [],
-            "validation_warnings": [],
-                "extracted_text_chars": extracted_text_chars,
-                "extracted_word_count": extracted_word_count,
-                "rating_token_count": rating_token_count,
-                "file_hash": file_hash,
-            }
+            return _empty_result(
+                result_no=result_no,
+                file_name=pdf_path.name,
+                file_path=str(pdf_path),
+                company_name=company_name,
+                agency=agency,
+                fail_reason=make_fail_reason(PARSE_ERROR),
+                file_hash=file_hash,
+                extracted_text_chars=extracted_text_chars,
+                extracted_word_count=extracted_word_count,
+                rating_token_count=rating_token_count,
+            )
 
         if not rebuilt_rows:
             if (
@@ -375,29 +418,22 @@ def extract_credit_report(
                 fail_code = TEXT_EXTRACTION_FAILED
             else:
                 fail_code = PARSE_ERROR
-            return {
-                "result_id": result_id,
-                "file_name": pdf_path.name,
-                "file_path": str(pdf_path),
-                "company_name": company_name,
-                "agency": agency,
-                "status": "fail",
-                "fail_reason": make_fail_reason(fail_code),
-                "selected": None,
-                "ratings": {},
-                "records": [],
-                "undefined_records": [],
-            "validation_warnings": [],
-                "extracted_text_chars": extracted_text_chars,
-                "extracted_word_count": extracted_word_count,
-                "rating_token_count": rating_token_count,
-                "file_hash": file_hash,
-            }
+            return _empty_result(
+                result_no=result_no,
+                file_name=pdf_path.name,
+                file_path=str(pdf_path),
+                company_name=company_name,
+                agency=agency,
+                fail_reason=make_fail_reason(fail_code),
+                file_hash=file_hash,
+                extracted_text_chars=extracted_text_chars,
+                extracted_word_count=extracted_word_count,
+                rating_token_count=rating_token_count,
+            )
 
-        records, validation_warnings = merge_canonical_records(
-            _dedupe_records(active.classify_rows(rebuilt_rows))
-        )
-        status, fail_reason, selected, ratings = select_and_judge(records)
+        deduped = _dedupe_records(active.classify_rows(rebuilt_rows))
+        records, validation_warnings = merge_canonical_records(deduped)
+        products, status, fail_reason = build_products(deduped)
 
         primary_matched_labels = {
             record.normalized_label
@@ -418,15 +454,14 @@ def extract_credit_report(
         ]
 
         return {
-            "result_id": result_id,
+            "result_no": result_no,
             "file_name": pdf_path.name,
             "file_path": str(pdf_path),
             "company_name": company_name,
             "agency": agency,
             "status": status,
             "fail_reason": fail_reason,
-            "selected": selected,
-            "ratings": ratings,
+            "products": products,
             "validation_warnings": validation_warnings,
             "records": [record.to_dict() for record in records],
             "undefined_records": undefined_records,
@@ -440,16 +475,10 @@ def extract_credit_report(
 
 
 def _result_stem(override: str | None = None) -> str:
-    settings = get_settings()
     if override:
         return override
     today = date.today().strftime("%Y%m%d")
-    return f"{settings.result_filename_prefix}_{today}"
-
-
-def _format_result_id(index: int) -> str:
-    """JSON/Excel 표시용 결과 ID (고정 형식 A0001)."""
-    return f"A{index:04d}"
+    return f"{RESULT_FILENAME_PREFIX}_{today}"
 
 
 def collect_undefined_occurrences(
@@ -484,8 +513,12 @@ def collect_undefined_occurrences(
                     "normalized_label": normalized,
                     "raw_label": record.get("raw_label"),
                     "file_name": result.get("file_name"),
+                    "company_name": result.get("company_name"),
                     "agency": result.get("agency"),
                     "rating": record.get("rating"),
+                    "outlook": record.get("outlook"),
+                    "evaluation_type": record.get("evaluation_type"),
+                    "label_text": record.get("label_text"),
                     "suggestions": record.get("suggestions") or [],
                 }
             )
@@ -497,7 +530,7 @@ def commit_batch_outputs(
     *,
     stem: str | None = None,
 ) -> tuple[Path, Path, Path]:
-    """JSON·Excel·admin/undefined.json을 임시 파일로 쓴 뒤 원자적 교체."""
+    """JSON·Excel·관리자 DB를 저장한다 (JSON/Excel은 tmp → 원자적 교체)."""
     settings = get_settings()
     config = get_instruments_config()
 
@@ -507,25 +540,19 @@ def commit_batch_outputs(
 
     json_final = result_dir / f"{result_stem}.json"
     excel_final = result_dir / f"{result_stem}.xlsx"
-    admin_final = settings.undefined_json_path
 
     json_tmp = write_results_json_tmp(results, json_final)
     excel_tmp = write_results_excel_tmp(results, config, excel_final)
 
-    store = load_undefined_store(admin_final)
-    merged = merge_undefined_occurrences(
-        store, collect_undefined_occurrences(results)
+    db_final = persist_undefined_occurrences(
+        collect_undefined_occurrences(results)
     )
-    admin_tmp = write_undefined_store_tmp(merged, admin_final)
 
-    # 모든 tmp 쓰기 성공 후 원자적 교체
     try:
         os.replace(json_tmp, json_final)
         os.replace(excel_tmp, excel_final)
-        os.replace(admin_tmp, admin_final)
     except Exception:
-        # 부분 교체 실패 시 남은 tmp 정리 시도
-        for tmp in (json_tmp, excel_tmp, admin_tmp):
+        for tmp in (json_tmp, excel_tmp):
             try:
                 if tmp.exists():
                     tmp.unlink()
@@ -533,7 +560,7 @@ def commit_batch_outputs(
                 pass
         raise
 
-    return json_final, excel_final, admin_final
+    return json_final, excel_final, db_final
 
 
 def build_argument_parser() -> argparse.ArgumentParser:
@@ -601,7 +628,7 @@ def main(argv: list[str] | None = None) -> None:
     for index, pdf_path in enumerate(pdf_files, start=1):
         result = extract_credit_report(
             pdf_path,
-            result_id=_format_result_id(index),
+            result_no=index,
             classifier=classifier,
         )
         results.append(result)

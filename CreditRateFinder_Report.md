@@ -1,6 +1,6 @@
 # CreditRateFinder 프로젝트 보고서
 
-**작성일:** 2026-07-20  
+**작성일:** 2026-07-21  
 **대상:** NICE신용평가 · 한국신용평가 · 한국기업평가 신용평가서 PDF  
 **목적:** 신용등급·등급전망 자동 추출 및 구조화
 
@@ -11,7 +11,7 @@
 ### 이 시스템은 무엇을 하나요?
 
 **CreditRateFinder**는 신평사 3사(NICE신용평가, 한국신용평가, 한국기업평가)가 발행한 **신용평가서 PDF**에서 **평가대상(상품)별 신용등급과 등급전망**을 자동으로 읽어 내는 프로그램입니다.  
-처리 결과는 **엑셀·JSON**으로 저장되며, PDF 한 건당 **대표 등급 1건(`selected`)** 이 확정됩니다.
+처리 결과는 **엑셀·JSON**으로 저장되며, PDF 한 건당 **상품별 등급 목록(`products`)** 이 확정됩니다.
 
 ### 왜 만들었나요?
 
@@ -34,20 +34,20 @@
 2. **추출:** 「평가 개요」「평가 등급」 표와 「유효등급」 구역에서 행 단위로 라벨·등급·전망 수집
 3. **분류:** 등록된 라벨 사전과 **정확히 일치**하는지 확인 → 발행자·무보증사채·CP 등 표준 상품으로 분류
 4. **확정:** 「본」「본평가」 우선 규칙으로 PDF당 대표 등급 1건 선택
-5. **출력:** `result/` 아래 JSON·엑셀, 미등록 라벨은 `admin/undefined.json`에 누적
+5. **출력:** `result/` 아래 JSON·엑셀, 미등록 라벨은 `admin/data/admin.db`(SQLite)에 누적
 
 ### 비개발자도 유지보수할 수 있나요?
 
-- **현재:** `config/instruments.yaml` 파일의 **라벨 사전**에 새 문구를 추가·수정하면, 코드 수정 없이 다음 실행부터 반영됩니다.
-- **개발 중:** 미등록 라벨을 화면에서 검토하고 사전에 반영할 수 있는 **유지보수용 웹 애플리케이션(Admin UI)** 을 준비 중입니다. (현재는 `admin/undefined.json` 누적·스키마만 구현)
+- **라벨 사전:** `config/instruments.yaml`의 **라벨 사전**에 새 문구를 추가·수정하면, 코드 수정 없이 다음 실행부터 반영됩니다.
+- **관리자 웹 앱(구현 완료):** 미등록 라벨을 브라우저에서 검토하고 클릭만으로 사전에 반영할 수 있는 **유지보수용 웹 애플리케이션(Streamlit)** 을 제공합니다. alias 추가·제외 시 YAML을 자동 백업 후 안전하게 갱신하며, 변경 이력을 남깁니다. (`admin/` 폴더, `setup_admin.bat` / `run_admin.bat` 더블클릭 실행)
 
 ### 결과를 어떻게 읽나요?
 
 | 파일 | 내용 |
 |------|------|
-| `result/result_YYYYMMDD.xlsx` | PDF당 1행 — 회사명, 신평사, 대표 등급·전망, 처리 성공/실패 |
+| `result/result_YYYYMMDD.xlsx` | 상품당 1행 — 회사명, 신평사, 상품·평가종류·등급·전망, 처리 성공/실패 |
 | `result/result_YYYYMMDD.json` | 상세 기록 — 전체 상품 목록, 실패 사유, 검증 경고 |
-| `admin/undefined.json` | YAML에 없는 라벨 목록 (중복 없이 누적, 유사 라벨 추천 포함) |
+| `admin/data/admin.db` | YAML에 없는 라벨 목록 (SQLite, 중복 없이 누적, 유사 라벨 추천·검수 상태 포함) |
 
 **성공(`success`):** 대표 등급이 자동 확정됨  
 **실패(`fail`):** 복수 상품·등급 불명·라벨 미등록 등 — `fail_reason` 코드로 원인 확인
@@ -78,7 +78,7 @@
 | 7 | [§7. 병합·검증](#7-병합검증) | Primary vs 유효등급 |
 | 8 | [§8. 대표 등급 확정](#8-대표-등급-확정) | selected·fail_reason |
 | 9 | [§9. 결과 저장](#9-결과-저장) | JSON·Excel·undefined |
-| 10 | [§10. 유지보수 체계](#10-유지보수-체계) | YAML·Admin UI |
+| 10 | [§10. 유지보수 체계](#10-유지보수-체계) | YAML·Admin 웹 앱 |
 | 11 | [§11. 한계·향후](#11-한계향후) | 알려진 제약 |
 
 ---
@@ -96,19 +96,28 @@
 - **단계형 추출 파이프라인:** 표(table) → 시각 레이아웃(visual) → 평문(fallback) 순으로 구조화된 행(`ExtractedRatingRow`)을 만든다.
 - **설정 주도 분류:** 상품·라벨 정의를 `config/instruments.yaml`에 분리하여 **코드 배포 없이** 신규 표기를 수용한다.
 - **단일 오케스트레이션:** 모든 처리 흐름을 `main.py` 한 곳에서 관리해 동작을 예측 가능하게 한다.
-- **운영 루프:** 미등록 라벨·실패 건을 `admin/undefined.json`에 누적하고, (개발 중인) Admin UI와 연계해 비개발자 검토를 전제로 설계한다.
+- **운영 루프:** 미등록 라벨·실패 건을 `admin/data/admin.db`(SQLite)에 누적하고, 비개발자용 Admin 웹 앱과 연계해 검토·YAML 반영을 전제로 설계한다.
 
 #### 시스템 구조 (모듈)
 
 ```
-main.py                 ← 유일한 오케스트레이션
+main.py                 ← 유일한 추출 오케스트레이션
 ├── agency/             신평사 식별·회사명·레이아웃 힌트
 ├── extract/            표·visual·유효등급·행 파싱·병합
 ├── classify/           YAML exact match·undefined 필터·추천
-├── export/             JSON·Excel·undefined_store
-├── common/             설정·모델·등급 토큰·실패 코드
-└── config/instruments.yaml
+├── export/             JSON·Excel·undefined_store(SQLite 어댑터)
+├── common/             설정·매칭 정책·모델·등급 토큰·실패 코드
+├── admin/              관리자 웹 앱 (Streamlit, SQLite, YAML 백업·복원)
+│   ├── admin_main.py   Streamlit 진입점
+│   ├── views/          화면 (검수·라벨·이력·결과)
+│   ├── ui/             테마·문구 헬퍼
+│   ├── services/       SQLite·YAML·결과 서비스
+│   ├── data/           admin.db
+│   └── backup/         YAML 백업
+└── config/instruments.yaml   # 상품·라벨 딕셔너리만
 ```
+관리자 앱은 추출 파이프라인과 분리된 별도 진입점(`admin/admin_main.py`)이며,
+추출 로직과는 SQLite(`admin.db`)와 `instruments.yaml`을 통해서만 연결된다.
 
 ---
 
@@ -124,7 +133,7 @@ main.py                 ← 유일한 오케스트레이션
 | 항목 | 방식 |
 |------|------|
 | 입력 | CLI: `python main.py [pdf\|폴더]` — 생략 시 `.env`의 `INPUT_DIR` |
-| 설정 | `.env`: `INPUT_DIR`, `RESULT_DIR`, `MAX_PDF_PAGES`(기본 3), `MIN_EXTRACTED_TEXT_CHARS`(기본 50) 등 |
+| 설정 | `.env`: `INPUT_DIR`, `INSTRUMENTS_YAML_PATH`(기본 `config/instruments.yaml`), `RESULT_DIR`, `MAX_PDF_PAGES`(기본 1), `MIN_EXTRACTED_TEXT_CHARS`(기본 50), `ADMIN_DB_PATH`(기본 `admin/data/admin.db`), `ADMIN_BACKUP_DIR`(기본 `admin/backup`). 결과 파일명 접두어(`result`)는 코드 고정 |
 | 공개 API | `extract_credit_report(path)` → dict; `commit_batch_outputs()` → 파일 저장 |
 | 신평사 표준명 | JSON `agency` / Excel `신평사` → `NICE신용평가㈜`, `한국신용평가㈜`, `한국기업평가㈜` 중 하나 |
 
@@ -232,7 +241,9 @@ main.py                 ← 유일한 오케스트레이션
 - **Undefined 처리:** 미등록 시 `classification_status=undefined`, char n-gram cosine **유사 라벨 추천(`suggestions`)** — **자동 확정에는 미사용**.
 - **필터:** `undefined_filter` — Primary에서 이미 matched된 라벨 중복, 재무 노이즈, rating none 등은 admin 누적·출력에서 제외.
 
-**등록 상품 키 (9종):** `issuer`, `senior_unsecured`, `subordinated`, `coco_t1`, `coco_t2`, `commercial_paper`, `short_term_bond`, `insurance_payment`, `structured_finance`
+**등록 상품 키 (12종):** `issuer`(발행자신용등급), `insurance_payment`(보험지급능력등급), `senior_unsecured`(무보증사채), `guaranteed_bond`(보증사채), `subordinated`(후순위사채), `coco_t1`(조건부자본증권(신종)), `coco_t2`(조건부자본증권(후순위)), `commercial_paper`(기업어음), `short_term_bond`(전자단기사채), `structured_abs`(자산유동화증권 ABS), `structured_abcp`(자산유동화기업어음 ABCP), `structured_abstb`(자산유동화전자단기사채 ABSTB)
+
+> 구조화금융은 `structured_abs` · `structured_abcp` · `structured_abstb`로 세분화했다. 각 상품 키는 `instruments.yaml`에서 사람이 읽는 `display_name` 하나로만 관리한다(과거 `major_category_name`/`display_name` 이원화 제거).
 
 **관련 모듈:** `classify/classifier.py`, `classify/recommend.py`, `classify/undefined_filter.py`, `config/instruments.yaml`
 
@@ -262,35 +273,32 @@ main.py                 ← 유일한 오케스트레이션
 
 #### 문제 상황
 
-- PDF 한 건에서 **여러 상품**이 등급을 가지면 어떤 것을 “대표”로 낼지 규칙이 필요하다.
-- 「본」이 없고 rating 있는 matched 상품이 2개 이상이면 **자동 단일 확정 불가**.
-- 유효등급에만 있는 복수 상품은 **multiple_instruments로 처리하면 안 됨** (Primary 기준만 판단).
+- PDF 한 건에서 **여러 상품**이 등급을 가지면 Excel·수식 소비를 위해 **상품당 1행**이 필요하다.
+- 같은 상품에 본·정기가 함께 있으면 대표 평가종류를 정해야 한다.
+- 일부 상품만 등급 확정에 실패해도 다른 상품은 살려야 한다.
 
 #### 해결 방안
 
-**선택 알고리즘 (`select_and_judge`):**
+**상품 집계 (`build_products`):**
 
-1. **Primary 레코드만** selected 후보 (`is_primary_record`)
-2. `evaluation_type`이 「본」 또는 「본평가」인 matched + rating 있는 레코드 **우선**
-3. 후보 1건 → `status: success`, `selected` 채움
-4. 「본」 복수 또는 (본 없을 때) rating 있는 matched ≥ 2 → `multiple_instruments`
-5. 기타: `multiple_ratings`, `rating_not_found`, `label_not_found`, `undefined_label` 등 **우선순위 있는 fail_reason**
+1. matched `instrument_key`별로 그룹화
+2. 평가종류 우선순위 `본/본평가 > 수시 > 신규 > 정기 > Primary(무종류) > 유효등급`
+3. 동일 우선순위에서 등급·전망이 하나면 상품 `success`
+4. ambiguous / 등급 충돌이면 해당 상품만 fail
+5. PDF 상태: 전부 성공=`success`, 일부=`partial`, 없음=`fail`
 
 | fail_reason code | 의미 (요약) |
 |------------------|-------------|
 | `file_error` | PDF 열기 실패 |
 | `text_extraction_failed` | 텍스트·등급 토큰 부족 |
 | `parse_error` | 구조 파싱 실패 |
-| `multiple_instruments` | Primary 기준 복수 상품 |
-| `multiple_rating_columns` | 현재등급 열로도 등급 단일화 실패 |
-| `multiple_ratings` | 동일 상품에 상충 등급 |
-| `rating_not_found` | 라벨은 matched, 등급 없음 |
+| `multiple_rating_columns` | 현재등급 열로도 등급 단일화 실패 (상품급) |
+| `multiple_ratings` | 동일 상품·동일 우선순위에서 상충 등급 (상품급) |
+| `rating_not_found` | 라벨은 matched, 등급 없음 (상품급) |
 | `label_not_found` | 등급은 있으나 라벨 미식별 |
 | `undefined_label` | 등급 있는 미등록 라벨 |
 
-**참고:** 다른 상품이 undefined여도 「본」이 확정되면 파일 전체 `status`는 `success`일 수 있다.
-
-**관련 모듈:** `main.py` (`select_and_judge`, `_build_ratings_sparse`), `common/fail_reasons.py`
+**관련 모듈:** `main.py` (`build_products`), `common/fail_reasons.py`
 
 ---
 
@@ -306,15 +314,16 @@ main.py                 ← 유일한 오케스트레이션
 
 | 산출물 | 내용 | 저장 특성 |
 |--------|------|-----------|
-| `result/result_YYYYMMDD.json` | PDF당 객체 — `selected`, `ratings`, `records`, `validation_warnings`, `undefined_records` | **당일 stem 덮어쓰기** |
-| `result/result_YYYYMMDD.xlsx` | 시트 `신용등급_결과`, PDF당 1행 (`selected` 기준) | **당일 stem 덮어쓰기** |
-| `admin/undefined.json` | 미등록 라벨 occurrence | **`occurrence_id` 기준 중복 제거 후 누적** |
+| `result/result_YYYYMMDD.json` | PDF당 객체 — `result_no`, `products`, `records`, `validation_warnings`, `undefined_records` | **당일 stem 덮어쓰기** |
+| `result/result_YYYYMMDD.xlsx` | 시트 `신용등급_결과`, 상품당 1행 (`products` 기준) | **당일 stem 덮어쓰기** |
+| `admin/data/admin.db` | 미등록 라벨 occurrence + 검수 상태·이력 | **`occurrence_id` 기준 upsert 누적 (SQLite)** |
 
 - **원자적 저장:** 임시 파일 작성 → `os.replace`로 한 번에 교체 (`commit_batch_outputs`).
+- **`result_no`:** 배치 내 정수 순번(`1`, `2`, `3`...). 파일 추가·삭제 시 순번이 바뀌므로 식별자가 아닌 **표시용 순번**임을 명확히 하고자 과거 `result_id`(`A0001`) 포맷을 제거했다. 안정 식별은 `file_hash`·`file_name`으로 한다.
 - **occurrence_id:** `file_hash|normalized_label|page|row_index` — 동일 위치 재실행 시 중복 방지.
-- **Excel 열:** 결과_ID, 회사명, 신평사, 처리상태, 대분류_Key, 대분류명, 소분류_원본라벨, 신용등급, 등급전망, 원본파일명
+- **Excel 열:** No, 회사명, 신평사, 처리상태, 상품분류_Key, 상품분류, 원본라벨, 평가종류, 신용등급, 등급전망, 원본파일명, 실패사유 (`No`는 `result_no` 정수)
 
-**관련 모듈:** `export/json_io.py`, `export/excel.py`, `export/undefined_store.py`
+**관련 모듈:** `export/json_io.py`, `export/excel.py`, `export/undefined_store.py`(SQLite 어댑터), `admin/services/candidate_store.py`
 
 ---
 
@@ -328,23 +337,41 @@ main.py                 ← 유일한 오케스트레이션
 
 #### 해결 방안
 
-**현재 운영 (구현 완료)**
+**운영 루프 (구현 완료)**
 
-1. 배치 실행 → `undefined_records` / `admin/undefined.json` 확인
-2. `suggestions`로 유사 등록 라벨 참고
-3. `config/instruments.yaml`의 `label_dictionary`에 alias 추가
-4. 재실행 — **코드 변경·재배포 불필요** (YAML만 hot-reload)
+1. 배치 실행 → 미등록 라벨이 `admin/data/admin.db`에 `pending`으로 누적
+2. 관리자 웹 앱 실행 → 라벨 검수 화면에서 `suggestions`(유사 등록 라벨) 참고
+3. 클릭으로 기존 상품에 alias 추가(승인) 또는 노이즈 라벨 제외(ignore)
+4. YAML 자동 백업 후 원자적 갱신 → 배치 재실행 시 즉시 반영 (**코드 변경·재배포 불필요**)
 
-**개발 중: 비개발자용 Admin UI (웹 애플리케이션)**
+**비개발자용 Admin 웹 앱 (Streamlit, 구현 완료)**
 
-| 목표 | 설명 |
+| 기능 | 설명 |
 |------|------|
-| 미등록 라벨 검토 | `undefined.json` 항목을 목록·필터로 조회 |
-| 라벨 승인·매핑 | 화면에서 상품(instrument) 선택 후 사전 반영 |
-| YAML 자동 반영 | (계획) 승인 시 `instruments.yaml` 갱신 — **현재 미구현** |
-| 재처리 연계 | (계획) 반영 후 해당 PDF 재실행 트리거 |
+| 라벨 검수 | `pending` 미등록 라벨을 목록·발생 횟수·추천과 함께 조회 |
+| 라벨 승인·매핑 | 화면에서 상품(instrument) 선택 → `instruments.yaml`의 `label_dictionary`에 alias 추가 |
+| 라벨 제외 | 노이즈 라벨을 `ignored` 처리 (검수 목록에서 제거) |
+| YAML 자동 반영 | `ruamel.yaml`로 주석·형식 보존 편집, `admin/backup/`에 타임스탬프 백업 후 `os.replace` 원자적 교체 |
+| 등록 라벨 관리 | 이미 등록된 alias 조회·삭제 |
+| 변경 이력·복원 | `review_history` 이력 조회, 백업 파일로 YAML 복원 |
 
-README 기준 **현재 상태:** Admin UI는 스키마·누적 저장만 존재, **승인 UI·YAML 자동 반영은 미구현**.
+| 구성 요소 | 파일 |
+|-----------|------|
+| 웹 진입점 | `admin/admin_main.py` |
+| SQLite 저장소 | `admin/services/candidate_store.py` (`admin.db`) |
+| YAML 안전 편집 | `admin/services/yaml_service.py` (백업·충돌 검사·원자적 교체) |
+| 설치·실행 | `admin/setup_admin.bat`, `admin/run_admin.bat` |
+| 데이터 이관 | `admin/services/migrate_undefined_json.py` (구 `admin/undefined.json` → SQLite 1회) |
+
+**YAML ↔ SQLite 관계**
+
+- **YAML = 라벨 매핑 원천(source of truth):** exact match 분류의 상품·라벨은 `instruments.yaml`만 사용한다.
+- **매칭 정책 = 코드 원천:** 정규화·추천·카탈로그 검증은 `common/matching_policy.py`에서만 관리한다.
+- **SQLite = 검수 큐·이력:** 미등록 라벨 후보와 검수 상태(`pending`/`approved`/`ignored`)·변경 이력을 보관한다.
+- **서버 시작 시 1회 멱등 양방향 동기화:** 개발자가 YAML을 직접 편집해도 관리자 서버 기동 시 `admin.db`와 재조정된다.
+  - `pending` 라벨이 현재 YAML에 존재하면 → `approved`
+  - `approved` 승인 alias가 YAML에서 제거되면 → `pending` 복구
+  - `ignored`는 변경하지 않음
 
 **동적 대응 원칙**
 
@@ -360,14 +387,13 @@ README 기준 **현재 상태:** Admin UI는 스키마·누적 저장만 존재,
 
 | 항목 | 설명 |
 |------|------|
-| Admin UI | undefined 누적만 가능, 웹 승인·YAML 반영 미완 |
 | OCR | 미사용 — 스캔 PDF는 `text_extraction_failed` 가능 |
-| 본 없는 복수 Primary 상품 | 자동 selected 불가 (`multiple_instruments`) |
-| 페이지 상한 | 기본 3페이지 — 장문 부록 표는 스캔 밖일 수 있음 |
+| 본 없는 복수 Primary 상품 | 상품별 `products`로 모두 반환 (`success`) |
+| 페이지 상한 | 기본 1페이지 — 장문 부록 표는 스캔 밖일 수 있음 |
+| Admin 동기화 | 서버 기동 시 1회 동기화 — 실행 중 YAML 직접 편집은 재기동 후 반영 |
 
 #### 향후 과제
 
-- Admin UI 완성 및 YAML 승인 워크플로
 - undefined → 사전 반영 후 **선택적 PDF 재처리** 자동화
 - (필요 시) OCR·페이지 범위 설정 확장 — 운영 정책에 따른 opt-in
 
@@ -404,13 +430,19 @@ README 기준 **현재 상태:** Admin UI는 스키마·누적 저장만 존재,
           └───────────────────────────┬───────────────────────────┘
                                       ▼
           ┌───────────────────────────────────────────────────────┐
-          │  select_and_judge → selected, status, fail_reason      │
+          │  build_products → products, status, fail_reason        │
           └───────────────────────────┬───────────────────────────┘
                                       ▼
           ┌───────────────────────────────────────────────────────┐
           │  commit_batch_outputs (원자적 저장)                     │
           │  · result/*.json / *.xlsx                              │
-          │  · admin/undefined.json (누적)                         │
+          │  · admin/data/admin.db (SQLite 누적)             │
+          └───────────────────────────┬───────────────────────────┘
+                                      ▼
+          ┌───────────────────────────────────────────────────────┐
+          │  Admin 웹 앱 (admin/admin_main.py, 별도 실행)            │
+          │  · 검수 → alias 승인/제외 → instruments.yaml 자동 갱신 │
+          │  · 서버 기동 시 admin.db ↔ YAML 1회 양방향 동기화       │
           └───────────────────────────────────────────────────────┘
 ```
 
@@ -425,8 +457,16 @@ cd CreditRateFinder\CreditRateFinder
 .venv\Scripts\python.exe -m pytest tests -q
 ```
 
-단위 테스트(41건)는 라벨 분리, 등급 오탐 방지, Primary+valid 동시 추출, canonical 병합, selected·fail_reason, undefined dedup, 원자적 저장 등을 검증한다.
+단위 테스트(114건)는 라벨 분리, 등급 오탐 방지, Primary+valid 동시 추출, canonical 병합, selected·fail_reason, undefined dedup(SQLite), 원자적 저장, 매칭 정책(정규화·추천·검증), 그리고 관리자 앱의 SQLite 검수 저장소·YAML 안전 편집·양방향 동기화 등을 검증한다.
+
+관리자 앱 실행:
+
+```bash
+cd CreditRateFinder\CreditRateFinder
+admin\setup_admin.bat   # 최초 1회 설치
+admin\run_admin.bat     # 브라우저에서 localhost:8501 검수
+```
 
 ---
 
-*본 문서는 CreditRateFinder 코드베이스(2026-07-20 기준) 및 README를 바탕으로 작성되었습니다.*
+*본 문서는 CreditRateFinder 코드베이스(2026-07-21 기준) 및 README를 바탕으로 작성되었습니다.*

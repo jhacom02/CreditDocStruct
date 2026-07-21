@@ -43,6 +43,7 @@ class ExtractedRatingRow:
     remark: str | None = None
     label_text: str | None = None
     raw_outlook: str | None = None
+    header_cells: list[str] | None = None
 
 
 @dataclass

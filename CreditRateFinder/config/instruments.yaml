@@ -1,385 +1,414 @@
-# 상품(instrument) 목록·표시명과 라벨 딕셔너리.
-# 구 credit_scanner/config/instrument_taxonomy.yaml(git 커밋 f4b2fe3)의
-# aliases를 label_dictionary 항목으로 마이그레이션했다. feature/score 기반
-# 분류(taxonomy features, base_score 등)는 새 계약(exact match만)에서 삭제.
-#
-# Plan: creditratefinder_restructure_43c68190 섹션 C 참고.
-
+# 고정된 12가지 상품(instrument) 목록과 표시명.
 instruments:
   issuer:
-    major_category_name: "발행자신용등급"
-    display_name: "발행자 신용등급"
+    display_name: "발행자신용등급"
+  insurance_payment:
+    display_name: "보험지급능력등급"
   senior_unsecured:
-    major_category_name: "무보증사채"
-    display_name: "선순위 무보증사채"
+    display_name: "무보증사채"
+  guaranteed_bond:
+    display_name: "보증사채"
   subordinated:
-    major_category_name: "후순위채권"
     display_name: "후순위사채"
   coco_t1:
-    major_category_name: "신종자본증권"
-    display_name: "조건부자본증권(신종/AT1)"
+    display_name: "조건부자본증권(신종)"
   coco_t2:
-    major_category_name: "조건부자본증권"
-    display_name: "조건부자본증권(후순위/T2)"
+    display_name: "조건부자본증권(후순위)"
   commercial_paper:
-    major_category_name: "기업어음"
-    display_name: "기업어음(CP)"
+    display_name: "기업어음"
   short_term_bond:
-    major_category_name: "단기사채"
     display_name: "전자단기사채"
-  insurance_payment:
-    major_category_name: "보험금지급능력평가"
-    display_name: "보험금지급능력등급"
-  structured_finance:
-    major_category_name: "구조화금융"
+  structured_abs:
     display_name: "자산유동화증권(ABS)"
+  structured_abcp:
+    display_name: "자산유동화기업어음(ABCP)"
+  structured_abstb:
+    display_name: "자산유동화전자단기사채(ABSTB)"
 
-# raw_label(원문 표기, normalization 규칙 적용 전) -> instrument_key.
-# 여러 표기 변형(신평사별 wording 포함)을 각각 별도 entry로 등록한다.
-# 동일 normalize_label() 결과가 다른 instrument_key로 매핑되면 기동 시 거부된다.
+# 원문 라벨(raw_label)을 상품 키(instrument_key)와 매핑.
 label_dictionary:
   "발행자":
     instrument_key: issuer
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "발행자 신용등급":
     instrument_key: issuer
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "발행자신용등급":
     instrument_key: issuer
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "Issuer Rating":
     instrument_key: issuer
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "Issuer Credit Rating":
     instrument_key: issuer
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "Corporate Credit Rating":
     instrument_key: issuer
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "기업신용등급":
     instrument_key: issuer
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "기업신용평가":
     instrument_key: issuer
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "ICR":
     instrument_key: issuer
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
 
   "선순위무보증사채":
     instrument_key: senior_unsecured
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "선순위무보증채권":
     instrument_key: senior_unsecured
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "무보증사채":
     instrument_key: senior_unsecured
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
-  "무보증채권":
-    instrument_key: senior_unsecured
-    active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "무보증사채(일반)":
     instrument_key: senior_unsecured
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
+  "무보증사채(선순위)":
+    instrument_key: senior_unsecured
+    active: true
+    note: ""
+  "무보증채권":
+    instrument_key: senior_unsecured
+    active: true
+    note: ""
   "일반사채":
     instrument_key: senior_unsecured
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
+  "회사채":
+    instrument_key: senior_unsecured
+    active: true
+    note: ""
+  "회사채(선순위)":
+    instrument_key: senior_unsecured
+    active: true
+    note: ""
   "사모일반사채":
     instrument_key: senior_unsecured
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "선순위사채":
     instrument_key: senior_unsecured
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "Senior Unsecured":
     instrument_key: senior_unsecured
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
+  "특수채":
+    instrument_key: senior_unsecured
+    active: true
+    note: ""
+  "금융채":
+    instrument_key: senior_unsecured
+    active: true
+    note: ""
+  "지방채":
+    instrument_key: senior_unsecured
+    active: true
+    note: ""
+
+  "보증사채":
+    instrument_key: guaranteed_bond
+    active: true
+    note: ""
+  "보증채권":
+    instrument_key: guaranteed_bond
+    active: true
+    note: ""
+  "Guaranteed Bond":
+    instrument_key: guaranteed_bond
+    active: true
+    note: ""
+  "GB":
+    instrument_key: guaranteed_bond
+    active: true
+    note: ""
 
   "후순위사채":
     instrument_key: subordinated
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "후순위채권":
     instrument_key: subordinated
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "무보증후순위사채":
     instrument_key: subordinated
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "무보증후순위채권":
     instrument_key: subordinated
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "Subordinated Bond":
     instrument_key: subordinated
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "Subordinated Debt":
     instrument_key: subordinated
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
 
   "조건부자본증권(T1)":
     instrument_key: coco_t1
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "조건부자본증권(T 1)":
     instrument_key: coco_t1
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "조건부자본증권(Tier1)":
     instrument_key: coco_t1
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "조건부자본증권(Tier 1)":
     instrument_key: coco_t1
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "조건부자본증권(신종)":
     instrument_key: coco_t1
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "조건부자본증권(상)":
     instrument_key: coco_t1
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "조건부자본증권 T1":
     instrument_key: coco_t1
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "조건부자본증권 Tier1":
     instrument_key: coco_t1
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "CoCo(HB)":
     instrument_key: coco_t1
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "CoCo(신종)":
     instrument_key: coco_t1
     active: true
-    note: "3사 실제 표기"
+    note: ""
   "COCO(신종)":
     instrument_key: coco_t1
     active: true
-    note: "3사 실제 표기"
+    note: ""
   "CoCo(T1)":
     instrument_key: coco_t1
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "CoCo Tier1":
     instrument_key: coco_t1
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "CoCo Tier 1":
     instrument_key: coco_t1
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "채권형신종자본증권":
     instrument_key: coco_t1
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "신종자본증권":
     instrument_key: coco_t1
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "기타기본자본":
     instrument_key: coco_t1
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "추가기본자본":
     instrument_key: coco_t1
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "AT1":
     instrument_key: coco_t1
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "AT 1":
     instrument_key: coco_t1
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "Additional Tier 1":
     instrument_key: coco_t1
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
 
   "조건부자본증권(T2)":
     instrument_key: coco_t2
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "조건부자본증권(T 2)":
     instrument_key: coco_t2
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "조건부자본증권(Tier2)":
     instrument_key: coco_t2
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "조건부자본증권(Tier 2)":
     instrument_key: coco_t2
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "조건부자본증권(후)":
     instrument_key: coco_t2
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "조건부자본증권(후순위)":
     instrument_key: coco_t2
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "조건부자본증권 T2":
     instrument_key: coco_t2
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "조건부자본증권 Tier2":
     instrument_key: coco_t2
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "CoCo(후)":
     instrument_key: coco_t2
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "CoCo(T2)":
     instrument_key: coco_t2
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "CoCo Tier2":
     instrument_key: coco_t2
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "CoCo Tier 2":
     instrument_key: coco_t2
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "조건부후순위사채":
     instrument_key: coco_t2
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "조건부후순위채권":
     instrument_key: coco_t2
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "후순위조건부자본증권":
     instrument_key: coco_t2
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "보완자본":
     instrument_key: coco_t2
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "Tier 2":
     instrument_key: coco_t2
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "Tier2":
     instrument_key: coco_t2
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
 
   "기업어음":
     instrument_key: commercial_paper
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "지급보증부기업어음":
     instrument_key: commercial_paper
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "CP":
     instrument_key: commercial_paper
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "Commercial Paper":
     instrument_key: commercial_paper
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
+  "단기신용등급":
+    instrument_key: commercial_paper
+    active: true
+    note: ""
 
   "전자단기사채":
     instrument_key: short_term_bond
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "단기사채":
     instrument_key: short_term_bond
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
-  "ABSTB":
-    instrument_key: short_term_bond
-    active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
 
   "보험금지급능력등급":
     instrument_key: insurance_payment
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "보험금지급능력":
     instrument_key: insurance_payment
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "보험금지급능력평가":
     instrument_key: insurance_payment
     active: true
-    note: "3사 실제 표기"
+    note: ""
+  "보험지급능력등급":
+    instrument_key: insurance_payment
+    active: true
+    note: ""
   "IFSR":
     instrument_key: insurance_payment
     active: true
-    note: "3사 실제 표기"
+    note: ""
 
   "ABS":
-    instrument_key: structured_finance
+    instrument_key: structured_abs
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
+  "자산유동화증권":
+    instrument_key: structured_abs
+    active: true
+    note: ""
   "ABCP":
-    instrument_key: structured_finance
+    instrument_key: structured_abcp
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
+  "자산유동화기업어음":
+    instrument_key: structured_abcp
+    active: true
+    note: ""
+  "ABSTB":
+    instrument_key: structured_abstb
+    active: true
+    note: ""
+  "자산유동화전자단기사채":
+    instrument_key: structured_abstb
+    active: true
+    note: ""
+  "자산유동화단기사채":
+    instrument_key: structured_abstb
+    active: true
+    note: ""
   "선순위수익증권":
-    instrument_key: structured_finance
+    instrument_key: structured_abs
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
+    note: ""
   "후순위수익증권":
-    instrument_key: structured_finance
+    instrument_key: structured_abs
     active: true
-    note: "instrument_taxonomy.yaml 마이그레이션"
-
-# common/text_utils.py normalize_text()/normalize_label()이 실제 구현하는 규칙 문서화.
-normalization:
-  unicode_form: NFKC
-  trim: true
-  strip_internal_newlines: true
-  bracket_normalization: true
-  uppercase_ascii: true
-  strip_all_whitespace_for_lookup: true
-
-# undefined 라벨 추천(classify/recommend.py, 자동 확정에는 사용 안 함).
-recommendation:
-  similarity_method: char_ngram_cosine
-  ngram_size: 2
-  top_k: 3
-  min_score: 15
-  keyword_rules: []
-
-# classifier/기동 검증 동작 스위치(모두 고정 true, 문서화 목적).
-validation:
-  exact_match_only: true
-  undefined_on_no_match: true
-  recommendation_does_not_classify: true
-  reject_conflicting_mappings: true
-  reject_unknown_instrument_keys: true
+    note: ""
