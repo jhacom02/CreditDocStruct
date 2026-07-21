@@ -129,7 +129,7 @@ def render_result_tab() -> None:
         return
 
     with st.container(border=True):
-        st.markdown("###### PDF별 상세 조회")
+        st.markdown("###### 상세 조회")
         options = {
             result_identity(item): _document_option_label(item)
             for item in filtered
