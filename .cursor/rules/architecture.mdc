@@ -1,7 +1,7 @@
 ---
-description: CreditRateFinder 아키텍처·오케스트레이션 규칙
+description: CreditDocStruct 아키텍처·오케스트레이션 규칙
 globs:
-  - CreditRateFinder/**/*.py
+  - CreditDocStruct/**/*.py
 alwaysApply: true
 ---
 

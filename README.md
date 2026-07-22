@@ -1,7 +1,9 @@
-# CreditRateFinder
+# CreditDocStruct
+
+**신평서 데이터 구조화 프로젝트**
 
 NICE신용평가 · 한국신용평가 · 한국기업평가 신용평가서 PDF에서  
-평가대상 라벨·신용등급·등급전망을 추출합니다.
+평가대상 라벨·신용등급·등급전망·재무지표를 추출·구조화합니다.
 
 표·시각 레이아웃으로 **구조 추출**(`ExtractedRatingRow`)한 뒤,  
 `config/instruments.yaml`의 `label_dictionary`와 **정확 일치**로 분류(`RatingRecord`)합니다.  
@@ -12,7 +14,7 @@ NICE신용평가 · 한국신용평가 · 한국기업평가 신용평가서 PDF
 ## 설치
 
 ```bash
-cd C:\mycode\CreditRateFinder\CreditRateFinder
+cd C:\mycode\CreditDocStruct\CreditDocStruct
 python -m venv .venv
 .venv\Scripts\python.exe -m pip install -r requirements.txt
 copy .env.example .env
@@ -29,7 +31,7 @@ copy .env.example .env
 모든 오케스트레이션은 **`main.py`** 에서만 수행합니다.
 
 ```bash
-cd C:\mycode\CreditRateFinder\CreditRateFinder
+cd C:\mycode\CreditDocStruct\CreditDocStruct
 
 # .env의 INPUT_DIR 폴더를 처리 (인자 생략)
 .venv\Scripts\python.exe main.py
@@ -49,7 +51,7 @@ cd C:\mycode\CreditRateFinder\CreditRateFinder
 | `--non-recursive` | 폴더 처리 시 하위 디렉터리 제외 |
 
 상품은 YAML exact match로 분류되며, 상품당 1개 등급이 `products`에 쌓입니다.  
-설정은 `CreditRateFinder/.env` (템플릿: `.env.example`)에서 로드합니다.
+설정은 `CreditDocStruct/.env` (템플릿: `.env.example`)에서 로드합니다.
 
 ### 공개 API
 
@@ -146,8 +148,7 @@ Excel(`신용등급_결과`)은 **상품당 1행**입니다.
 ## 상품·라벨 (`config/instruments.yaml`)
 
 등록 상품 키: `issuer`, `insurance_payment`, `senior_unsecured`, `guaranteed_bond`,  
-`subordinated`, `coco_t1`, `coco_t2`, `commercial_paper`, `short_term_bond`,  
-`structured_abs`, `structured_abcp`, `structured_abstb`.
+`subordinated`, `coco_t1`, `coco_t2`, `commercial_paper`, `short_term_bond`.
 
 YAML에는 **상품 목록과 라벨 딕셔너리만** 둡니다.  
 정규화·추천·검증 정책은 `common/matching_policy.py`에서 관리합니다.
@@ -164,12 +165,12 @@ undefined 라벨에는 char n-gram cosine 추천(`suggestions`,
 ## 디렉터리
 
 ```
-CreditRateFinder/
+CreditDocStruct/
 ├── README.md
 ├── .gitignore
 ├── .cursorignore
 ├── .cursor/rules/          # architecture, taxonomy, extraction, testing, documentation
-└── CreditRateFinder/       # 앱 루트 (실행 cwd)
+└── CreditDocStruct/       # 앱 루트 (실행 cwd)
     ├── main.py
     ├── requirements.txt
     ├── .env / .env.example
@@ -194,7 +195,7 @@ CreditRateFinder/
 | 항목 | 내용 |
 |------|------|
 | 진입점 | `admin/admin_main.py` (Streamlit) |
-| 설치·실행 | [`admin/README.md`](CreditRateFinder/admin/README.md) 참고 |
+| 설치·실행 | [`admin/README.md`](CreditDocStruct/admin/README.md) 참고 |
 | 최초 설치 | `admin\setup_admin.bat` 더블클릭 |
 | 평소 실행 | `admin\run_admin.bat` 더블클릭 |
 | 미분류 누적 | `admin/data/admin.db` (PDF 추출 시 자동 저장) |
@@ -220,7 +221,7 @@ CreditRateFinder/
 ## 테스트
 
 ```bash
-cd C:\mycode\CreditRateFinder\CreditRateFinder
+cd C:\mycode\CreditDocStruct\CreditDocStruct
 .venv\Scripts\python.exe -m pytest tests -q
 ```
 

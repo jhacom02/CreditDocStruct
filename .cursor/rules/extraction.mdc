@@ -1,8 +1,8 @@
 ---
 description: PDF 추출·rating_status 판정 규칙
 globs:
-  - CreditRateFinder/extract/**/*
-  - CreditRateFinder/agency/**/*
+  - CreditDocStruct/extract/**/*
+  - CreditDocStruct/agency/**/*
 alwaysApply: false
 ---
 

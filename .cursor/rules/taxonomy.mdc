@@ -1,8 +1,8 @@
 ---
 description: instruments.yaml exact-match 분류 규칙
 globs:
-  - CreditRateFinder/config/**/*
-  - CreditRateFinder/classify/**/*
+  - CreditDocStruct/config/**/*
+  - CreditDocStruct/classify/**/*
 alwaysApply: false
 ---
 

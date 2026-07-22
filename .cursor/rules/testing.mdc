@@ -1,7 +1,7 @@
 ---
 description: 테스트 규칙
 globs:
-  - CreditRateFinder/tests/**/*
+  - CreditDocStruct/tests/**/*
 alwaysApply: false
 ---
 
