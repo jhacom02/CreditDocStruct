@@ -4,13 +4,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
 from classify.fin_normalize import facts_from_fin_table
 from classify.metric_classifier import MetricClassifier
 from common.matching_policy import normalize_metric_label
+from common.metric_catalog import get_metrics_config
 from common.models import ExtractedFinTable
-from common.settings import get_metrics_config, load_metrics_config
 from export.document_store import (
     load_raw_tables,
     renormalize_all,
@@ -27,6 +25,8 @@ def test_parse_period_header_variants() -> None:
     assert parse_period_header("2022.12") == ("2022.12", 2022, 12)
     assert parse_period_header("2021(12)") == ("2021.12", 2021, 12)
     assert parse_period_header("2026.03") == ("2026.03", 2026, 3)
+    assert parse_period_header("2021") == ("2021.12", 2021, 12)
+    assert parse_period_header("2025") == ("2025.12", 2025, 12)
 
 
 def test_parse_numeric_cell() -> None:
@@ -48,20 +48,35 @@ def test_strip_footnote_marker() -> None:
     assert mark is not None
 
 
-def test_metrics_config_loads() -> None:
+def test_metrics_catalog_eight_keys() -> None:
     config = get_metrics_config()
-    assert "roa" in config.metrics
-    assert config.normalized_lookup.get("ROA") == "roa"
-    assert config.normalized_lookup.get("총자산순이익률") == "roa"
+    assert set(config.metrics) == {
+        "total_assets",
+        "net_income",
+        "total_borrowings",
+        "equity",
+        "debt_ratio",
+        "bis_ratio",
+        "liquidity_ratio",
+        "leverage",
+    }
     assert config.normalized_lookup.get("BIS자본비율") == "bis_ratio"
+    assert config.normalized_lookup.get("당기순이익") == "net_income"
+    assert "순이익" not in config.normalized_lookup
+    assert config.metrics["leverage"].display_name == "총자산/자기자본(배)"
 
 
 def test_metric_classifier_aliases() -> None:
-    classifier = MetricClassifier.from_yaml()
-    key, normalized, status = classifier.classify_label("총자산이익률(ROA)")
+    classifier = MetricClassifier.from_catalog()
+    key, normalized, status = classifier.classify_label("총자산(십억원)")
     assert status == "matched"
-    assert key == "roa"
-    assert normalized
+    assert key == "total_assets"
+    assert normalized == "총자산"
+    _, _, undef = classifier.classify_label("지배주주지분순이익")
+    assert undef == "undefined"
+    key2, _, status2 = classifier.classify_label("차입부채")
+    assert status2 == "matched"
+    assert key2 == "total_borrowings"
 
 
 def test_facts_from_fin_table_matched_and_undefined() -> None:
@@ -72,16 +87,16 @@ def test_facts_from_fin_table_matched_and_undefined() -> None:
         rows=[
             ["총자산", "1000", "1100"],
             ["알수없는지표XYZ", "1.2", "1.3"],
-            ["ROA(%)", "0.5", "0.6"],
+            ["당기순이익", "10", "11"],
         ],
         basis="별도",
         unit_caption="단위: 십억원, %",
     )
-    classifier = MetricClassifier.from_yaml()
+    classifier = MetricClassifier.from_catalog()
     facts, undefined = facts_from_fin_table(table, classifier)
     matched = [f for f in facts if f.classification_status == "matched"]
     assert any(f.metric_key == "total_assets" for f in matched)
-    assert any(f.metric_key == "roa" and f.value == 0.5 for f in matched)
+    assert any(f.metric_key == "net_income" for f in matched)
     assert any("알수없는지표" in u["raw_label"] for u in undefined)
 
 
@@ -94,7 +109,7 @@ def test_document_store_roundtrip_and_renormalize(tmp_path: Path) -> None:
         rows=[["자기자본", "500"]],
         source="pdf_table",
     )
-    classifier = MetricClassifier.from_yaml()
+    classifier = MetricClassifier.from_catalog()
     facts, _ = facts_from_fin_table(table, classifier)
     result = {
         "file_hash": "abc123",
@@ -115,22 +130,3 @@ def test_document_store_roundtrip_and_renormalize(tmp_path: Path) -> None:
     stats = renormalize_all(db_path=db, classifier=classifier)
     assert stats["documents"] == 1
     assert stats["facts"] >= 1
-
-
-def test_load_metrics_config_rejects_unknown_key(tmp_path: Path) -> None:
-    path = tmp_path / "metrics.yaml"
-    path.write_text(
-        """
-metrics:
-  roa:
-    display_name: ROA
-    value_type: percent
-metric_label_dictionary:
-  "ROA":
-    metric_key: missing_key
-    active: true
-""",
-        encoding="utf-8",
-    )
-    with pytest.raises(Exception):
-        load_metrics_config(path)

@@ -36,8 +36,7 @@ class Settings:
     input_dir: str | None
     # 폴더/파일을 하나의 경로 변수로 지정 (예: config/instruments.yaml)
     instruments_yaml: str = "config/instruments.yaml"
-    metrics_yaml: str = "config/metrics.yaml"
-    result_dir: str = "result"
+    result_dir: str = "results"
     admin_db_path: str = "admin/data/admin.db"
     document_db_path: str = "admin/data/documents.db"
     admin_backup_dir: str = "admin/backup"
@@ -61,10 +60,6 @@ class Settings:
     @property
     def instruments_yaml_path(self) -> Path:
         return self._resolve_path(self.instruments_yaml)
-
-    @property
-    def metrics_yaml_path(self) -> Path:
-        return self._resolve_path(self.metrics_yaml)
 
     @property
     def result_dir_path(self) -> Path:
@@ -96,10 +91,7 @@ def get_settings() -> Settings:
         instruments_yaml=os.environ.get(
             "INSTRUMENTS_YAML_PATH", "config/instruments.yaml"
         ),
-        metrics_yaml=os.environ.get(
-            "METRICS_YAML_PATH", "config/metrics.yaml"
-        ),
-        result_dir=os.environ.get("RESULT_DIR", "result"),
+        result_dir=os.environ.get("RESULT_DIR", "results"),
         admin_db_path=os.environ.get(
             "ADMIN_DB_PATH", "admin/data/admin.db"
         ),
@@ -221,137 +213,17 @@ def get_instruments_config() -> InstrumentsConfig:
     return load_instruments_config()
 
 
-@dataclass(frozen=True)
-class MetricDefinition:
-    key: str
-    display_name: str
-    value_type: str = "unknown"
-
-
-@dataclass(frozen=True)
-class MetricLabelEntry:
-    raw_label: str
-    metric_key: str
-    active: bool = True
-    note: str = ""
-
-
-@dataclass(frozen=True)
-class MetricsConfig:
-    metrics: dict[str, MetricDefinition]
-    metric_label_dictionary: tuple[MetricLabelEntry, ...]
-    normalized_lookup: dict[str, str]
-
-
-class MetricsConfigError(ValueError):
-    """config/metrics.yaml 기동 시 검증 실패."""
-
-
-def _build_metrics(raw: dict[str, Any]) -> dict[str, MetricDefinition]:
-    metrics: dict[str, MetricDefinition] = {}
-    for key, spec in (raw or {}).items():
-        spec = spec or {}
-        metrics[key] = MetricDefinition(
-            key=key,
-            display_name=spec.get("display_name", key),
-            value_type=str(spec.get("value_type") or "unknown"),
-        )
-    return metrics
-
-
-def _build_metric_label_dictionary(
-    raw: dict[str, Any],
-) -> list[MetricLabelEntry]:
-    entries: list[MetricLabelEntry] = []
-    for raw_label, spec in (raw or {}).items():
-        spec = spec or {}
-        metric_key = spec.get("metric_key")
-        if not metric_key:
-            continue
-        entries.append(
-            MetricLabelEntry(
-                raw_label=raw_label,
-                metric_key=metric_key,
-                active=bool(spec.get("active", True)),
-                note=spec.get("note", "") or "",
-            )
-        )
-    return entries
-
-
-def _validate_metrics(
-    metrics: dict[str, MetricDefinition],
-    entries: list[MetricLabelEntry],
-) -> dict[str, str]:
-    from common.matching_policy import (
-        MatchingPolicyError,
-        normalize_metric_label,
-    )
-
-    known = set(metrics.keys())
-    lookup: dict[str, str] = {}
-    conflicts: list[str] = []
-    unknown: list[str] = []
-    for entry in entries:
-        if entry.metric_key not in known:
-            unknown.append(f"{entry.raw_label!r} -> {entry.metric_key!r}")
-            continue
-        if not entry.active:
-            continue
-        normalized = normalize_metric_label(entry.raw_label)
-        if not normalized:
-            continue
-        existing = lookup.get(normalized)
-        if existing is not None and existing != entry.metric_key:
-            conflicts.append(
-                f"{normalized!r}: {existing!r} vs {entry.metric_key!r}"
-            )
-            continue
-        lookup[normalized] = entry.metric_key
-    if unknown:
-        raise MetricsConfigError(
-            "등록되지 않은 metric_key 참조: " + "; ".join(unknown)
-        )
-    if conflicts:
-        raise MetricsConfigError(
-            "동일 정규화 라벨이 서로 다른 metric_key에 매핑됨: "
-            + "; ".join(conflicts)
-        )
-    return lookup
-
-
-def load_metrics_config(path: Path | None = None) -> MetricsConfig:
-    settings = get_settings()
-    yaml_path = path or settings.metrics_yaml_path
-    with yaml_path.open("r", encoding="utf-8") as handle:
-        raw = yaml.safe_load(handle) or {}
-    if not isinstance(raw, dict):
-        raise MetricsConfigError(
-            "config/metrics.yaml 최상위는 객체여야 합니다."
-        )
-    metrics = _build_metrics(raw.get("metrics") or {})
-    entries = _build_metric_label_dictionary(
-        raw.get("metric_label_dictionary") or {}
-    )
-    try:
-        normalized_lookup = _validate_metrics(metrics, entries)
-    except MetricsConfigError:
-        raise
-    except Exception as exc:
-        raise MetricsConfigError(str(exc)) from exc
-    return MetricsConfig(
-        metrics=metrics,
-        metric_label_dictionary=tuple(entries),
-        normalized_lookup=normalized_lookup,
-    )
-
-
-@lru_cache(maxsize=1)
-def get_metrics_config() -> MetricsConfig:
-    return load_metrics_config()
+# 재무지표는 코드 카탈로그 (metrics.yaml 없음)
+from common.metric_catalog import (  # noqa: E402
+    MetricDefinition,
+    MetricLabelEntry,
+    MetricsConfig,
+    clear_metrics_config_cache,
+    get_metrics_config,
+)
 
 
 def clear_config_caches() -> None:
     get_settings.cache_clear()
     get_instruments_config.cache_clear()
-    get_metrics_config.cache_clear()
+    clear_metrics_config_cache()

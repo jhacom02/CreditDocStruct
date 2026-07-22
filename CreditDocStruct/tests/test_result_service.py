@@ -8,15 +8,14 @@ import pytest
 
 from admin.services.result_service import (
     ResultServiceError,
-    build_excel_bytes,
-    build_summary_rows,
+    build_public_excel_bytes,
+    build_public_rows,
     filter_results,
     list_result_files,
     load_results_json,
 )
-from common.fail_reasons import message_for
 from common.settings import get_instruments_config
-from export.excel import EXCEL_COLUMNS
+from export.excel import EXCEL_PUBLIC_COLUMNS
 
 
 def test_empty_result_dir(tmp_path: Path) -> None:
@@ -30,24 +29,34 @@ def test_load_non_list_json(tmp_path: Path) -> None:
         load_results_json(path)
 
 
-def test_summary_rows_include_fail_reason() -> None:
+def test_public_rows_use_public_columns() -> None:
     results = [
         {
             "result_no": 1,
             "file_name": "x.pdf",
             "company_name": "A",
             "agency": "NICE신용평가㈜",
-            "status": "fail",
-            "fail_reason": {"code": "parse_error", "message": "파싱 실패"},
-            "products": [],
+            "status": "success",
+            "fail_reason": None,
+            "products": [
+                {
+                    "instrument_key": "issuer",
+                    "raw_label": "발행자",
+                    "rating": "AAA",
+                    "outlook": "안정적",
+                    "evaluation_type": "본",
+                    "status": "success",
+                    "fail_reason": None,
+                }
+            ],
         }
     ]
-    rows = build_summary_rows(results, get_instruments_config())
-    assert rows[0]["실패코드"] == "parse_error"
-    assert rows[0]["실패사유"] == f"parse_error — {message_for('parse_error')}"
+    rows = build_public_rows(results, get_instruments_config())
+    assert len(rows) == 1
+    assert set(rows[0].keys()) == set(EXCEL_PUBLIC_COLUMNS)
 
 
-def test_excel_bytes_row_count_matches_filter() -> None:
+def test_public_excel_bytes_row_count_matches_filter() -> None:
     results = [
         {
             "result_no": 1,
@@ -87,13 +96,15 @@ def test_excel_bytes_row_count_matches_filter() -> None:
         },
     ]
     filtered = filter_results(results, status="success")
-    payload = build_excel_bytes(filtered, get_instruments_config())
+    payload = build_public_excel_bytes(filtered, get_instruments_config())
     assert payload[:2] == b"PK"
 
     from io import BytesIO
 
     import pandas as pd
 
-    dataframe = pd.read_excel(BytesIO(payload))
-    assert list(dataframe.columns) == EXCEL_COLUMNS
+    with pd.ExcelFile(BytesIO(payload)) as workbook:
+        assert len(workbook.sheet_names) >= 2
+        dataframe = pd.read_excel(workbook, sheet_name="신용등급")
+    assert list(dataframe.columns) == EXCEL_PUBLIC_COLUMNS
     assert len(dataframe) == 2

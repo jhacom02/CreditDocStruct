@@ -44,7 +44,6 @@ from common.rating_tokens import find_rating_tokens_in_text
 from common.settings import (
     RESULT_FILENAME_PREFIX,
     get_instruments_config,
-    get_metrics_config,
     get_settings,
 )
 from classify.fin_normalize import facts_from_fin_tables
@@ -566,35 +565,9 @@ def collect_undefined_occurrences(
 def collect_undefined_metric_occurrences(
     results: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
-    occurrences: list[dict[str, Any]] = []
-    config = get_metrics_config()
-    for result in results:
-        file_hash = result.get("file_hash")
-        if not file_hash:
-            continue
-        for item in result.get("undefined_metrics") or []:
-            normalized = item.get("normalized_label") or ""
-            if not normalized:
-                continue
-            if normalized in config.normalized_lookup:
-                continue
-            occurrence_id = make_occurrence_id(
-                file_hash=file_hash,
-                normalized_label=f"metric:{normalized}",
-                page=0,
-                row_index=0,
-            )
-            occurrences.append(
-                {
-                    "occurrence_id": occurrence_id,
-                    "normalized_label": normalized,
-                    "raw_label": item.get("raw_label"),
-                    "file_name": result.get("file_name"),
-                    "company_name": result.get("company_name"),
-                    "agency": result.get("agency"),
-                }
-            )
-    return occurrences
+    """하위 호환: 지표 YAML 운영 루프 제거 후 빈 목록."""
+    del results
+    return []
 
 
 def commit_batch_outputs(
@@ -618,13 +591,6 @@ def commit_batch_outputs(
 
     db_final = persist_undefined_occurrences(
         collect_undefined_occurrences(results)
-    )
-    from export.metric_undefined_store import (
-        persist_undefined_metric_occurrences,
-    )
-
-    persist_undefined_metric_occurrences(
-        collect_undefined_metric_occurrences(results)
     )
     doc_db = persist_batch_documents(results)
 

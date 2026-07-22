@@ -6,12 +6,22 @@ import re
 from typing import Any
 
 from common.matching_policy import normalize_metric_label
+from common.metric_catalog import (
+    METRIC_DISPLAY_NAMES,
+    get_metrics_config,
+)
 from extract.fin_tables import parse_numeric_cell, parse_period_header
 
 _YEAR_ONLY_RE = re.compile(r"^(20\d{2})$")
 
 NUM_FORMAT_INT = "#,##0"
 NUM_FORMAT_DEC = "#,##0.0"
+
+# 폴백 표시명 (매칭 실패 시)
+_DEFAULT_ROW1 = "총자산"
+_DEFAULT_ROW2 = "당기순이익"
+_DEFAULT_ROW3 = "총차입금"
+_DEFAULT_ROW4 = "부채비율(%)"
 
 
 def normalize_period_label(text: str | None) -> str | None:
@@ -78,95 +88,139 @@ def excel_number_format(raw: Any) -> str:
     return NUM_FORMAT_INT
 
 
-_SUMMARY_LABEL_ALIASES: dict[str, tuple[str, ...]] = {
-    "total_assets": (
-        "총자산",
-        "자산총계",
-        "총자산(십억원)",
-        "자산총계(억원)",
-        "총자산(억원)",
-    ),
-    "net_income": ("당기순이익", "순이익", "당기순이익(십억원)", "당기순이익(억원)"),
-    "total_borrowings": (
-        "총차입금",
-        "차입금",
-        "차입부채",
-        "총차입금(억원)",
-    ),
-    "bis_ratio": (
-        "BIS자기자본비율",
-        "BIS자본비율",
-        "BIS기준총자본비율",
-        "BIS기준 총자본비율",
-        "BIS자기자본비율(%)",
-        "BIS자본비율(%)",
-    ),
-    "liquidity_ratio": ("유동성비율", "유동성비율(%)"),
-    "debt_ratio": (
-        "부채비율",
-        "부채비율(%)",
-        "수정부채비율",
-        "부채비율(별도기준)",
-    ),
-}
-
-# 요약 금액 3행 (고정)
-AMOUNT_ROW_SPECS: tuple[tuple[str, str], ...] = (
-    ("총자산", "total_assets"),
-    ("당기순이익", "net_income"),
-    ("총차입금", "total_borrowings"),
-)
-
-# 비율 행: 표 라벨 우선순위 → 표시명
-_RATIO_PRIORITY: tuple[tuple[str, str], ...] = (
-    ("bis_ratio", "BIS자본비율(%)"),
-    ("liquidity_ratio", "유동성비율(%)"),
-    ("debt_ratio", "부채비율(%)"),
-)
-
-
-def _row_matches(raw_label: str, aliases: tuple[str, ...]) -> bool:
-    compact = normalize_metric_label(raw_label)
-    if not compact:
-        return False
-    for alias in aliases:
-        alias_c = normalize_metric_label(alias)
-        if not alias_c:
-            continue
-        if alias_c == compact:
-            return True
-        if alias_c in compact:
-            return True
-    return False
-
-
-def _table_has_metric(table: dict[str, Any], metric_key: str) -> bool:
-    aliases = _SUMMARY_LABEL_ALIASES.get(metric_key, ())
+def _index_table_by_metric(
+    table: dict[str, Any] | None,
+) -> dict[str, list[Any]]:
+    """metric_key → 표 행 (exact normalize만)."""
+    index: dict[str, list[Any]] = {}
+    if not table:
+        return index
+    lookup = get_metrics_config().normalized_lookup
     for row in table.get("rows") or []:
         if not row:
             continue
-        if _row_matches(str(row[0] or ""), aliases):
-            return True
-    return False
+        normalized = normalize_metric_label(str(row[0] or ""))
+        if not normalized:
+            continue
+        key = lookup.get(normalized)
+        if key is None:
+            continue
+        # 동일 키 첫 행만 (요약용)
+        index.setdefault(key, list(row))
+    return index
+
+
+def _table_has_metric(table: dict[str, Any] | None, metric_key: str) -> bool:
+    return metric_key in _index_table_by_metric(table)
+
+
+def resolve_funding_row(table: dict[str, Any] | None) -> tuple[str, str]:
+    """3행: 총차입금 → 자기자본 → 기본 총차입금."""
+    if _table_has_metric(table, "total_borrowings"):
+        return METRIC_DISPLAY_NAMES["total_borrowings"], "total_borrowings"
+    if _table_has_metric(table, "equity"):
+        return METRIC_DISPLAY_NAMES["equity"], "equity"
+    return _DEFAULT_ROW3, "total_borrowings"
 
 
 def resolve_ratio_row(table: dict[str, Any] | None) -> tuple[str, str]:
-    """비율 행 (표시명, metric_key). BIS → 유동성 → 부채."""
-    if table:
-        for metric_key, display in _RATIO_PRIORITY:
-            if _table_has_metric(table, metric_key):
-                return display, metric_key
-    return "부채비율(%)", "debt_ratio"
+    """4행: 부채비율 → BIS → 유동성 → 레버리지 → 기본 부채비율(%)."""
+    if _table_has_metric(table, "debt_ratio"):
+        return METRIC_DISPLAY_NAMES["debt_ratio"], "debt_ratio"
+    if _table_has_metric(table, "bis_ratio"):
+        return METRIC_DISPLAY_NAMES["bis_ratio"], "bis_ratio"
+    if _table_has_metric(table, "liquidity_ratio"):
+        return METRIC_DISPLAY_NAMES["liquidity_ratio"], "liquidity_ratio"
+    if _table_has_metric(table, "leverage"):
+        return METRIC_DISPLAY_NAMES["leverage"], "leverage"
+    return _DEFAULT_ROW4, "debt_ratio"
 
 
 def build_summary_row_specs(
     table: dict[str, Any] | None,
 ) -> list[tuple[str, str]]:
-    """요약 4행: 금액 3 + 동적 비율 1."""
-    rows = list(AMOUNT_ROW_SPECS)
-    display, key = resolve_ratio_row(table)
-    rows.append((display, key))
-    return rows
+    """요약 항상 4행: (표시명, metric_key)."""
+    funding_display, funding_key = resolve_funding_row(table)
+    ratio_display, ratio_key = resolve_ratio_row(table)
+    return [
+        (_DEFAULT_ROW1, "total_assets"),
+        (_DEFAULT_ROW2, "net_income"),
+        (funding_display, funding_key),
+        (ratio_display, ratio_key),
+    ]
+
+
+def _row_values_for_periods(
+    table: dict[str, Any],
+    *,
+    metric_key: str,
+    periods: list[str],
+) -> list[tuple[float | None, str | None]]:
+    return [
+        lookup_raw_value(table, metric_key=metric_key, period=period)
+        for period in periods
+    ]
+
+
+def _row_has_any_value(values: list[tuple[float | None, str | None]]) -> bool:
+    return any(item[0] is not None for item in values)
+
+
+def cascade_summary_rows(
+    tables_in_order: list[dict[str, Any] | None],
+) -> tuple[list[str], str, list[tuple[str, str, list[tuple[float | None, str | None]]]]]:
+    """NICE→KIS→KR usable 표에서 빈 행만 다음 표로 cascade.
+
+    Returns (periods, unit_caption, [(display, metric_key, values), ...]).
+    """
+    tables = [table for table in tables_in_order if table]
+    if not tables:
+        specs = build_summary_row_specs(None)
+        unit = shared_unit_caption(None)
+        return [], unit, [(display, key, []) for display, key in specs]
+
+    periods: list[str] = []
+    unit = shared_unit_caption(None)
+    for table in tables:
+        candidate_periods = build_summary_periods(
+            list((table.get("headers") or [])[1:])
+        )
+        if candidate_periods:
+            periods = candidate_periods
+            unit = shared_unit_caption(table)
+            break
+    if not periods:
+        unit = shared_unit_caption(tables[0])
+
+    slot_resolvers = (
+        lambda t: (_DEFAULT_ROW1, "total_assets"),
+        lambda t: (_DEFAULT_ROW2, "net_income"),
+        resolve_funding_row,
+        resolve_ratio_row,
+    )
+
+    output: list[tuple[str, str, list[tuple[float | None, str | None]]]] = []
+    for resolver in slot_resolvers:
+        display = ""
+        metric_key = ""
+        values: list[tuple[float | None, str | None]] = []
+        filled = False
+        for table in tables:
+            display, metric_key = resolver(table)
+            if not periods:
+                continue
+            values = _row_values_for_periods(
+                table, metric_key=metric_key, periods=periods
+            )
+            if _row_has_any_value(values):
+                filled = True
+                break
+        if not filled:
+            display, metric_key = resolver(tables[0])
+            values = [(None, None) for _ in periods] if periods else []
+        output.append((display, metric_key, values))
+
+    return periods, unit, output
 
 
 def build_summary_periods(period_headers: list[str]) -> list[str]:
@@ -190,7 +244,7 @@ def lookup_raw_value(
     metric_key: str,
     period: str,
 ) -> tuple[float | None, str | None]:
-    """(값, raw 문자열). 환산 없음."""
+    """(값, raw 문자열). exact 키 인덱싱, 환산 없음."""
     headers = list(table.get("headers") or [])
     period_cols: dict[str, int] = {}
     for index, header in enumerate(headers):
@@ -201,21 +255,16 @@ def lookup_raw_value(
     if col is None:
         return None, None
 
-    aliases = _SUMMARY_LABEL_ALIASES.get(metric_key, ())
-    for row in table.get("rows") or []:
-        if not row:
-            continue
-        label = str(row[0] or "")
-        if not _row_matches(label, aliases):
-            continue
-        if col >= len(row):
-            return None, None
-        raw_cell = row[col]
-        value, raw = parse_numeric_cell(raw_cell if raw_cell is not None else None)
-        return value, raw if raw is not None else (
-            str(raw_cell) if raw_cell is not None else None
-        )
-    return None, None
+    row = _index_table_by_metric(table).get(metric_key)
+    if row is None:
+        return None, None
+    if col >= len(row):
+        return None, None
+    raw_cell = row[col]
+    value, raw = parse_numeric_cell(raw_cell if raw_cell is not None else None)
+    return value, raw if raw is not None else (
+        str(raw_cell) if raw_cell is not None else None
+    )
 
 
 def normalize_fin_table_headers(
@@ -242,7 +291,6 @@ def normalize_fin_table_headers(
     return out_headers, out_rows
 
 
-# 하위 호환: 테스트/구코드
 def format_summary_unit_caption() -> str:
     return "(단위:억,%)"
 
@@ -251,6 +299,13 @@ def convert_to_eok(value: float | None, unit_token: str) -> float | None:
     """Deprecated: 환산 없음. 값 그대로 반환."""
     return value
 
+
+# 하위 호환
+AMOUNT_ROW_SPECS: tuple[tuple[str, str], ...] = (
+    ("총자산", "total_assets"),
+    ("당기순이익", "net_income"),
+    ("총차입금", "total_borrowings"),
+)
 
 SUMMARY_ROW_SPECS: tuple[tuple[str, str, bool], ...] = (
     ("총자산", "total_assets", False),

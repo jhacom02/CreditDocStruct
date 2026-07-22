@@ -1,19 +1,24 @@
-"""기업별 신평사 select-and-judge.
-
-기업 시트용 PDF 1건 선택:
-1) usable financial_tables 후보 최우선
-2) 그 안에서 NICE > KIS > KR
-3) usable 재무가 없으면 등급 success 후보만으로 동일 agency 순위
-"""
+"""기업별 PDF 그룹핑 · 신평사별 선택 · 재무 usable 판정."""
 
 from __future__ import annotations
 
 import re
+from datetime import date
 from typing import Any
 
-from agency.agency import normalize_agency_key
+from agency.agency import AGENCY_DISPLAY_NAMES, normalize_agency_key
 from common.text_utils import normalize_text
 from export.fin_excel_utils import normalize_period_label
+
+AGENCY_ORDER: tuple[str, ...] = ("nice", "kis", "kr")
+
+RATING_RAW_SECTION_TITLE = "신용등급(원본)"
+FIN_RAW_SECTION_TITLE = "재무지표(원본)"
+
+
+def agency_display_name(agency_key: str) -> str:
+    """Excel raw 소제목용 신평사명 (NICE신용평가㈜ 등)."""
+    return AGENCY_DISPLAY_NAMES.get(agency_key, agency_key)
 
 _AGENCY_RANK: dict[str, int] = {
     "nice": 0,
@@ -23,6 +28,10 @@ _AGENCY_RANK: dict[str, int] = {
 
 _MIN_LABELED_ROWS = 3
 _MIN_PERIOD_COLS = 2
+
+_EVAL_DATE_RE = re.compile(
+    r"(?P<year>20\d{2})\s*[.\-/]\s*(?P<month>\d{1,2})\s*[.\-/]\s*(?P<day>\d{1,2})"
+)
 
 
 def company_group_key(name: str | None) -> str:
@@ -47,7 +56,6 @@ def is_usable_financial_table(table: dict[str, Any]) -> bool:
     )
     if period_count < _MIN_PERIOD_COLS:
         return False
-    # 빈 칸이 많은 깨진 헤더(한전 KIS 등) 제외
     if period_count < len(data_headers) * 0.5:
         return False
 
@@ -65,7 +73,7 @@ def is_usable_financial(result: dict[str, Any]) -> bool:
     return any(is_usable_financial_table(t) for t in tables)
 
 
-def _success_products(result: dict[str, Any]) -> list[dict[str, Any]]:
+def success_products(result: dict[str, Any]) -> list[dict[str, Any]]:
     return [
         p
         for p in (result.get("products") or [])
@@ -73,29 +81,41 @@ def _success_products(result: dict[str, Any]) -> list[dict[str, Any]]:
     ]
 
 
-def select_result_for_company(
-    candidates: list[dict[str, Any]],
-) -> dict[str, Any] | None:
-    """동일 기업 후보 중 1건 선택.
-
-    usable 재무가 1차 기준이고, agency 순위(NICE>KIS>KR)는
-    동일 풀 안에서의 순위다.
-    """
-    with_fin = [item for item in candidates if is_usable_financial(item)]
-    pool = with_fin or [
-        item for item in candidates if _success_products(item)
-    ]
-    if not pool:
+def _parse_evaluation_date(text: str | None) -> date | None:
+    if not text:
+        return None
+    match = _EVAL_DATE_RE.search(normalize_text(text))
+    if not match:
+        return None
+    try:
+        return date(
+            int(match.group("year")),
+            int(match.group("month")),
+            int(match.group("day")),
+        )
+    except ValueError:
         return None
 
-    pool.sort(key=lambda item: agency_rank(item.get("agency")))
-    return pool[0]
+
+def latest_evaluation_date(candidates: list[dict[str, Any]]) -> str:
+    """그룹 내 가장 최신 evaluation_date 문자열 (원문 형식 유지)."""
+    best_date: date | None = None
+    best_text = ""
+    for item in candidates:
+        raw = item.get("evaluation_date") or ""
+        parsed = _parse_evaluation_date(raw)
+        if parsed is None:
+            continue
+        if best_date is None or parsed > best_date:
+            best_date = parsed
+            best_text = str(raw)
+    return best_text
 
 
-def select_one_per_company(
+def group_results_by_company(
     results: list[dict[str, Any]],
-) -> list[dict[str, Any]]:
-    """기업당 1건. 등장 순서 유지."""
+) -> tuple[list[str], dict[str, list[dict[str, Any]]]]:
+    """등장 순서 + 기업키 → PDF 목록."""
     groups: dict[str, list[dict[str, Any]]] = {}
     order: list[str] = []
     for result in results:
@@ -106,7 +126,79 @@ def select_one_per_company(
             groups[key] = []
             order.append(key)
         groups[key].append(result)
+    return order, groups
 
+
+def pick_result_by_agency(
+    candidates: list[dict[str, Any]],
+    agency_key: str,
+) -> dict[str, Any] | None:
+    """신평사별 대표 PDF — success product 수 우선."""
+    pool = [
+        item
+        for item in candidates
+        if normalize_agency_key(item.get("agency")) == agency_key
+        and success_products(item)
+    ]
+    if not pool:
+        return None
+    pool.sort(
+        key=lambda item: (
+            -len(success_products(item)),
+            agency_rank(item.get("agency")),
+        )
+    )
+    return pool[0]
+
+
+def pick_usable_financial_table(
+    result: dict[str, Any],
+) -> dict[str, Any] | None:
+    for table in result.get("financial_tables") or []:
+        if is_usable_financial_table(table):
+            return table
+    return None
+
+
+def iter_usable_fin_by_agency(
+    candidates: list[dict[str, Any]],
+) -> list[tuple[str, dict[str, Any], dict[str, Any]]]:
+    """(agency_key, result, table) — AGENCY_ORDER 순, usable만."""
+    picked: list[tuple[str, dict[str, Any], dict[str, Any]]] = []
+    for agency_key in AGENCY_ORDER:
+        pool = [
+            item
+            for item in candidates
+            if normalize_agency_key(item.get("agency")) == agency_key
+            and is_usable_financial(item)
+        ]
+        if not pool:
+            continue
+        pool.sort(key=lambda item: agency_rank(item.get("agency")))
+        result = pool[0]
+        table = pick_usable_financial_table(result)
+        if table is not None:
+            picked.append((agency_key, result, table))
+    return picked
+
+
+def select_result_for_company(
+    candidates: list[dict[str, Any]],
+) -> dict[str, Any] | None:
+    """하위 호환: 대표 1 PDF (usable 재무 우선, NICE > KIS > KR)."""
+    with_fin = [item for item in candidates if is_usable_financial(item)]
+    pool = with_fin or [item for item in candidates if success_products(item)]
+    if not pool:
+        return None
+    pool.sort(key=lambda item: agency_rank(item.get("agency")))
+    return pool[0]
+
+
+def select_one_per_company(
+    results: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """기업당 1건. 등장 순서 유지 (목록/트리거용)."""
+    order, groups = group_results_by_company(results)
     selected: list[dict[str, Any]] = []
     for key in order:
         chosen = select_result_for_company(groups[key])

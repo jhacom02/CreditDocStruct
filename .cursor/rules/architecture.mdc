@@ -9,7 +9,7 @@ alwaysApply: true
 
 - PDF 추출 오케스트레이션은 `main.py`만 담당한다. 다른 패키지에 CLI/배치 루프를 두지 않는다.
 - 관리자 앱은 `admin/admin_main.py`(Streamlit) 별도 진입점을 사용한다.
-- 최상위 폴더는 1단만: `common/`, `agency/`, `classify/`, `extract/`, `export/`, `admin/`, `config/`, `result/`, `tests/`.
+- 최상위 폴더는 1단만: `common/`, `agency/`, `classify/`, `extract/`, `export/`, `admin/`, `config/`, `results/`, `tests/`.
 - `admin/` 내부는 기능 하위 패키지(`views/`, `ui/`, `services/`, `data/`, `backup/`)를 둘 수 있다.
 - 경로·상수는 `.env` → `common/settings.py`로만 읽는다. 코드에 하드코딩하지 않는다.
 - 라벨 매칭 정책(정규화·추천·카탈로그 검증)은 `common/matching_policy.py`가 단일 원천이다.
@@ -18,3 +18,5 @@ alwaysApply: true
 - 추출 모델(`ExtractedRatingRow`)과 분류 모델(`RatingRecord`)을 분리한다.
 - JSON/Excel 결과 저장은 임시 파일 → 성공 확인 → `os.replace()` 원자적 교체(`commit_batch_outputs`).
 - 미분류 라벨은 `admin/services/candidate_store.py`(SQLite)에 저장한다. YAML 수정은 `admin/services/yaml_service.py`만 담당한다.
+- 재무지표는 `common/metric_catalog.py` 코드 상수(8키 exact). `metrics.yaml`·admin 지표 검수 없음.
+  raw/facts는 `export/document_store.py`(`documents.db`). 요약 4행 규칙은 `export/fin_excel_utils.py`.

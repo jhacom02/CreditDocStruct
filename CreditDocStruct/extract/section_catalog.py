@@ -13,6 +13,18 @@ SECTION_FINANCIAL = "financial_indicators"
 
 SECTION_KEYS = (SECTION_PRIMARY, SECTION_VALID, SECTION_FINANCIAL)
 
+# 제목 줄 잔여에 있으면 오염(재무·본문)으로 본다
+_TITLE_CONTAMINATION_RE = re.compile(
+    r"(?:"
+    r"\d"
+    r"|[%％]"
+    r"|ROA|ROE|NIM|BIS|Peer|PEER"
+    r"|충당금|고정이하|요주의|자기자본|총자산|차입"
+    r"|십억|억원"
+    r")",
+    re.IGNORECASE,
+)
+
 
 @dataclass(frozen=True)
 class SectionSpec:
@@ -75,13 +87,53 @@ SECTION_CATALOG: dict[str, SectionSpec] = {
     ),
 }
 
+# 거터·섹션 역할: 좌우 동시 배치 시 기대 region
+PREFERRED_REGION_BY_SECTION: dict[str, str] = {
+    SECTION_VALID: "left",
+    SECTION_FINANCIAL: "right",
+}
+
 
 def compact_title(text: str | None) -> str:
     return re.sub(r"\s+", "", normalize_text(text)).lower()
 
 
+def _residual_after_alias(compact: str, alias_c: str) -> str:
+    if compact.startswith(alias_c):
+        return compact[len(alias_c) :]
+    return compact
+
+
+def title_is_contaminated(text: str | None, *, matched_alias: str | None = None) -> bool:
+    """제목 줄에 재무 수치·지표명이 붙으면 True."""
+    normalized = normalize_text(text)
+    compact = compact_title(normalized)
+    if not compact:
+        return True
+    residual = compact
+    if matched_alias:
+        residual = _residual_after_alias(compact, compact_title(matched_alias))
+    else:
+        # 알려진 alias 제거 후 잔여 검사
+        for spec in SECTION_CATALOG.values():
+            for alias in spec.title_aliases:
+                alias_c = compact_title(alias)
+                if compact.startswith(alias_c):
+                    residual = compact[len(alias_c) :]
+                    break
+            else:
+                continue
+            break
+    if not residual:
+        return False
+    return bool(_TITLE_CONTAMINATION_RE.search(residual))
+
+
 def match_section_key(text: str | None) -> str | None:
-    """줄 텍스트가 카탈로그 제목이면 section_key, 아니면 None."""
+    """줄 텍스트가 카탈로그 제목이면 section_key, 아니면 None.
+
+    재무 수치가 붙은 오염 제목(예: '유효등급 충당금/…')은 거부한다.
+    """
     normalized = normalize_text(text)
     compact = compact_title(normalized)
     if not compact:
@@ -91,18 +143,24 @@ def match_section_key(text: str | None) -> str | None:
         alias_compacts = {compact_title(alias) for alias in spec.title_aliases}
         if compact in alias_compacts:
             return key
-        # 제목 줄이 alias로 시작하거나 동일 계열
+
         for alias_c in alias_compacts:
-            if compact == alias_c or compact.startswith(alias_c):
-                if len(compact) <= len(alias_c) + 4:
-                    return key
+            if compact.startswith(alias_c) and len(compact) <= len(alias_c) + 4:
+                residual = compact[len(alias_c) :]
+                if residual and _TITLE_CONTAMINATION_RE.search(residual):
+                    continue
+                if title_is_contaminated(text, matched_alias=alias_c):
+                    continue
+                return key
+
         for pattern in spec.title_patterns:
             if re.fullmatch(pattern, normalized, re.IGNORECASE):
                 return key
-            if (
-                len(compact) <= 14
-                and re.search(pattern, normalized, re.IGNORECASE)
+            if len(compact) <= 14 and re.search(
+                pattern, normalized, re.IGNORECASE
             ):
+                if title_is_contaminated(text):
+                    continue
                 return key
     return None
 

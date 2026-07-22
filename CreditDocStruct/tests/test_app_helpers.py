@@ -9,20 +9,14 @@ import pytest
 
 from admin.services.result_service import (
     ResultServiceError,
-    build_excel_bytes,
+    build_public_excel_bytes,
     filter_results,
     list_result_files,
     load_results_json,
     summarize_results,
 )
 from admin.ui.copy import (
-    action_label,
-    clamp_index,
     default_instrument_key,
-    filter_candidates,
-    history_sentence,
-    next_index_after_remove,
-    recommendation_strength,
     sort_suggestions,
     top_suggestions,
 )
@@ -56,76 +50,6 @@ def test_default_instrument_key_from_top() -> None:
 
 def test_default_instrument_key_empty() -> None:
     assert default_instrument_key([]) is None
-
-
-@pytest.mark.parametrize(
-    ("score", "expected"),
-    [
-        (60, "비교적 유사함"),
-        (59.9, "확인 필요"),
-        (30, "확인 필요"),
-        (29.9, "추천 신뢰 낮음"),
-        (None, "추천 정보 없음"),
-    ],
-)
-def test_recommendation_strength(score: float | None, expected: str) -> None:
-    assert recommendation_strength(score) == expected
-
-
-def test_history_sentence_approve() -> None:
-    sentence = history_sentence(
-        {
-            "action": "approve",
-            "alias": "IFSR",
-            "instrument_key": "insurance_payment",
-            "reviewer": "관리자",
-        }
-    )
-    assert "IFSR" in sentence
-    assert "등록" in sentence
-
-
-def test_history_sentence_sync_approve() -> None:
-    assert action_label("sync_approve") == "기존 등록 라벨 동기화"
-    sentence = history_sentence(
-        {
-            "action": "sync_approve",
-            "alias": "IFSR",
-            "instrument_key": "insurance_payment",
-        }
-    )
-    assert "동기화" in sentence
-
-
-def test_filter_candidates_by_agency_and_company() -> None:
-    items = [
-        {
-            "agency": "NICE신용평가㈜",
-            "company_name": "경남은행",
-            "last_seen_at": "2026-07-21T10:00:00+09:00",
-        },
-        {
-            "agency": "한국신용평가㈜",
-            "company_name": "우리은행",
-            "last_seen_at": "2026-07-21T10:00:00+09:00",
-        },
-    ]
-    filtered = filter_candidates(
-        items,
-        agency="NICE신용평가㈜",
-        company_query="경남",
-        period="전체",
-    )
-    assert len(filtered) == 1
-    assert filtered[0]["company_name"] == "경남은행"
-
-
-def test_next_index_and_clamp() -> None:
-    assert next_index_after_remove(0, 0) == 0
-    assert next_index_after_remove(2, 2) == 1
-    assert next_index_after_remove(1, 3) == 1
-    assert clamp_index(5, 3) == 2
-    assert clamp_index(-1, 3) == 0
 
 
 def _sample_results() -> list[dict]:
@@ -194,7 +118,6 @@ def test_filter_and_summarize_results() -> None:
     filtered = filter_results(
         results,
         status="fail",
-        fail_code="undefined_label",
         query="테스트",
     )
     assert len(filtered) == 1
@@ -202,8 +125,19 @@ def test_filter_and_summarize_results() -> None:
     assert summary == {"total": 2, "success": 1, "partial": 0, "fail": 1}
 
 
-def test_build_excel_bytes_columns() -> None:
+def test_build_public_excel_bytes_columns() -> None:
     config = get_instruments_config()
-    payload = build_excel_bytes(_sample_results(), config)
+    payload = build_public_excel_bytes(_sample_results(), config)
     assert payload[:2] == b"PK"
     assert len(payload) > 100
+
+    from io import BytesIO
+
+    import pandas as pd
+
+    from export.excel import EXCEL_PUBLIC_COLUMNS
+
+    with pd.ExcelFile(BytesIO(payload)) as workbook:
+        assert "신용등급" in workbook.sheet_names
+        dataframe = pd.read_excel(workbook, sheet_name="신용등급")
+    assert list(dataframe.columns) == EXCEL_PUBLIC_COLUMNS

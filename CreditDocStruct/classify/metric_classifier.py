@@ -2,28 +2,26 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
 from common.matching_policy import normalize_metric_label
+from common.metric_catalog import MetricsConfig, get_metrics_config
 from common.models import ClassificationStatus
-from common.settings import (
-    MetricsConfig,
-    get_metrics_config,
-    load_metrics_config,
-)
 
 
 class MetricClassifier:
-    """YAML metric_label_dictionary exact-match 분류기."""
+    """코드 카탈로그 exact-match 분류기."""
 
     def __init__(self, config: MetricsConfig):
         self.config = config
 
     @classmethod
-    def from_yaml(cls, path: str | Path | None = None) -> MetricClassifier:
-        if path is None:
-            return cls(get_metrics_config())
-        return cls(load_metrics_config(Path(path)))
+    def from_catalog(cls) -> MetricClassifier:
+        return cls(get_metrics_config())
+
+    # 하위 호환
+    @classmethod
+    def from_yaml(cls, path: object = None) -> MetricClassifier:
+        del path
+        return cls.from_catalog()
 
     def classify_label(
         self, raw_label: str

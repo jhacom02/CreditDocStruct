@@ -37,8 +37,10 @@ _NARRATIVE_LABEL_RE = re.compile(
 _APPLIED_STATEMENTS_RE = re.compile(r"적용\s*재무\s*제표")
 
 _PERIOD_RE = re.compile(
-    r"(?P<year>20\d{2})\s*[.\-/]?\s*\(?(?P<month>1[0-2]|0[1-9]|[1-9])\)?",
+    r"(?P<year>20\d{2})"
+    r"(?:\s*[.\-/]?\s*\(?(?P<month>1[0-2]|0[1-9]|[1-9])\)?)?",
 )
+_YEAR_ONLY_RE = re.compile(r"^(20\d{2})$")
 _BASIS_RE = re.compile(
     r"(K-?IFRS|IFRS|별도|연결|개별|은행계정|공기업|준정부)",
     re.IGNORECASE,
@@ -52,10 +54,58 @@ _EMPTY_VALUE_RE = re.compile(
     r"^(?:n\.?\s*a\.?|-|—|–|해당없음|없음)?$",
     re.IGNORECASE,
 )
+_LABEL_TRAILING_NUM_RE = re.compile(
+    r"^(?P<label>.+?)\s+(?P<num>[\d,]+(?:\.\d+)?)\s*$"
+)
 
 
 def _compact(text: str | None) -> str:
     return re.sub(r"\s+", "", normalize_text(text)).lower()
+
+
+def _digits_only(text: str | None) -> str:
+    return re.sub(r"[^\d]", "", text or "")
+
+
+def repair_financial_row_label(row: list[Any]) -> list[Any]:
+    """라벨 셀에 붙은 trailing 수치를 분리하고 첫 기간열을 복구한다."""
+    if not row:
+        return row
+    label = normalize_text(str(row[0] or ""))
+    if not label:
+        return list(row)
+
+    match = _LABEL_TRAILING_NUM_RE.match(label)
+    if not match:
+        return list(row)
+
+    clean_label = normalize_text(match.group("label"))
+    trailing_num = match.group("num")
+    trailing_digits = _digits_only(trailing_num)
+    if not clean_label or not trailing_digits:
+        return list(row)
+
+    new_row = list(row)
+    new_row[0] = clean_label
+    if len(new_row) <= 1:
+        return new_row
+
+    first_val = str(new_row[1] or "").strip()
+    first_digits = _digits_only(first_val)
+    if not first_val:
+        new_row[1] = trailing_num
+    elif len(first_digits) > len(trailing_digits) + 3:
+        # 한전 NICE 등: 기간 값이 이어붙은 경우 라벨 trailing을 1열 값으로
+        new_row[1] = trailing_num
+    elif first_digits == trailing_digits:
+        new_row[1] = trailing_num
+
+    return new_row
+
+
+def repair_financial_data_rows(rows: list[list[Any]]) -> list[list[Any]]:
+    """모든 데이터 행에 라벨 trailing 수치 분리를 적용."""
+    return [repair_financial_row_label(list(row)) for row in rows]
 
 
 def filter_financial_data_rows(rows: list[list[Any]]) -> list[list[Any]]:
@@ -89,19 +139,28 @@ def filter_financial_data_rows(rows: list[list[Any]]) -> list[list[Any]]:
         if not has_number and len(label) > 20:
             continue
         filtered.append(row)
-    return filtered
+    return repair_financial_data_rows(filtered)
 
 
 def parse_period_header(text: str | None) -> tuple[str | None, int | None, int | None]:
-    """기간 헤더 → (canonical 'YYYY.MM', year, month)."""
+    """기간 헤더 → (canonical 'YYYY.MM', year, month).
+
+    연도만 있으면 연말(`.12`)로 정규화 (NICE 요지 연도 열).
+    """
     normalized = normalize_text(text)
     if not normalized:
         return None, None, None
-    match = _PERIOD_RE.search(normalized)
+    compact = re.sub(r"\s+", "", normalized)
+    year_only = _YEAR_ONLY_RE.fullmatch(compact)
+    if year_only:
+        year = int(year_only.group(1))
+        return f"{year:04d}.12", year, 12
+    match = _PERIOD_RE.fullmatch(compact) or _PERIOD_RE.search(normalized)
     if not match:
         return None, None, None
     year = int(match.group("year"))
-    month = int(match.group("month"))
+    month_raw = match.group("month")
+    month = int(month_raw) if month_raw else 12
     return f"{year:04d}.{month:02d}", year, month
 
 

@@ -11,15 +11,24 @@ from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
 from common.settings import InstrumentsConfig
-from export.agency_select import select_one_per_company
+from export.agency_select import (
+    AGENCY_ORDER,
+    FIN_RAW_SECTION_TITLE,
+    RATING_RAW_SECTION_TITLE,
+    agency_display_name,
+    group_results_by_company,
+    iter_usable_fin_by_agency,
+    latest_evaluation_date,
+    pick_result_by_agency,
+    success_products,
+)
 from export.fin_excel_utils import (
-    build_summary_periods,
-    build_summary_row_specs,
+    cascade_summary_rows,
     excel_number_format,
-    lookup_raw_value,
     normalize_fin_table_headers,
     shared_unit_caption,
 )
+from export.rating_excel_utils import build_cascaded_rating_rows
 from extract.fin_tables import parse_numeric_cell
 
 EXCEL_PUBLIC_COLUMNS = [
@@ -244,32 +253,12 @@ def _set_company_col_widths(ws, last_col: int) -> None:
         ws.column_dimensions[get_column_letter(col)].width = 15
 
 
-def _success_products(result: dict[str, Any]) -> list[dict[str, Any]]:
-    return [
-        p
-        for p in (result.get("products") or [])
-        if p.get("status") == "success" and p.get("rating")
-    ]
-
-
-def _write_company_sheet(
-    wb: Workbook,
-    result: dict[str, Any],
-    config: InstrumentsConfig,
-    used_titles: set[str],
-) -> None:
-    title = _safe_sheet_title(str(result.get("company_name") or "기업"), used_titles)
-    ws = wb.create_sheet(title)
-    row = 1
-
-    # --- 개요 ---
+def _write_overview_block(ws, row: int, company_name: str, eval_date: str) -> int:
     ws.cell(row=row, column=1, value="개요").font = _SECTION_FONT
     row += 1
     overview = [
-        ("회사명", result.get("company_name") or ""),
-        ("신평사", result.get("agency") or ""),
-        ("평가일", result.get("evaluation_date") or ""),
-        ("원본파일명", result.get("file_name") or ""),
+        ("회사명", company_name),
+        ("평가일", eval_date),
     ]
     start = row
     for label, value in overview:
@@ -282,17 +271,54 @@ def _write_company_sheet(
         ws.cell(row=r, column=1).font = _HEADER_FONT
         ws.cell(row=r, column=1).border = _THIN
         ws.cell(row=r, column=2).border = _THIN
-    row += 1
+    return row + 1
 
-    # --- 신용등급 ---
-    ws.cell(row=row, column=1, value="신용등급").font = _SECTION_FONT
+
+def _write_rating_summary_block(
+    ws,
+    row: int,
+    company_results: list[dict[str, Any]],
+    config: InstrumentsConfig,
+) -> int:
+    ws.cell(row=row, column=1, value="신용등급(요약)").font = _SECTION_FONT
     row += 1
-    rating_header_row = row
+    header_row = row
     ws.cell(row=row, column=1, value="상품분류")
     ws.cell(row=row, column=2, value="신용등급")
     _style_header_row(ws, row, 1, 2)
     row += 1
-    for product in _success_products(result):
+
+    rating_rows = build_cascaded_rating_rows(company_results, config)
+    for display, rating in rating_rows:
+        ws.cell(row=row, column=1, value=display)
+        ws.cell(row=row, column=2, value=rating)
+        ws.cell(row=row, column=1).border = _THIN
+        ws.cell(row=row, column=2).border = _THIN
+        row += 1
+    if row == header_row + 1:
+        ws.cell(row=row, column=1, value="")
+        ws.cell(row=row, column=2, value="")
+        _apply_borders(ws, row, row, 1, 2)
+        row += 1
+    return row + 1
+
+
+def _write_rating_raw_agency_table(
+    ws,
+    row: int,
+    *,
+    agency_subheading: str,
+    result: dict[str, Any],
+    config: InstrumentsConfig,
+) -> tuple[int, int]:
+    ws.cell(row=row, column=1, value=agency_subheading)
+    row += 1
+    header_row = row
+    ws.cell(row=row, column=1, value="상품분류")
+    ws.cell(row=row, column=2, value="신용등급")
+    _style_header_row(ws, row, 1, 2)
+    row += 1
+    for product in success_products(result):
         key = product.get("instrument_key")
         display = ""
         if key and key in config.instruments:
@@ -304,63 +330,59 @@ def _write_company_sheet(
         ws.cell(row=row, column=1).border = _THIN
         ws.cell(row=row, column=2).border = _THIN
         row += 1
-    if row == rating_header_row + 1:
+    if row == header_row + 1:
         ws.cell(row=row, column=1, value="")
         ws.cell(row=row, column=2, value="")
         _apply_borders(ws, row, row, 1, 2)
         row += 1
-    row += 1
+    return row, 2
 
-    # --- 재무지표 ---
-    fin_title_row = row
-    ws.cell(row=row, column=1, value="재무지표").font = _SECTION_FONT
-    tables = result.get("financial_tables") or []
-    table = next((t for t in tables if t.get("rows")), None)
-    last_col = 2
-    unit_caption = shared_unit_caption(table)
-    if table:
-        headers, data_rows = normalize_fin_table_headers(table)
-        last_col = max(len(headers), 2)
-        ws.cell(row=fin_title_row, column=last_col, value=unit_caption)
-        ws.cell(row=fin_title_row, column=last_col).alignment = Alignment(
-            horizontal="right"
+
+def _write_rating_raw_section(
+    ws,
+    row: int,
+    company_results: list[dict[str, Any]],
+    config: InstrumentsConfig,
+) -> tuple[int, int]:
+    """신용등급(원본) 볼드 + 신평사별 소제목·표."""
+    agencies = [
+        (agency_key, pick_result_by_agency(company_results, agency_key))
+        for agency_key in AGENCY_ORDER
+    ]
+    agencies = [(key, result) for key, result in agencies if result is not None]
+    if not agencies:
+        return row, 2
+
+    ws.cell(row=row, column=1, value=RATING_RAW_SECTION_TITLE).font = _SECTION_FONT
+    row += 1
+    max_col = 2
+    for index, (agency_key, result) in enumerate(agencies):
+        row, cols = _write_rating_raw_agency_table(
+            ws,
+            row,
+            agency_subheading=agency_display_name(agency_key),
+            result=result,
+            config=config,
         )
-        row += 1
-        for col, header in enumerate(headers, start=1):
-            ws.cell(row=row, column=col, value=header)
-        _style_header_row(ws, row, 1, last_col)
-        row += 1
-        for data in data_rows:
-            for col in range(1, last_col + 1):
-                raw = data[col - 1] if col - 1 < len(data) else None
-                cell = ws.cell(row=row, column=col)
-                if col == 1:
-                    cell.value = raw
-                else:
-                    num, raw_text = parse_numeric_cell(
-                        raw if raw is not None else None
-                    )
-                    if num is not None:
-                        cell.value = num
-                        cell.number_format = excel_number_format(
-                            raw_text if raw_text is not None else raw
-                        )
-                    else:
-                        cell.value = raw
-                cell.border = _THIN
+        max_col = max(max_col, cols)
+        if index + 1 < len(agencies):
             row += 1
-    else:
-        row += 1
+    return row + 1, max_col
 
-    row += 1
 
-    # --- 재무지표(요약) ---
+def _write_fin_summary_block(
+    ws,
+    row: int,
+    company_results: list[dict[str, Any]],
+) -> tuple[int, int]:
+    fin_by_agency = iter_usable_fin_by_agency(company_results)
+    tables_in_order = [table for _agency, _result, table in fin_by_agency]
+    summary_periods, unit_caption, summary_rows = cascade_summary_rows(
+        tables_in_order
+    )
+
     summary_title_row = row
     ws.cell(row=row, column=1, value="재무지표(요약)").font = _SECTION_FONT
-    summary_periods = build_summary_periods(
-        list((table.get("headers") or [])[1:]) if table else []
-    )
-    summary_specs = build_summary_row_specs(table)
     end_col = max(1 + len(summary_periods), 4)
     ws.cell(row=summary_title_row, column=end_col, value=unit_caption)
     ws.cell(row=summary_title_row, column=end_col).alignment = Alignment(
@@ -374,31 +396,125 @@ def _write_company_sheet(
     _style_header_row(ws, row, 1, end_col)
     row += 1
 
-    if table and summary_periods:
-        for display_label, metric_key in summary_specs:
-            ws.cell(row=row, column=1, value=display_label).border = _THIN
-            for col, period in enumerate(summary_periods, start=2):
-                value, raw_text = lookup_raw_value(
-                    table,
-                    metric_key=metric_key,
-                    period=period,
-                )
-                cell = ws.cell(row=row, column=col)
-                if value is not None:
-                    cell.value = value
-                    cell.number_format = excel_number_format(raw_text)
-                cell.border = _THIN
-            for col in range(2 + len(summary_periods), end_col + 1):
-                ws.cell(row=row, column=col).border = _THIN
-            row += 1
-    else:
-        for display_label, _key in summary_specs:
-            ws.cell(row=row, column=1, value=display_label).border = _THIN
-            for col in range(2, end_col + 1):
-                ws.cell(row=row, column=col).border = _THIN
-            row += 1
+    for display_label, _metric_key, values in summary_rows:
+        ws.cell(row=row, column=1, value=display_label).border = _THIN
+        for col, (value, raw_text) in enumerate(values, start=2):
+            cell = ws.cell(row=row, column=col)
+            if value is not None:
+                cell.value = value
+                cell.number_format = excel_number_format(raw_text)
+            cell.border = _THIN
+        for col in range(2 + len(values), end_col + 1):
+            ws.cell(row=row, column=col).border = _THIN
+        row += 1
 
-    _set_company_col_widths(ws, max(last_col, end_col))
+    return row + 1, max(end_col, 2)
+
+
+def _write_fin_raw_agency_table(
+    ws,
+    row: int,
+    *,
+    agency_subheading: str,
+    table: dict[str, Any],
+) -> tuple[int, int]:
+    unit_caption = shared_unit_caption(table)
+    headers, data_rows = normalize_fin_table_headers(table)
+    last_col = max(len(headers), 2)
+    subheading_row = row
+    ws.cell(row=subheading_row, column=1, value=agency_subheading)
+    ws.cell(row=subheading_row, column=last_col, value=unit_caption)
+    ws.cell(row=subheading_row, column=last_col).alignment = Alignment(
+        horizontal="right"
+    )
+    row += 1
+    for col, header in enumerate(headers, start=1):
+        ws.cell(row=row, column=col, value=header)
+    _style_header_row(ws, row, 1, last_col)
+    row += 1
+    for data in data_rows:
+        for col in range(1, last_col + 1):
+            raw = data[col - 1] if col - 1 < len(data) else None
+            cell = ws.cell(row=row, column=col)
+            if col == 1:
+                cell.value = raw
+            else:
+                num, raw_text = parse_numeric_cell(
+                    raw if raw is not None else None
+                )
+                if num is not None:
+                    cell.value = num
+                    cell.number_format = excel_number_format(
+                        raw_text if raw_text is not None else raw
+                    )
+                else:
+                    cell.value = raw
+            cell.border = _THIN
+        row += 1
+    return row, last_col
+
+
+def _write_fin_raw_section(
+    ws,
+    row: int,
+    company_results: list[dict[str, Any]],
+) -> tuple[int, int]:
+    """재무지표(원본) 볼드 + 신평사별 소제목·표."""
+    fin_by_agency = iter_usable_fin_by_agency(company_results)
+    if not fin_by_agency:
+        return row, 2
+
+    ws.cell(row=row, column=1, value=FIN_RAW_SECTION_TITLE).font = _SECTION_FONT
+    row += 1
+    max_col = 2
+    for index, (agency_key, _result, table) in enumerate(fin_by_agency):
+        row, cols = _write_fin_raw_agency_table(
+            ws,
+            row,
+            agency_subheading=agency_display_name(agency_key),
+            table=table,
+        )
+        max_col = max(max_col, cols)
+        if index + 1 < len(fin_by_agency):
+            row += 1
+    return row + 1, max_col
+
+
+def _write_company_sheet(
+    wb: Workbook,
+    company_results: list[dict[str, Any]],
+    config: InstrumentsConfig,
+    used_titles: set[str],
+) -> None:
+    representative = company_results[0]
+    title = _safe_sheet_title(
+        str(representative.get("company_name") or "기업"), used_titles
+    )
+    ws = wb.create_sheet(title)
+    row = 1
+    max_col = 2
+
+    row = _write_overview_block(
+        ws,
+        row,
+        str(representative.get("company_name") or ""),
+        latest_evaluation_date(company_results),
+    )
+
+    row = _write_rating_summary_block(ws, row, company_results, config)
+
+    row, fin_summary_cols = _write_fin_summary_block(ws, row, company_results)
+    max_col = max(max_col, fin_summary_cols)
+
+    row, rating_raw_cols = _write_rating_raw_section(
+        ws, row, company_results, config
+    )
+    max_col = max(max_col, rating_raw_cols)
+
+    row, fin_raw_cols = _write_fin_raw_section(ws, row, company_results)
+    max_col = max(max_col, fin_raw_cols)
+
+    _set_company_col_widths(ws, max_col)
 
 
 def write_results_excel_tmp(
@@ -435,8 +551,9 @@ def write_results_excel_tmp(
     _autosize(list_ws, max_width=120)
 
     used_titles: set[str] = {"신용등급"}
-    for selected in select_one_per_company(results):
-        _write_company_sheet(wb, selected, config, used_titles)
+    order, groups = group_results_by_company(results)
+    for key in order:
+        _write_company_sheet(wb, groups[key], config, used_titles)
 
     wb.save(tmp_path)
     return tmp_path

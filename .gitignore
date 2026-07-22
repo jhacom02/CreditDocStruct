@@ -38,19 +38,11 @@ data/
 output/
 downloads/
 results/
-result/
 
 # Admin application runtime (CreditDocStruct/CreditDocStruct/)
-# Transition: keep both path prefixes until folders are renamed.
 CreditDocStruct/admin/data/admin.db
 CreditDocStruct/admin/data/*.db
 CreditDocStruct/admin/backup/*.yaml
 CreditDocStruct/admin/backup/*.yml
 !CreditDocStruct/admin/data/.gitkeep
 !CreditDocStruct/admin/backup/.gitkeep
-CreditRateFinder/admin/data/admin.db
-CreditRateFinder/admin/data/*.db
-CreditRateFinder/admin/backup/*.yaml
-CreditRateFinder/admin/backup/*.yml
-!CreditRateFinder/admin/data/.gitkeep
-!CreditRateFinder/admin/backup/.gitkeep

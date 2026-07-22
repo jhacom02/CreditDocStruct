@@ -42,6 +42,52 @@ EVALUATION_TYPES = {
 
 PRIMARY_EVAL_TYPES = frozenset({"본", "본평가"})
 
+_VALID_NOISE_PATTERNS = (
+    r"BIS\s*자본",
+    r"BIS자본",
+    r"BIS기준",
+    r"ROA\s*\(",
+    r"ROA\(",
+    r"ROE\s*\(",
+    r"NIM\s*\(",
+    r"총자산",
+    r"등급\s*추이",
+    r"자기자본",
+    r"부채비율",
+    r"유동성비율",
+    r"이중\s*레버리지",
+    r"레버리지",
+    r"Peer",
+    r"PEER",
+    r"충당금",
+    r"고정이하",
+    r"요주의",
+    r"적용재무제표",
+)
+
+
+def truncate_valid_row_text(text: str) -> str:
+    """유효등급 행에서 재무지표·등급추이 등 노이즈 이전까지만 유지."""
+    normalized = normalize_text(text)
+    if not normalized:
+        return ""
+
+    cut_index = len(normalized)
+    for pattern in _VALID_NOISE_PATTERNS:
+        match = re.search(pattern, normalized, re.IGNORECASE)
+        if match:
+            cut_index = min(cut_index, match.start())
+
+    trimmed = normalize_text(normalized[:cut_index])
+    if not trimmed:
+        return normalized
+
+    if find_rating_tokens_in_text(trimmed):
+        return trimmed
+
+    return normalized
+
+
 RATING_ACTIONS = {
     "유지",
     "상향",

@@ -31,7 +31,7 @@ from common.fail_reasons import (
 from common.models import ExtractedRatingRow, RatingRecord
 from common.settings import get_instruments_config, get_settings
 from extract.label_fields import decompose_label_fields, split_label_and_issue
-from extract.layout import truncate_valid_row_text
+from extract.row_parser import truncate_valid_row_text
 from extract.merge import merge_canonical_records, merge_rating_records
 from extract.row_parser import parse_rating_row_values
 from export.excel import build_excel_row, build_excel_rows
@@ -727,7 +727,7 @@ def test_commit_batch_atomic(
     from openpyxl import load_workbook
 
     workbook = load_workbook(excel_path, read_only=True, data_only=True)
-    sheet = workbook["신용등급_결과"]
+    sheet = workbook["신용등급"]
     assert sheet["A1"].value == "No"
     assert sheet["A2"].value == 1
     assert isinstance(sheet["A2"].value, int)
