@@ -2,19 +2,36 @@
 
 from __future__ import annotations
 
+import pandas as pd
 import streamlit as st
 
 from admin.services.result_service import (
+    AGENCY_FILTER_OPTIONS,
     ResultServiceError,
     build_public_excel_bytes,
-    build_public_rows,
+    build_public_rows_with_sources,
+    empty_financial_wide_columns,
     filter_results,
+    financial_fail_message,
+    financial_table_to_wide_rows,
+    first_financial_table,
     list_result_files,
     load_results_json,
     summarize_results,
 )
 from common.settings import get_instruments_config
 from export.excel import EXCEL_PUBLIC_COLUMNS
+
+
+def _section_label(text: str) -> None:
+    st.markdown(
+        f'<p class="section-label">{text}</p>',
+        unsafe_allow_html=True,
+    )
+
+
+def _empty_financial_frame() -> pd.DataFrame:
+    return pd.DataFrame(columns=empty_financial_wide_columns())
 
 
 def render_result_tab() -> None:
@@ -41,17 +58,16 @@ def render_result_tab() -> None:
 
     filters = st.columns(2)
     with filters[0]:
-        status = st.selectbox(
-            "처리상태", ["전체", "success", "partial", "fail"]
-        )
+        agency = st.selectbox("신평사", list(AGENCY_FILTER_OPTIONS))
     with filters[1]:
         query = st.text_input("회사명 검색")
 
     filtered = filter_results(
         results,
-        status=status,
+        agency=agency,
         query=query,
     )
+
     summary = summarize_results(filtered)
     st.caption(
         f"전체 {summary['total']}건 · 성공 {summary['success']} · "
@@ -63,16 +79,11 @@ def render_result_tab() -> None:
         return
 
     config = get_instruments_config()
-    rows = build_public_rows(filtered, config)
+    row_sources = build_public_rows_with_sources(filtered, config)
     table = [
-        {key: row.get(key, "") for key in EXCEL_PUBLIC_COLUMNS}
-        for row in rows
+        {key: pair.row.get(key, "") for key in EXCEL_PUBLIC_COLUMNS}
+        for pair in row_sources
     ]
-    st.dataframe(
-        table,
-        use_container_width=True,
-        hide_index=True,
-    )
 
     st.download_button(
         "Excel 다운로드",
@@ -83,4 +94,66 @@ def render_result_tab() -> None:
             "spreadsheetml.sheet"
         ),
         use_container_width=True,
+    )
+
+    _section_label("신용등급")
+
+    event = st.dataframe(
+        table,
+        use_container_width=True,
+        hide_index=True,
+        selection_mode="single-row",
+        on_select="rerun",
+        key="rating_results_table",
+    )
+
+    _section_label("주요 재무지표")
+    st.caption("신용등급 표에서 체크박스 선택 시 해당 발행사, 신평사의 주요 재무지표가 표시됩니다.")
+
+    selected_rows: list[int] = []
+    if event is not None and getattr(event, "selection", None) is not None:
+        selected_rows = list(event.selection.rows or [])
+
+    if not selected_rows:
+        st.dataframe(
+            _empty_financial_frame(),
+            use_container_width=True,
+            hide_index=True,
+            key="financial_empty_table",
+        )
+        return
+
+    row_index = int(selected_rows[0])
+    if row_index < 0 or row_index >= len(row_sources):
+        st.dataframe(
+            _empty_financial_frame(),
+            use_container_width=True,
+            hide_index=True,
+            key="financial_oob_table",
+        )
+        return
+
+    source_result = row_sources[row_index].result
+    fin_table = first_financial_table(source_result)
+    columns, wide_rows = financial_table_to_wide_rows(fin_table)
+
+    if not wide_rows:
+        st.markdown(
+            f'<p class="fin-fail-msg">{financial_fail_message(source_result)}</p>',
+            unsafe_allow_html=True,
+        )
+        st.dataframe(
+            _empty_financial_frame(),
+            use_container_width=True,
+            hide_index=True,
+            key="financial_fail_empty_table",
+        )
+        return
+
+    display = pd.DataFrame(wide_rows, columns=columns)
+    st.dataframe(
+        display,
+        use_container_width=True,
+        hide_index=True,
+        key="financial_selected_table",
     )

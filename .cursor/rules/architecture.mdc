@@ -17,6 +17,6 @@ alwaysApply: true
 - `target_instrument` / `--target` / `DEFAULT_TARGET_INSTRUMENT` 개념은 없다. PDF에서 라벨을 자동 탐색해 상품별 `products`를 확정한다.
 - 추출 모델(`ExtractedRatingRow`)과 분류 모델(`RatingRecord`)을 분리한다.
 - JSON/Excel 결과 저장은 임시 파일 → 성공 확인 → `os.replace()` 원자적 교체(`commit_batch_outputs`).
-- 미분류 라벨은 `admin/services/candidate_store.py`(SQLite)에 저장한다. YAML 수정은 `admin/services/yaml_service.py`만 담당한다.
+- 미분류 라벨은 결과 JSON `undefined_records`에 남긴다. YAML 수정은 `admin/services/yaml_service.py`만 담당한다 (`managed_by: admin` 추가분만 삭제 가능).
 - 재무지표는 `common/metric_catalog.py` 코드 상수(8키 exact). `metrics.yaml`·admin 지표 검수 없음.
-  raw/facts는 `export/document_store.py`(`documents.db`). 요약 4행 규칙은 `export/fin_excel_utils.py`.
+  raw/norm은 `export/document_store.py`(`documents.db`: documents, rating/financial_grids_raw, rating/financial_norm). 요약 4행 규칙은 `export/fin_excel_utils.py`.

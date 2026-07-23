@@ -7,8 +7,14 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from agency.agency import AGENCY_DISPLAY_NAMES
 from common.settings import InstrumentsConfig, get_settings
 from export.excel import build_excel_public_rows, write_results_excel_tmp
+
+AGENCY_FILTER_OPTIONS: tuple[str, ...] = (
+    "전체",
+    *(AGENCY_DISPLAY_NAMES[key] for key in ("nice", "kis", "kr")),
+)
 
 
 class ResultServiceError(ValueError):
@@ -20,6 +26,14 @@ class ResultFileInfo:
     path: Path
     name: str
     modified_at: float
+
+
+@dataclass(frozen=True)
+class PublicRowSource:
+    """공개 신용등급 행 + 원본 PDF 결과."""
+
+    row: dict[str, Any]
+    result: dict[str, Any]
 
 
 def list_result_files(result_dir: Path | None = None) -> list[ResultFileInfo]:
@@ -66,15 +80,15 @@ def load_results_json(path: Path) -> list[dict[str, Any]]:
 def filter_results(
     results: list[dict[str, Any]],
     *,
-    status: str | None = None,
+    agency: str | None = None,
     query: str | None = None,
 ) -> list[dict[str, Any]]:
-    status = (status or "").strip()
+    agency = (agency or "").strip()
     query = (query or "").strip().lower()
 
     filtered: list[dict[str, Any]] = []
     for item in results:
-        if status and status != "전체" and item.get("status") != status:
+        if agency and agency != "전체" and item.get("agency") != agency:
             continue
         if query:
             company = str(item.get("company_name") or "").lower()
@@ -96,14 +110,91 @@ def summarize_results(results: list[dict[str, Any]]) -> dict[str, int]:
     }
 
 
+def build_public_rows_with_sources(
+    results: list[dict[str, Any]],
+    config: InstrumentsConfig,
+) -> list[PublicRowSource]:
+    pairs: list[PublicRowSource] = []
+    for item in results:
+        for row in build_excel_public_rows(item, config):
+            pairs.append(PublicRowSource(row=row, result=item))
+    return pairs
+
+
 def build_public_rows(
     results: list[dict[str, Any]],
     config: InstrumentsConfig,
 ) -> list[dict[str, Any]]:
-    rows: list[dict[str, Any]] = []
-    for item in results:
-        rows.extend(build_excel_public_rows(item, config))
-    return rows
+    return [pair.row for pair in build_public_rows_with_sources(results, config)]
+
+
+def empty_financial_wide_rows() -> list[dict[str, Any]]:
+    """미선택 시 빈 재무지표 표 (계정과목 열만)."""
+    return []
+
+
+def empty_financial_wide_columns() -> list[str]:
+    return ["계정과목"]
+
+
+def financial_table_to_wide_rows(
+    table: dict[str, Any] | None,
+) -> tuple[list[str], list[dict[str, Any]]]:
+    """raw financial_tables 항목 → (열이름, wide 행).
+
+    열1=계정과목, 이후=기간 헤더. 유효 행이 없으면 빈 목록.
+    """
+    if not table:
+        return empty_financial_wide_columns(), []
+
+    headers = list(table.get("headers") or [])
+    rows = list(table.get("rows") or [])
+    period_headers: list[str] = []
+    for index, header in enumerate(headers[1:], start=1):
+        label = str(header or "").strip()
+        if not label:
+            label = f"기간{index}"
+        period_headers.append(label)
+
+    columns = ["계정과목", *period_headers]
+    wide_rows: list[dict[str, Any]] = []
+    for row in rows:
+        cells = list(row or [])
+        if not cells:
+            continue
+        account = str(cells[0] if cells else "").strip()
+        if not account:
+            continue
+        entry: dict[str, Any] = {"계정과목": account}
+        for col_index, col_name in enumerate(period_headers):
+            value_index = col_index + 1
+            if value_index < len(cells):
+                entry[col_name] = cells[value_index]
+            else:
+                entry[col_name] = ""
+        wide_rows.append(entry)
+
+    if not wide_rows:
+        return empty_financial_wide_columns(), []
+    return columns, wide_rows
+
+
+def financial_fail_message(result: dict[str, Any]) -> str:
+    agency = str(result.get("agency") or "신평사")
+    company = str(result.get("company_name") or "기업")
+    return f"{agency}에서 제공하는 {company} 재무지표 추출에 실패했습니다."
+
+
+def first_financial_table(
+    result: dict[str, Any] | None,
+) -> dict[str, Any] | None:
+    if not result:
+        return None
+    tables = result.get("financial_tables") or []
+    if not tables:
+        return None
+    first = tables[0]
+    return first if isinstance(first, dict) else None
 
 
 def build_public_excel_bytes(

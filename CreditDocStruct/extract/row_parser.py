@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from common.models import ExtractedRatingRow, RatingStatus
 from common.rating_tokens import (
     OUTLOOK_TOKEN_RE,
+    RATING_SEARCH_RE,
     RatingToken,
     count_rating_tokens_in_cell,
     find_rating_tokens_in_text,
@@ -65,6 +66,17 @@ _VALID_NOISE_PATTERNS = (
     r"적용재무제표",
 )
 
+# 등급 토큰 뒤에 이어지는 한글(재무·각주) 시작점
+_HANGUL_AFTER_RATING_RE = re.compile(r"\s+[\uac00-\ud7a3]")
+
+
+def _rating_token_end_index(text: str) -> int | None:
+    """마지막 등급 검색 매치의 끝 위치를 반환한다."""
+    last_end: int | None = None
+    for match in RATING_SEARCH_RE.finditer(text):
+        last_end = match.end()
+    return last_end
+
 
 def truncate_valid_row_text(text: str) -> str:
     """유효등급 행에서 재무지표·등급추이 등 노이즈 이전까지만 유지."""
@@ -77,6 +89,13 @@ def truncate_valid_row_text(text: str) -> str:
         match = re.search(pattern, normalized, re.IGNORECASE)
         if match:
             cut_index = min(cut_index, match.start())
+
+    # 구조적 cut: 등급 토큰 직후 한글(재무·각주)이 시작되면 그 앞에서 자른다
+    token_end = _rating_token_end_index(normalized)
+    if token_end is not None:
+        hangul = _HANGUL_AFTER_RATING_RE.search(normalized, token_end)
+        if hangul:
+            cut_index = min(cut_index, hangul.start())
 
     trimmed = normalize_text(normalized[:cut_index])
     if not trimmed:

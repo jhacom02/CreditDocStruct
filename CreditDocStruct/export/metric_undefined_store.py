@@ -15,7 +15,9 @@ def persist_undefined_metric_occurrences(
 ) -> Path:
     """지표 검수 운영 중단: 저장하지 않고 경로만 반환."""
     del occurrences
-    settings = get_settings()
-    path = Path(db_path) if db_path is not None else settings.admin_db_path_resolved
+    if db_path is not None:
+        path = Path(db_path)
+    else:
+        path = get_settings().document_db_path_resolved
     path.parent.mkdir(parents=True, exist_ok=True)
     return path

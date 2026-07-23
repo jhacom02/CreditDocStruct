@@ -7,9 +7,12 @@ from pathlib import Path
 import pytest
 
 from admin.services.yaml_service import (
+    MANAGED_BY_ADMIN,
     YamlServiceError,
     add_alias,
+    delete_aliases,
     list_backups,
+    list_instrument_aliases,
     load_active_alias_lookup,
     load_yaml_document,
     remove_alias,
@@ -75,9 +78,13 @@ def test_add_alias_success(yaml_env: tuple[Path, Path]) -> None:
         "Issuer Rating",
         yaml_path=yaml_path,
         backup_dir=backup_dir,
+        note="관리자 추가",
     )
     data = load_yaml_document(yaml_path)
-    assert "Issuer Rating" in data["label_dictionary"]
+    entry = data["label_dictionary"]["Issuer Rating"]
+    assert entry["instrument_key"] == "issuer"
+    assert entry["managed_by"] == MANAGED_BY_ADMIN
+    assert entry["note"] == "관리자 추가"
     config = load_instruments_config(yaml_path)
     assert config.normalized_lookup[normalize_label("Issuer Rating")] == "issuer"
     assert "normalization" not in data
@@ -120,9 +127,50 @@ def test_empty_alias(yaml_env: tuple[Path, Path]) -> None:
 
 def test_remove_alias(yaml_env: tuple[Path, Path]) -> None:
     yaml_path, backup_dir = yaml_env
-    remove_alias("발행자", yaml_path=yaml_path, backup_dir=backup_dir)
+    remove_alias(
+        "발행자",
+        yaml_path=yaml_path,
+        backup_dir=backup_dir,
+        allow_locked=True,
+    )
     data = load_yaml_document(yaml_path)
     assert "발행자" not in data["label_dictionary"]
+
+
+def test_delete_aliases_rejects_locked(yaml_env: tuple[Path, Path]) -> None:
+    yaml_path, backup_dir = yaml_env
+    with pytest.raises(YamlServiceError, match="잠긴 라벨"):
+        delete_aliases(
+            ["발행자"],
+            yaml_path=yaml_path,
+            backup_dir=backup_dir,
+        )
+
+
+def test_delete_aliases_admin_only(yaml_env: tuple[Path, Path]) -> None:
+    yaml_path, backup_dir = yaml_env
+    add_alias(
+        "issuer",
+        "관리자표기",
+        yaml_path=yaml_path,
+        backup_dir=backup_dir,
+        note="메모",
+    )
+    groups = list_instrument_aliases(yaml_path)
+    issuer = next(g for g in groups if g.instrument_key == "issuer")
+    admin_entry = next(a for a in issuer.aliases if a.raw_label == "관리자표기")
+    assert admin_entry.is_admin_managed
+    locked = next(a for a in issuer.aliases if a.raw_label == "발행자")
+    assert not locked.is_admin_managed
+
+    delete_aliases(
+        ["관리자표기"],
+        yaml_path=yaml_path,
+        backup_dir=backup_dir,
+    )
+    data = load_yaml_document(yaml_path)
+    assert "관리자표기" not in data["label_dictionary"]
+    assert "발행자" in data["label_dictionary"]
 
 
 def test_backup_created(yaml_env: tuple[Path, Path]) -> None:

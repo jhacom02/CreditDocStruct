@@ -27,12 +27,20 @@ class YamlServiceError(ValueError):
     """YAML 수정·검증 실패."""
 
 
+MANAGED_BY_ADMIN = "admin"
+
+
 @dataclass(frozen=True)
 class AliasEntry:
     raw_label: str
     instrument_key: str
     active: bool = True
     note: str = ""
+    managed_by: str | None = None
+
+    @property
+    def is_admin_managed(self) -> bool:
+        return (self.managed_by or "").strip() == MANAGED_BY_ADMIN
 
 
 @dataclass(frozen=True)
@@ -88,12 +96,17 @@ def list_instrument_aliases(
         key = spec.get("instrument_key")
         if not key:
             continue
+        managed = spec.get("managed_by")
+        managed_by = str(managed).strip() if managed else None
+        if managed_by == "":
+            managed_by = None
         grouped.setdefault(key, []).append(
             AliasEntry(
                 raw_label=str(raw_label),
                 instrument_key=key,
                 active=bool(spec.get("active", True)),
                 note=str(spec.get("note") or ""),
+                managed_by=managed_by,
             )
         )
 
@@ -220,19 +233,25 @@ def add_alias(
     yaml_path: Path | None = None,
     backup_dir: Path | None = None,
     note: str | None = None,
+    managed_by: str | None = MANAGED_BY_ADMIN,
 ) -> Path:
     """label_dictionary에 alias를 추가하고 백업 경로를 반환한다."""
     path = _resolve_yaml_path(yaml_path)
-    _check_alias_conflicts(alias, instrument_key, yaml_path=path)
+    cleaned = (alias or "").strip()
+    if not cleaned:
+        raise YamlServiceError("alias가 비어 있습니다.")
+    _check_alias_conflicts(cleaned, instrument_key, yaml_path=path)
 
     data = load_yaml_document(path)
     dictionary = data.setdefault("label_dictionary", {})
-    timestamp = datetime.now(tz=KST).isoformat(timespec="seconds")
-    dictionary[alias] = {
+    entry: dict[str, Any] = {
         "instrument_key": instrument_key,
         "active": True,
-        "note": note or f"admin 승인 {timestamp}",
+        "note": (note if note is not None else "") or "",
     }
+    if managed_by:
+        entry["managed_by"] = managed_by
+    dictionary[cleaned] = entry
     return _write_yaml_atomic(data, path, backup_dir=backup_dir)
 
 
@@ -241,15 +260,46 @@ def remove_alias(
     *,
     yaml_path: Path | None = None,
     backup_dir: Path | None = None,
+    allow_locked: bool = False,
 ) -> Path:
-    """label_dictionary에서 alias를 삭제하고 백업 경로를 반환한다."""
+    """label_dictionary에서 alias를 삭제하고 백업 경로를 반환한다.
+
+    기본은 managed_by=admin 행만 삭제. allow_locked=True면 잠금 행도 삭제(테스트·개발용).
+    """
+    return delete_aliases(
+        [alias],
+        yaml_path=yaml_path,
+        backup_dir=backup_dir,
+        allow_locked=allow_locked,
+    )
+
+
+def delete_aliases(
+    aliases: list[str],
+    *,
+    yaml_path: Path | None = None,
+    backup_dir: Path | None = None,
+    allow_locked: bool = False,
+) -> Path:
+    """관리자 추가(managed_by=admin) 라벨만 삭제한다."""
     path = _resolve_yaml_path(yaml_path)
     data = load_yaml_document(path)
     dictionary = data.get("label_dictionary") or {}
-    if alias not in dictionary:
-        raise YamlServiceError(f"alias를 찾을 수 없습니다: {alias!r}")
+    if not aliases:
+        raise YamlServiceError("삭제할 라벨이 없습니다.")
 
-    del dictionary[alias]
+    for alias in aliases:
+        if alias not in dictionary:
+            raise YamlServiceError(f"alias를 찾을 수 없습니다: {alias!r}")
+        spec = dictionary.get(alias) or {}
+        managed = str(spec.get("managed_by") or "").strip()
+        if not allow_locked and managed != MANAGED_BY_ADMIN:
+            raise YamlServiceError(
+                f"잠긴 라벨은 삭제할 수 없습니다: {alias!r}"
+            )
+
+    for alias in aliases:
+        del dictionary[alias]
     data["label_dictionary"] = dictionary
     return _write_yaml_atomic(data, path, backup_dir=backup_dir)
 

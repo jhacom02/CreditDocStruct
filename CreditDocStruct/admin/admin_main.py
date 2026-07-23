@@ -4,27 +4,35 @@ from __future__ import annotations
 
 import streamlit as st
 
-from admin.services.candidate_store import (
-    count_by_status,
-    reconcile_candidate_statuses,
+from admin.services.exception_service import count_exceptions
+from admin.services.result_service import (
+    ResultServiceError,
+    list_result_files,
+    load_results_json,
 )
-from admin.services.yaml_service import load_active_alias_lookup
 from admin.ui.theme import inject_styles
+from admin.views.dictionary import render_dictionary_tab
+from admin.views.exceptions import render_exceptions_tab
+from admin.views.guide import render_guide_tab
 from admin.views.results import render_result_tab
-from admin.views.review import render_review_tab
 
 
-@st.cache_resource(show_spinner=False)
-def synchronize_candidates_on_server_start() -> dict[str, int]:
-    """Streamlit 서버 프로세스에서 최초 1회 후보 상태를 YAML과 맞춘다."""
-    return reconcile_candidate_statuses(load_active_alias_lookup())
+def _sidebar_exception_count() -> int:
+    files = list_result_files()
+    if not files:
+        return 0
+    try:
+        results = load_results_json(files[0].path)
+    except ResultServiceError:
+        return 0
+    return count_exceptions(results)
 
 
 def _render_sidebar() -> None:
     if st.sidebar.button("⟲ 새로고침", use_container_width=True):
         st.rerun()
-    pending = count_by_status().get("pending", 0)
-    st.sidebar.caption(f"검수 대기 {pending}건")
+    pending = _sidebar_exception_count()
+    st.sidebar.caption(f"확인 필요 {pending}건")
 
 
 def main() -> None:
@@ -33,18 +41,23 @@ def main() -> None:
         layout="wide",
     )
     inject_styles()
-    synchronize_candidates_on_server_start()
 
-    st.title("관리자 페이지")
-    st.caption("추출 결과 확인 · 미분류 라벨 검수")
+    st.title("신용평가서 관리자 페이지")
+    st.caption("신평서에서 추출한 신용등급·재무제표를 확인합니다. 비개발자용 유지보수 내역을 관리합니다.")
 
     _render_sidebar()
 
-    tab1, tab2 = st.tabs(["결과 조회", "라벨 검수"])
+    tab1, tab2, tab3, tab4 = st.tabs(
+        ["결과 조회", "확인 필요", "상품 사전", "운영 가이드"]
+    )
     with tab1:
         render_result_tab()
     with tab2:
-        render_review_tab()
+        render_exceptions_tab()
+    with tab3:
+        render_dictionary_tab()
+    with tab4:
+        render_guide_tab()
 
 
 if __name__ == "__main__":

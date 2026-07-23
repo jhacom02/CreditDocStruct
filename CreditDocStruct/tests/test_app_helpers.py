@@ -117,7 +117,7 @@ def test_filter_and_summarize_results() -> None:
     results = _sample_results()
     filtered = filter_results(
         results,
-        status="fail",
+        agency="NICE신용평가㈜",
         query="테스트",
     )
     assert len(filtered) == 1

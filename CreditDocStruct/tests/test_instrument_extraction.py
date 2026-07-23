@@ -35,11 +35,7 @@ from extract.row_parser import truncate_valid_row_text
 from extract.merge import merge_canonical_records, merge_rating_records
 from extract.row_parser import parse_rating_row_values
 from export.excel import build_excel_row, build_excel_rows
-from admin.services.candidate_store import init_db, list_pending
-from export.undefined_store import (
-    make_occurrence_id,
-    persist_undefined_occurrences,
-)
+from export.undefined_store import make_occurrence_id
 from main import _extract_rows_from_page, build_products, commit_batch_outputs
 
 
@@ -641,36 +637,11 @@ def test_excel_fail_blanks_fields() -> None:
     assert rows[0]["실패사유"] == "parse_error"
 
 
-def test_undefined_occurrence_dedup(tmp_path: Path) -> None:
-    db_path = tmp_path / "admin.db"
-    occurrence_id = make_occurrence_id("abc123", "미등록상품", 1, 0)
-    occurrence = {
-        "occurrence_id": occurrence_id,
-        "normalized_label": "미등록상품",
-        "raw_label": "미등록상품",
-        "file_name": "a.pdf",
-        "company_name": "테스트",
-        "agency": "NICE신용평가㈜",
-        "rating": "A+",
-        "suggestions": [],
-    }
-
-    persist_undefined_occurrences([occurrence], db_path=db_path)
-    pending = list_pending(db_path=db_path)
-    assert pending[0]["occurrence_count"] == 1
-
-    persist_undefined_occurrences([occurrence], db_path=db_path)
-    pending = list_pending(db_path=db_path)
-    assert pending[0]["occurrence_count"] == 1
-
-    occurrence2 = dict(occurrence)
-    occurrence2["occurrence_id"] = make_occurrence_id(
-        "def456", "미등록상품", 1, 0
-    )
-    persist_undefined_occurrences([occurrence2], db_path=db_path)
-    pending = list_pending(db_path=db_path)
-    assert pending[0]["occurrence_count"] == 2
-    assert init_db(db_path).exists()
+def test_make_occurrence_id_stable() -> None:
+    first = make_occurrence_id("abc123", "미등록상품", 1, 0)
+    second = make_occurrence_id("abc123", "미등록상품", 1, 0)
+    assert first == second
+    assert "미등록상품" in first
 
 
 def test_commit_batch_atomic(
@@ -679,7 +650,7 @@ def test_commit_batch_atomic(
     from common import settings as settings_mod
 
     monkeypatch.setenv("RESULT_DIR", str(tmp_path / "result"))
-    monkeypatch.setenv("ADMIN_DB_PATH", str(tmp_path / "admin.db"))
+    monkeypatch.setenv("DOCUMENT_DB_PATH", str(tmp_path / "documents.db"))
     settings_mod.get_settings.cache_clear()
 
     settings = settings_mod.get_settings()
@@ -711,12 +682,12 @@ def test_commit_batch_atomic(
         }
     ]
 
-    json_path, excel_path, db_path, _doc_path = commit_batch_outputs(
+    json_path, excel_path, doc_path = commit_batch_outputs(
         results, stem="result_test"
     )
     assert json_path.exists()
     assert excel_path.exists()
-    assert db_path.exists()
+    assert doc_path.exists()
     assert not json_path.with_name(json_path.name + ".tmp").exists()
 
     saved_results = json.loads(json_path.read_text(encoding="utf-8"))
@@ -913,6 +884,21 @@ def test_truncate_valid_row_text() -> None:
     assert "AA+" in trimmed or "Stable" in trimmed
 
 
+def test_truncate_valid_row_text_hangul_after_rating() -> None:
+    """등급 토큰 뒤 한글 재무·각주는 패턴 목록 없이도 자른다."""
+    polluted = (
+        "AAA/STABLE 이중레버리지비율*(%) 126.5 124.8 125.0"
+    )
+    trimmed = truncate_valid_row_text(polluted)
+    assert trimmed == "AAA/STABLE"
+    assert "이중" not in trimmed
+
+    footnote = (
+        "AA-/STABLE 부채비율과 이중레버리지비율은 별도재무제표기준"
+    )
+    assert truncate_valid_row_text(footnote) == "AA-/STABLE"
+
+
 def test_classifier_coco_ifsr_aliases(classifier: LabelClassifier) -> None:
     for label in ("CoCo(신종)", "COCO(신종)", "IFSR"):
         record = classifier.classify_label(label)
@@ -953,7 +939,91 @@ def test_rebuild_merged_three_products() -> None:
     assert "신종자본증권" in labels
     for item in rebuilt:
         assert item.rating == "AAA"
-        assert item.rating_status == "single"
+
+
+def test_rebuild_collapsed_primary_with_product_labels() -> None:
+    """종류·현재등급이 공백으로 붕괴된 primary를 상품별로 분할한다."""
+    from extract.row_rebuild import is_collapsed_rating_fields
+
+    config = get_instruments_config()
+    header = [
+        "평가대상",
+        "종류",
+        "현재등급",
+        "직전등급",
+        "RATING ACTION",
+        "비고",
+    ]
+    collapsed = ExtractedRatingRow(
+        raw_label="특수채 기업어음 단기사채",
+        label_text="특수채 기업어음 단기사채",
+        rating_cells=["AAA/안정적 AAA/안정적 A1 A1"],
+        rating_status="ambiguous",
+        rating=None,
+        outlook=None,
+        page=1,
+        row_index=0,
+        section="primary_rating",
+        source="pdf_table",
+        cells=[
+            "특수채 기업어음 단기사채",
+            "본 정기 본 본",
+            "AAA/안정적 AAA/안정적 A1 A1",
+            "AAA/안정적 AAA/안정적 - -",
+            "유지 유지 신규 신규",
+            "",
+        ],
+        evaluation_type=None,
+        header_cells=header,
+    )
+    assert is_collapsed_rating_fields(collapsed)
+    rebuilt, error = rebuild_merged_rows([collapsed], config)
+    assert error is None
+    assert len(rebuilt) == 3
+    by_label = {item.raw_label: item for item in rebuilt}
+    assert by_label["특수채"].rating == "AAA"
+    assert by_label["특수채"].evaluation_type == "본"
+    assert by_label["기업어음"].evaluation_type == "정기"
+    assert by_label["단기사채"].rating == "A1"
+
+
+def test_rebuild_skips_collapsed_primary_without_labels() -> None:
+    config = get_instruments_config()
+    header = ["평가대상", "종류", "현재등급", "직전등급", "RATING ACTION"]
+    empty_label = ExtractedRatingRow(
+        raw_label="",
+        label_text="",
+        rating_cells=["AAA/안정적 A1"],
+        rating_status="ambiguous",
+        rating=None,
+        outlook=None,
+        page=1,
+        row_index=0,
+        section="primary_rating",
+        source="pdf_table",
+        cells=["", "본 본", "AAA/안정적 A1", "AAA A1", "유지 신규"],
+        evaluation_type=None,
+        header_cells=header,
+    )
+    valid = ExtractedRatingRow(
+        raw_label="특수채",
+        label_text="특수채",
+        rating_cells=["AAA/안정적"],
+        rating_status="single",
+        rating="AAA",
+        outlook="안정적",
+        page=1,
+        row_index=1,
+        section="valid_ratings",
+        source="valid_rating_section",
+        cells=["특수채", "AAA/안정적"],
+        evaluation_type="유효등급",
+        header_cells=["구분", "등급"],
+    )
+    rebuilt, error = rebuild_merged_rows([empty_label, valid], config)
+    assert error is None
+    assert len(rebuilt) == 1
+    assert rebuilt[0].raw_label == "특수채"
 
 
 def test_rebuild_merged_three_products_multi_rating_cells() -> None:

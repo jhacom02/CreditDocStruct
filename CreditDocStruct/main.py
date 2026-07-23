@@ -64,11 +64,7 @@ from extract.merge import is_primary_record, merge_canonical_records, source_ran
 from export.document_store import persist_batch_documents, renormalize_all
 from export.excel import write_results_excel_tmp
 from export.json_io import write_results_json_tmp
-from export.undefined_store import (
-    file_sha256,
-    make_occurrence_id,
-    persist_undefined_occurrences,
-)
+from export.undefined_store import file_sha256, make_occurrence_id
 
 VALID_ONLY_EVALUATION_TYPE = "유효등급"
 
@@ -574,8 +570,8 @@ def commit_batch_outputs(
     results: list[dict[str, Any]],
     *,
     stem: str | None = None,
-) -> tuple[Path, Path, Path, Path]:
-    """JSON·Excel·관리자 DB·문서 DB를 저장한다."""
+) -> tuple[Path, Path, Path]:
+    """JSON·Excel·문서 DB를 저장한다."""
     settings = get_settings()
     config = get_instruments_config()
 
@@ -589,9 +585,6 @@ def commit_batch_outputs(
     json_tmp = write_results_json_tmp(results, json_final)
     excel_tmp = write_results_excel_tmp(results, config, excel_final)
 
-    db_final = persist_undefined_occurrences(
-        collect_undefined_occurrences(results)
-    )
     doc_db = persist_batch_documents(results)
 
     try:
@@ -606,7 +599,7 @@ def commit_batch_outputs(
                 pass
         raise
 
-    return json_final, excel_final, db_final, doc_db
+    return json_final, excel_final, doc_db
 
 
 def build_argument_parser() -> argparse.ArgumentParser:
@@ -691,7 +684,7 @@ def main(argv: list[str] | None = None) -> None:
         )
         results.append(result)
 
-    json_path, excel_path, admin_path, doc_path = commit_batch_outputs(
+    json_path, excel_path, doc_path = commit_batch_outputs(
         results, stem=args.output
     )
 
@@ -699,7 +692,6 @@ def main(argv: list[str] | None = None) -> None:
         {
             "json": str(json_path),
             "excel": str(excel_path),
-            "admin": str(admin_path),
             "documents": str(doc_path),
             "count": len(results),
         },

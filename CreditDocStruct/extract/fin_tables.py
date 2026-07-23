@@ -57,6 +57,13 @@ _EMPTY_VALUE_RE = re.compile(
 _LABEL_TRAILING_NUM_RE = re.compile(
     r"^(?P<label>.+?)\s+(?P<num>[\d,]+(?:\.\d+)?)\s*$"
 )
+_NUMERIC_TOKEN_RE = re.compile(r"-?[\d,]+(?:\.\d+)?")
+_CONCAT_NUMBERS_ONLY_RE = re.compile(
+    r"^[\s,.\-△▲()]*"
+    r"(?:-?[\d,]+(?:\.\d+)?)"
+    r"(?:\s+-?[\d,]+(?:\.\d+)?)+"
+    r"[\s,.\-△▲()]*$"
+)
 
 
 def _compact(text: str | None) -> str:
@@ -65,6 +72,18 @@ def _compact(text: str | None) -> str:
 
 def _digits_only(text: str | None) -> str:
     return re.sub(r"[^\d]", "", text or "")
+
+
+def take_first_concatenated_number(text: str | None) -> str | None:
+    """공백으로 붙은 복수 수치 셀이면 첫 수치만 남긴다.
+
+    예: '2,111,237 2,348,050' → '2,111,237'
+    """
+    raw = normalize_text(text)
+    if not raw or not _CONCAT_NUMBERS_ONLY_RE.match(raw):
+        return None
+    match = _NUMERIC_TOKEN_RE.search(raw)
+    return match.group(0) if match else None
 
 
 def repair_financial_row_label(row: list[Any]) -> list[Any]:
@@ -103,9 +122,101 @@ def repair_financial_row_label(row: list[Any]) -> list[Any]:
     return new_row
 
 
+def repair_financial_value_cells(row: list[Any]) -> list[Any]:
+    """값 열의 복수 수치 concat을 첫 수치로 정리한다."""
+    if not row:
+        return row
+    new_row = list(row)
+    for index in range(1, len(new_row)):
+        first = take_first_concatenated_number(new_row[index])
+        if first is not None:
+            new_row[index] = first
+    return new_row
+
+
+def align_sparse_period_columns(
+    headers: list[Any],
+    rows: list[list[Any]],
+) -> tuple[list[str], list[list[str]]]:
+    """빈 헤더 열에 수치가 있고 기간 헤더 아래가 비어 있으면 값을 기간 열로 옮긴 뒤
+    라벨+기간 열만 남긴다. (한전 KIS 등 PyMuPDF 교차 빈 칸)
+    """
+    if not headers:
+        return [], [list(map(lambda c: normalize_text(str(c or "")), row)) for row in rows]
+
+    width = max(
+        [len(headers)] + [len(row) for row in rows],
+        default=0,
+    )
+    norm_headers = [
+        normalize_text(str(headers[i] if i < len(headers) else "") or "")
+        for i in range(width)
+    ]
+    work_rows: list[list[str]] = []
+    for row in rows:
+        work_rows.append(
+            [
+                normalize_text(str(row[i] if i < len(row) else "") or "")
+                for i in range(width)
+            ]
+        )
+
+    period_idxs = [
+        index
+        for index in range(1, width)
+        if parse_period_header(norm_headers[index])[0] is not None
+    ]
+    if not period_idxs:
+        return norm_headers[: len(headers)] or norm_headers, work_rows
+
+    for row in work_rows:
+        for period_index in period_idxs:
+            current = row[period_index]
+            if current.strip():
+                continue
+            prev_index = period_index - 1
+            if prev_index < 1:
+                continue
+            if norm_headers[prev_index].strip():
+                continue
+            prev_val = row[prev_index]
+            if not prev_val.strip():
+                continue
+            if parse_numeric_cell(prev_val)[0] is None:
+                # concat 정리 전일 수 있어 첫 수치만 검사
+                first = take_first_concatenated_number(prev_val)
+                if first is None:
+                    continue
+                prev_val = first
+            row[period_index] = prev_val
+            row[prev_index] = ""
+
+    keep = [0] + period_idxs
+    out_headers = [norm_headers[i] for i in keep]
+    if not out_headers[0].strip():
+        out_headers[0] = "구분"
+    out_rows = [[row[i] for i in keep] for row in work_rows]
+    return out_headers, out_rows
+
+
+def repair_financial_matrix(
+    headers: list[Any],
+    rows: list[list[Any]],
+) -> tuple[list[str], list[list[str]]]:
+    """라벨 trailing·값 concat·빈 기간열 정렬을 한 번에 적용."""
+    repaired = [
+        repair_financial_value_cells(repair_financial_row_label(list(row)))
+        for row in rows
+    ]
+    return align_sparse_period_columns(headers, repaired)
+
+
 def repair_financial_data_rows(rows: list[list[Any]]) -> list[list[Any]]:
-    """모든 데이터 행에 라벨 trailing 수치 분리를 적용."""
-    return [repair_financial_row_label(list(row)) for row in rows]
+    """모든 데이터 행에 라벨 trailing·값 concat 정리를 적용."""
+    return [
+        repair_financial_value_cells(repair_financial_row_label(list(row)))
+        for row in rows
+    ]
 
 
 def filter_financial_data_rows(rows: list[list[Any]]) -> list[list[Any]]:
@@ -316,6 +427,10 @@ def _from_pymupdf_table(
     if not data_rows:
         return None
 
+    headers, data_rows = repair_financial_matrix(headers, data_rows)
+    if not data_rows:
+        return None
+
     basis = basis_hint
     if header_index > 0:
         basis = basis or _detect_basis(
@@ -462,6 +577,10 @@ def _visual_fin_grid(
         return None
 
     grid_rows = filter_financial_data_rows(grid_rows)
+    if not grid_rows:
+        return None
+
+    headers, grid_rows = repair_financial_matrix(headers, grid_rows)
     if not grid_rows:
         return None
 

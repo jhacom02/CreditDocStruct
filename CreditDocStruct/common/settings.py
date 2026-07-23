@@ -37,7 +37,6 @@ class Settings:
     # 폴더/파일을 하나의 경로 변수로 지정 (예: config/instruments.yaml)
     instruments_yaml: str = "config/instruments.yaml"
     result_dir: str = "results"
-    admin_db_path: str = "admin/data/admin.db"
     document_db_path: str = "admin/data/documents.db"
     admin_backup_dir: str = "admin/backup"
     max_pdf_pages: int = 1
@@ -66,10 +65,6 @@ class Settings:
         return self._resolve_path(self.result_dir)
 
     @property
-    def admin_db_path_resolved(self) -> Path:
-        return self._resolve_path(self.admin_db_path)
-
-    @property
     def document_db_path_resolved(self) -> Path:
         return self._resolve_path(self.document_db_path)
 
@@ -92,9 +87,6 @@ def get_settings() -> Settings:
             "INSTRUMENTS_YAML_PATH", "config/instruments.yaml"
         ),
         result_dir=os.environ.get("RESULT_DIR", "results"),
-        admin_db_path=os.environ.get(
-            "ADMIN_DB_PATH", "admin/data/admin.db"
-        ),
         document_db_path=os.environ.get(
             "DOCUMENT_DB_PATH", "admin/data/documents.db"
         ),
@@ -120,6 +112,7 @@ class LabelDictionaryEntry:
     instrument_key: str
     active: bool = True
     note: str = ""
+    managed_by: str | None = None
 
 
 @dataclass(frozen=True)
@@ -157,12 +150,17 @@ def _build_label_dictionary(
         instrument_key = spec.get("instrument_key")
         if not instrument_key:
             continue
+        managed = spec.get("managed_by")
+        managed_by = str(managed).strip() if managed else None
+        if managed_by == "":
+            managed_by = None
         entries.append(
             LabelDictionaryEntry(
                 raw_label=raw_label,
                 instrument_key=instrument_key,
                 active=bool(spec.get("active", True)),
                 note=spec.get("note", "") or "",
+                managed_by=managed_by,
             )
         )
     return entries

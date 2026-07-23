@@ -185,6 +185,17 @@ def _is_bon_only_label(row: ExtractedRatingRow) -> bool:
     return is_evaluation_only_primary_row(row)
 
 
+def is_collapsed_rating_fields(row: ExtractedRatingRow) -> bool:
+    """종류·현재등급 셀에 복수 평가/등급이 공백으로 붙은 붕괴 행인지."""
+    eval_types = infer_evaluation_types_from_column(
+        row.cells, row.header_cells
+    )
+    current_tokens, _previous = ordered_rating_tokens_from_columns(
+        row.cells, row.header_cells
+    )
+    return len(eval_types) >= 2 and len(current_tokens) >= 2
+
+
 def _collect_orphan_tokens(
     rows: list[ExtractedRatingRow],
     start_index: int,
@@ -229,8 +240,18 @@ def rebuild_merged_rows(
             continue
 
         label_text = decomposed.label_text or decomposed.raw_label
-        merged = is_merged_label_suspect(label_text, config) or (
-            is_merged_label_suspect(decomposed.raw_label, config)
+        label_spans = find_registered_label_spans(label_text, config)
+        multi_label = len({item[3] for item in label_spans}) >= 2
+        collapsed = is_collapsed_rating_fields(decomposed)
+
+        # 라벨 없이 종류/등급만 붕괴된 primary는 복원 불가 → 스킵
+        # (유효등급 섹션에서 상품을 가져오는 경우가 일반적)
+        if collapsed and not multi_label and not normalize_text(label_text):
+            index += 1
+            continue
+
+        merged = multi_label or is_merged_label_suspect(
+            decomposed.raw_label, config
         )
         if (
             decomposed.source == "visual_layout"
@@ -239,6 +260,10 @@ def rebuild_merged_rows(
             # visual 한 줄에는 평가대상 뒤의 종목명이 함께 붙는다.
             # 종목명에 등록 alias가 있어도 단일 등급 행이면 별도 상품이 아니다.
             merged = False
+
+        # 복수 상품 라벨 + 붕괴된 종류/등급 → 분할 복원
+        if collapsed and multi_label:
+            merged = True
 
         if merged:
             orphan_tokens, next_index = _collect_orphan_tokens(rows, index + 1)
