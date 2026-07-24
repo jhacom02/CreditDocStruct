@@ -53,7 +53,9 @@ def collect_exceptions(results: list[dict[str, Any]]) -> list[dict[str, Any]]:
                     "detail": pdf_code,
                     "message": (result.get("fail_reason") or {}).get("message")
                     or "",
-                    "action": "원본 PDF 파싱에 실패했습니다.",
+                    "action": (
+                        "PDF를 다시 받거나 손상·암호 여부를 확인한 뒤, 추출을 다시 실행하세요."
+                    ),
                 }
             )
 
@@ -73,7 +75,8 @@ def collect_exceptions(results: list[dict[str, Any]]) -> list[dict[str, Any]]:
                     or "",
                     "message": "",
                     "action": (
-                        "「상품 사전」탭에서 해당 원문 라벨을 추가한 뒤 추출을 다시 실행하세요."
+                        "상세의 원문표현을 복사해 「상품 사전」에서 맞는 상품을 "
+                        "고른 뒤 추가하고, 재추출하세요."
                     ),
                     "rating": record.get("rating"),
                 }
@@ -98,7 +101,8 @@ def collect_exceptions(results: list[dict[str, Any]]) -> list[dict[str, Any]]:
                     or code
                     or "",
                     "action": (
-                        "신용등급을 인식할 수 없습니다. 원문을 확인한 뒤 수기 입력해주세요."
+                        "원문 PDF를 보고 수기로 보완하세요. "
+                        "같은 문제가 반복되면 개발에 요청하세요."
                     ),
                 }
             )
@@ -116,7 +120,8 @@ def collect_exceptions(results: list[dict[str, Any]]) -> list[dict[str, Any]]:
                     "detail": "",
                     "message": "",
                     "action": (
-                        "특정 신평사의 재무지표가 없거나 추출에 실패했습니다. 원문을 확인한 뒤 수기 입력해주세요."
+                        "해당 신평사 자료에 표가 없거나 읽히지 않은 경우입니다. "
+                        "수기 보완하거나 개발에 요청하세요."
                     ),
                 }
             )

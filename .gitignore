@@ -46,3 +46,4 @@ CreditDocStruct/admin/backup/*.yaml
 CreditDocStruct/admin/backup/*.yml
 !CreditDocStruct/admin/data/.gitkeep
 !CreditDocStruct/admin/backup/.gitkeep
+!CreditDocStruct/results/.gitkeep

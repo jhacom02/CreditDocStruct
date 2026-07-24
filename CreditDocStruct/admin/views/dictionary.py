@@ -90,8 +90,8 @@ def render_dictionary_tab() -> None:
         [
             {
                 "No": index,
-                "상품키": group.instrument_key,
                 "상품명": group.display_name,
+                "상품 Key": group.instrument_key,
             }
             for index, group in enumerate(groups, start=1)
         ]
@@ -133,7 +133,7 @@ def render_dictionary_tab() -> None:
     free_df = pd.DataFrame(free_rows, columns=list(_ALIAS_COLUMNS))
 
     if locked_rows:
-        st.caption("잠금 (삭제 불가)")
+        st.caption("기본 목록 (삭제 불가)")
         _show_dataframe(
             locked_df,
             key=f"dict_alias_locked_{instrument_key}",
@@ -141,7 +141,7 @@ def render_dictionary_tab() -> None:
 
     free_event = None
     if free_rows:
-        st.caption("삭제 가능 (체크 후 삭제)")
+        st.caption("내가 추가한 목록 (삭제 가능)")
         free_event = _show_dataframe(
             free_df,
             key=f"dict_alias_free_{instrument_key}",
@@ -158,9 +158,9 @@ def render_dictionary_tab() -> None:
     add_cols = st.columns([1, 1])
     with add_cols[0]:
         new_label = st.text_input(
-            "원문 라벨",
+            "원문라벨",
             key=label_key,
-            placeholder="추가할 원문 표현",
+            placeholder="추가할 원문표현",
         )
     with add_cols[1]:
         new_note = st.text_input(
@@ -171,20 +171,12 @@ def render_dictionary_tab() -> None:
 
     btn_cols = st.columns([6, 1, 1])
     with btn_cols[1]:
-        st.markdown(
-            '<span id="dict-confirm-marker"></span>',
-            unsafe_allow_html=True,
-        )
         confirm = st.button(
             "추가",
             key=f"dict_confirm_{instrument_key}",
             use_container_width=True,
         )
     with btn_cols[2]:
-        st.markdown(
-            '<span id="dict-delete-marker"></span>',
-            unsafe_allow_html=True,
-        )
         delete = st.button(
             "삭제",
             key=f"dict_delete_{instrument_key}",
@@ -194,7 +186,7 @@ def render_dictionary_tab() -> None:
     if confirm:
         cleaned = (new_label or "").strip()
         if not cleaned:
-            st.warning("원문 라벨을 입력하세요.")
+            st.warning("원문라벨을 입력하세요.")
         else:
             existing = {a.raw_label for a in selected.aliases}
             if cleaned in existing:

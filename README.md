@@ -1,12 +1,16 @@
 # CreditDocStruct
 
-**신평서 데이터 구조화 프로젝트 — 개발자 문서**
+**신평서 데이터 구조화 프로젝트 — 개발자·AI 에이전트용 문서**
 
 NICE신용평가 · 한국신용평가 · 한국기업평가가 발행한 **신용평가서 PDF**에서  
-평가대상 라벨·신용등급·등급전망·재무지표를 추출해 구조화된 JSON/Excel로 저장한다.
+평가대상 라벨·신용등급·등급전망·재무지표를 추출해 구조화된 JSON/Excel·SQLite로 저장한다.
 
-이 문서만 읽어도 프로젝트의 **추출 범위, 처리 흐름, 모듈 책임, 분류 정책**을 파악할 수 있도록 작성했다.  
-AI·후임 개발자가 유지보수할 때는 이 README와 `.cursor/rules/`를 함께 참고한다.
+**이 문서의 목적:** 프로젝트의 구조·처리 로직·기술·운영/유지보수 원칙을 한곳에 둔다.  
+AI 에이전트와 후임 개발자가 **기존 구조와 규칙을 해치지 않고** 수정할 수 있도록,  
+현재 코드와 일치하는 사실만 기술한다. 업무 배경·PoC 범위는 `About_CreditDocStruct.md`를 참고한다.
+
+유지보수 시 이 README의 **§3 아키텍처·개발 규칙**과 해당 주제 절(§7~§12, §16~§18)을 함께 본다.
+코드·문서·테스트는 아래에 적은 **현재 계약**만 따른다.
 
 ---
 
@@ -14,7 +18,7 @@ AI·후임 개발자가 유지보수할 때는 이 README와 `.cursor/rules/`를
 
 1. [추출 대상과 범위](#1-추출-대상과-범위)
 2. [기술 스택](#2-기술-스택)
-3. [아키텍처 원칙](#3-아키텍처-원칙)
+3. [아키텍처·개발 규칙](#3-아키텍처개발-규칙)
 4. [디렉터리 구조](#4-디렉터리-구조)
 5. [전체 처리 흐름](#5-전체-처리-흐름)
 6. [데이터 모델](#6-데이터-모델)
@@ -117,27 +121,67 @@ PDF 1페이지(또는 `MAX_PDF_PAGES` 범위)에서 **섹션 제목 3종**을 �
 
 | 구분 | 기술 |
 |------|------|
-| 언어 | Python 3 |
+| 언어 | Python **3.11 또는 3.12** (64-bit 권장) |
 | PDF | PyMuPDF (`pymupdf`) — 텍스트·좌표·표 추출 |
 | 설정 | `python-dotenv` (.env), `PyYAML` (instruments.yaml) |
 | 출력 | `pandas`, `openpyxl` (Excel), JSON (stdlib) |
 | DB | SQLite (`documents.db`) |
+| YAML 편집(관리자) | `ruamel.yaml` (순서·주석 보존) |
 | 테스트 | `pytest` |
-| 관리자 UI | Streamlit (`admin/`, 별도 requirements) |
+| 관리자 UI | Streamlit (`admin/`, `admin/requirements.txt`) |
 
 ---
 
-## 3. 아키텍처 원칙
+## 3. 아키텍처·개발 규칙
 
-`.cursor/rules/architecture.mdc`와 동일한 규칙을 따른다.
+AI 에이전트·후임 개발자는 이 절을 **변경의 가드레일**로 삼는다. 상세 흐름은 이후 절을 본다.
 
-1. **오케스트레이션 단일 진입점** — PDF 배치 처리 루프는 `main.py`만 담당. 다른 패키지에 CLI/배치 루프를 두지 않는다.
-2. **추출·분류 모델 분리** — `ExtractedRatingRow`(추출) → `RatingRecord`(분류). 등급 값은 추출 단계에서 확정하고 분류기는 **재계산하지 않는다**.
-3. **정책 단일 원천** — 라벨 정규화·추천·검증은 `common/matching_policy.py`. YAML에는 상품·라벨 딕셔너리만 둔다.
-4. **재무지표는 코드 카탈로그** — `common/metric_catalog.py` (8키). `metrics.yaml` 없음.
-5. **경로·상수** — `.env` → `common/settings.py`로만 읽는다. 코드에 하드코딩하지 않는다.
-6. **원자적 저장** — JSON/Excel은 임시 파일 작성 → `os.replace()`로 교체 (`commit_batch_outputs`).
-7. **자동 상품 탐색** — 사용자가 대상 상품을 지정하지 않는다. PDF에서 검출된 라벨을 YAML로 분류해 `products`를 만든다.
+### 3.1 아키텍처
+
+1. **오케스트레이션 단일 진입점** — PDF 배치 처리 루프·파이프라인 조립은 `main.py`만. `admin/run_extract.bat`은 `main.py` 호출 래퍼일 뿐 두 번째 오케스트레이터가 아니다.
+2. **관리자 별도 진입점** — `admin/admin_main.py`(Streamlit). 조회·예외 목록·상품 라벨 YAML만. PDF 추출 UI 없음.
+3. **최상위 패키지(1단)** — `common/`, `agency/`, `classify/`, `extract/`, `export/`, `admin/`, `config/`, `results/`, `tests/`. `admin/` 안에만 `views/`, `ui/`, `services/`, `data/`, `backup/` 등 기능 하위를 둔다.
+4. **경로·상수** — `.env` → `common/settings.py`만. 코드에 하드코딩하지 않는다.
+5. **정책 단일 원천** — 정규화·추천·카탈로그 검증은 `common/matching_policy.py`. `instruments.yaml`에는 상품·라벨 딕셔너리만.
+6. **자동 상품 탐색** — `target_instrument` / `--target` / `DEFAULT_TARGET_INSTRUMENT` 없음. PDF 검출 라벨 → YAML 분류 → `products`.
+7. **추출·분류 모델 분리** — `ExtractedRatingRow` → `RatingRecord`. 분류기는 `rating`·`evaluation_type`을 **재계산하지 않는다**.
+8. **원자적 저장** — JSON/Excel: 임시 파일 → 성공 확인 → `os.replace()` (`commit_batch_outputs`).
+9. **미분류** — 결과 JSON `undefined_records`. YAML 쓰기는 `admin/services/yaml_service.py`만 (`managed_by: admin` 추가분만 삭제 가능).
+10. **재무지표** — `common/metric_catalog.py` 8키 exact. raw/norm은 `export/document_store.py`(`documents.db`). 요약 4행은 `export/fin_excel_utils.py`. 관리자에서 지표 정의 편집 없음.
+11. **실패 비표시** — Excel 원본·요약 신평사 블록은 `success_products` / `is_usable_financial_table` 통과분만. 게이트를 완화해 깨진 표를 억지 노출하지 않는다.
+
+### 3.2 추출 (extract)
+
+- `extract/row_parser.py`는 `ExtractedRatingRow`만 만든다. 분류기를 호출하지 않는다.
+- 행 전체 등급 후보: 1개면 셀 위치 무관 `single`, 2개+면 **현재등급** 열만 사용. 동일 등급이 현재·직전에 있어도 행 전체 dedupe로 `single`을 만들지 않는다.
+- Primary·유효등급·재무지표는 `extract/sections.py` 섹션 그리드 파이프라인. **유효등급은 Primary와 무관하게 항상 추출**.
+- 그리드 셀 `source`는 `pdf_table` 또는 `visual_layout`. 진입점은 섹션 파이프라인이다.
+- 평가대상 셀: `extract/label_fields.py` YAML 최장 prefix로 `raw_label`/`issue_name` 분리 후 분류.
+- 병합 라벨: `extract/row_rebuild.py`로 분할. 복원 실패 시 `parse_error`.
+- `extract/merge.py` `merge_canonical_records`: Primary canonical + `confirmed_by` + `validation_warnings`.
+- `build_products`: 상품당 1건. 평가종류 우선순위 `본 > 수시 > 신규 > 예비 > 정기 > (primary 무타입) > 유효등급`.
+
+### 3.3 분류·택소노미 (classify / YAML)
+
+- 상품·라벨 매핑은 `config/instruments.yaml`만 (`instruments` + `label_dictionary`).
+- 분류는 `label_dictionary` **exact match만**. 점수형 feature taxonomy 없음.
+- 라벨 status: `matched` | `undefined` 만.
+- undefined 추천(`classify/recommend.py`)은 검토용. `instrument_key` 자동 확정 금지. `RECOMMENDATION.min_score` 미만 suggestion 제외.
+- `classify/undefined_filter.py`로 이메일·재무지표·rating none 등 후보 제외.
+- 기동 시: 동일 정규화 라벨 상충 매핑 거부, 미등록 `instrument_key` 참조 거부.
+
+### 3.4 테스트
+
+- `tests/label_variants.json`: exact → matched/key, 미등록 → undefined + suggestions, 자동 key 확정 없음.
+- 유지할 단위 테스트 영역: 현재등급 열 선택, 상품별 `products` 집계, source 병합, `fail_reason`, Excel 상품당 1행, occurrence_id, 원자적 저장, YAML `managed_by`, 예외 대기열.
+- 테스트·문서·API에 쓰지 않는 개념: `--target`, scoring taxonomy, `ocr_required`, `metrics.yaml`, 구결과 경로 `result/`(기본은 `results/`), 라벨 status `unknown`/`ambiguous`.
+
+### 3.5 문서화
+
+- README·`admin/README.md`·`ops_guide.md`는 **현재 코드 계약**과 일치해야 한다.
+- 문서에 적을 핵심 계약: `products` 상품당 1건, ExtractedRatingRow/RatingRecord 분리, PDF `success`/`partial`/`fail`, 현재등급 열·평가종류 우선순위, 재무지표 8키·요약 4행·`documents.db`·`--renormalize`, `RESULT_DIR`=`results/`, Excel `EXCEL_PUBLIC_COLUMNS` / `ADMIN_COLUMNS` 분리.
+- admin 탭(현재): **결과 조회 · 확인 필요 · 상품 사전 · 운영 가이드**.
+- 존재하지 않는 기능·과거 UI·삭제된 플래그를 문서에 남기지 않는다.
 
 ---
 
@@ -145,8 +189,7 @@ PDF 1페이지(또는 `MAX_PDF_PAGES` 범위)에서 **섹션 제목 3종**을 �
 
 ```
 CreditDocStruct/
-├── README.md                 # 이 문서 (개발자용)
-├── .cursor/rules/            # AI·개발 규칙 (architecture, extraction, taxonomy, testing)
+├── README.md                 # 이 문서 (구조·규칙·유지보수 — AI·개발자용)
 └── CreditDocStruct/          # 앱 루트 (실행 cwd)
     ├── main.py               # CLI + extract_credit_report + commit_batch_outputs
     ├── requirements.txt
@@ -158,12 +201,17 @@ CreditDocStruct/
     ├── extract/              # PDF → 섹션 그리드 → ExtractedRatingRow / ExtractedFinTable
     ├── classify/             # YAML exact match, 재무지표 분류, undefined 추천
     ├── export/               # JSON, Excel, documents.db
-    ├── admin/                # Streamlit 관리자 (4탭)
+    ├── admin/                # Streamlit 관리자 + 운영용 bat (추출 로직은 main.py)
     │   ├── admin_main.py
+    │   ├── setup_admin.bat   # .venv + requirements.txt + admin/requirements.txt
+    │   ├── run_extract.bat   # main.py 호출 (.env INPUT_DIR)
+    │   ├── run_admin.bat     # Streamlit 0.0.0.0:8501
     │   ├── views/            # results, exceptions, dictionary, guide
     │   ├── services/         # result / exception / yaml
-    │   ├── content/ops_guide.md
-    │   └── README.md         # 비개발자·설치 안내
+    │   ├── ui/theme.py       # CSS (섹션 라벨·알림·버튼 색)
+    │   ├── content/ops_guide.md  # UI「운영 가이드」탭 (운영자 문구)
+    │   └── README.md         # admin 개발자 매뉴얼
+    ├── .streamlit/config.toml
     ├── results/              # 배치 JSON/Excel 출력
     └── tests/
 ```
@@ -200,7 +248,7 @@ CreditDocStruct/
 | `export/agency_select.py` | — | 회사 그룹핑, 신평사 순서(NICE→KIS→KR), fin usable 게이트 |
 | `export/rating_excel_utils.py` | — | 신용등급(요약) cascade |
 | `export/fin_excel_utils.py` | — | 재무지표(요약) 4행·기간 cascade |
-| `export/undefined_store.py` | — | `file_sha256`·occurrence id 헬퍼 (admin.db 미사용) |
+| `export/undefined_store.py` | — | `file_sha256`, `make_occurrence_id` 헬퍼 |
 | `export/document_store.py` | — | documents.db (요약·등급/재무 raw·norm), `--renormalize` |
 | `admin/services/exception_service.py` | — | 결과 JSON → 확인 필요 대기열 |
 | `admin/services/yaml_service.py` | — | 상품 사전 라벨 추가/삭제(`managed_by: admin`), YAML 백업 |
@@ -357,11 +405,13 @@ instrument_key = config.normalized_lookup.get(normalized)  # exact only
 
 ### 8.2 undefined 필터 (`classify/undefined_filter.py`)
 
-`undefined_records`·SQLite 누적에서 제외:
+`undefined_records`에 넣지 않는 경우:
 
 - `rating_status=none` 이고 rating 없음
 - 이메일·전화·재무지표 힌트 라벨
 - Primary에서 이미 matched된 라벨의 유효등급 중복
+
+미분류는 결과 JSON에만 남기고, 관리자 **확인 필요** 탭·**상품 사전**으로 처리한다.
 
 ### 8.3 정규화 정책 (`common/matching_policy.py`)
 
@@ -407,27 +457,28 @@ instrument_key = config.normalized_lookup.get(normalized)  # exact only
 
 ### 분류
 
-- `MetricClassifier` → `common/metric_catalog.py`의 `_METRIC_ALIASES` exact match
-- **`net_income`은 `당기순이익`만** — `순이익` 부분 일치 금지
+- `MetricClassifier` → `common/metric_catalog.py`의 `_METRIC_ALIASES`를 `normalize_metric_label` 후 **exact match**
+- **`net_income`은 alias `당기순이익`만** — `순이익` 단독·부분 일치 없음
+- 그 외 키는 등록 alias 허용 예: `총자산`/`자산총계`, `자기자본`/`자본총계`, BIS·부채비율 변형 등 (`_METRIC_ALIASES`가 원천)
 
 ### 정규화 (`classify/fin_normalize.py`)
 
 - 표 헤더에서 기간 파싱 (`parse_period_header`)
 - 셀 숫자 파싱 (`parse_numeric_cell`)
-- 단위: 라벨 괄호, 표 caption(십억원/억원 등)에서 추론
+- 단위: 라벨 괄호, 표 caption(십억원/억원 등)에서 추론 → `FinancialFact.value` / `value_raw` / `unit`
 
 ### Excel 요약 4행 (`export/fin_excel_utils.py`)
 
-기업별 시트 **재무지표(요약)** 는 항상 4행, 표시명 고정:
+기업별 시트 **재무지표(요약)** 는 **항상 4행**. 행 슬롯·채움:
 
-| 행 | 표시명 | 값 결정 |
-|----|--------|---------|
-| 1 | 총자산 | exact 매칭, 없으면 빈칸 |
-| 2 | 당기순이익 | exact `당기순이익`만 |
-| 3 | 총차입금 또는 자기자본 | 총차입금 → 자기자본 → 라벨 `총차입금`+빈칸 |
-| 4 | 부채비율(%) / BIS / 유동성 / 레버리지 | 순서대로 cascade, 없으면 `부채비율(%)`+빈칸 |
+| 행 | 표시명(기본) | 채움 |
+|----|--------------|------|
+| 1 | 총자산 | `total_assets` 매칭 값, 없으면 빈칸 (표시명은 고정) |
+| 2 | 당기순이익 | `net_income`만, 없으면 빈칸 (표시명 고정) |
+| 3 | 총차입금 또는 자기자본 | `total_borrowings` → `equity`. 매칭된 쪽의 표시명 사용. 둘 다 없으면 라벨 `총차입금`+빈칸 |
+| 4 | 부채비율(%) 등 | `debt_ratio` → `bis_ratio` → `liquidity_ratio` → `leverage`. 매칭된 표시명 사용. 없으면 라벨 `부채비율(%)`+빈칸 |
 
-빈 칸은 신평사 순서 **NICE → KIS → KR** 로 채운다 (`cascade_summary_rows`).  
+빈 **값**은 usable 재무 표를 가진 신평사 순서 **NICE → KIS → KR**로만 채운다 (`cascade_summary_rows`).  
 신용등급(요약)도 동일 순서로 상품별 첫 성공 등급을 고른다 (`build_cascaded_rating_rows`).
 
 ### 기업별 Excel 시트 레이아웃 (`export/excel.py`)
@@ -546,37 +597,40 @@ instrument_key = config.normalized_lookup.get(normalized)  # exact only
 | `INSTRUMENTS_YAML_PATH` | 상품·라벨 YAML | `config/instruments.yaml` |
 | `RESULT_DIR` | 결과 폴더 | `results` |
 | `DOCUMENT_DB_PATH` | 문서·재무 DB | `admin/data/documents.db` |
-| `ADMIN_BACKUP_DIR` | YAML 백업 | `admin/backup` |
+| `ADMIN_BACKUP_DIR` | 상품 사전 YAML 쓰기 전 백업 폴더 | `admin/backup` |
 | `MAX_PDF_PAGES` | PDF 스캔 상한 | `1` |
 | `MIN_EXTRACTED_TEXT_CHARS` | 텍스트 추출 실패 판정 | `50` |
 
-`ADMIN_DB_PATH`(구 미분류 SQLite)는 **폐기**. 미분류는 결과 JSON `undefined_records`와 관리자 **확인 필요** 탭으로 본다.
-
-상대 경로는 앱 루트(`CreditDocStruct/CreditDocStruct/`) 기준.
+상대 경로는 앱 루트(`CreditDocStruct/CreditDocStruct/`) 기준.  
+미분류 라벨 저장소는 결과 JSON의 `undefined_records`이다.
 
 ---
 
 ## 14. 실행 방법
 
-```bash
-cd C:\mycode\CreditDocStruct\CreditDocStruct
-python -m venv .venv
-.venv\Scripts\python.exe -m pip install -r requirements.txt
+권장: Python 3.11/3.12 64-bit, 앱 루트 `CreditDocStruct/CreditDocStruct/`.
+
+### 최초 설정
+
+```bat
 copy .env.example .env
-# .env에 INPUT_DIR 설정
+REM .env 의 INPUT_DIR 에 PDF 폴더 경로 설정
 
-# .env INPUT_DIR 배치 처리
+admin\setup_admin.bat
+REM .venv 생성 + requirements.txt + admin\requirements.txt 설치
+```
+
+### PDF 추출
+
+```bash
+# CLI
 .venv\Scripts\python.exe main.py
-
-# 단일 PDF / 다른 폴더
 .venv\Scripts\python.exe main.py report.pdf
 .venv\Scripts\python.exe main.py ./other_pdfs
-
-# 결과 파일명 stem
 .venv\Scripts\python.exe main.py -o batch
-
-# 재무 facts만 재생성
 .venv\Scripts\python.exe main.py --renormalize
+
+# 동일: admin\run_extract.bat  (인자 없이 INPUT_DIR 전체 배치)
 ```
 
 | CLI 옵션 | 설명 |
@@ -585,6 +639,15 @@ copy .env.example .env
 | `-o`, `--output` | 결과 stem |
 | `--non-recursive` | 하위 폴더 제외 |
 | `--renormalize` | documents.db `financial_grids_raw` → `financial_norm` 재생성 |
+
+### 관리자 웹
+
+```bat
+admin\run_admin.bat
+REM http://localhost:8501  /  사내망 http://<서버IP>:8501
+```
+
+상세는 [§17](#17-관리자-앱-간략)·[`admin/README.md`](CreditDocStruct/admin/README.md).
 
 ---
 
@@ -628,40 +691,35 @@ cd C:\mycode\CreditDocStruct\CreditDocStruct
 | `test_yaml_service.py`, `test_exception_service.py` | YAML managed_by·예외 대기열 |
 | `test_result_service.py`, `test_app_helpers.py` | 결과 조회 헬퍼 |
 
-새 라벨·섹션·등급 규칙 추가 시 해당 영역 테스트와 `tests/label_variants.json`을 함께 갱신한다.
+새 라벨·섹션·등급 규칙 추가 시 해당 영역 테스트와 `tests/label_variants.json`을 함께 갱신한다.  
+테스트 작성·유지 시 [§3.4](#34-테스트)를 지킨다.
 
 ---
 
 ## 17. 관리자 앱 (간략)
 
-Streamlit 기반 비개발자 운영 UI (`admin/admin_main.py`). 설치·화면 상세는 [`admin/README.md`](CreditDocStruct/admin/README.md) 참고.
+Streamlit 관리자 웹 앱. 진입점 `admin/admin_main.py`, 개발자 매뉴얼은 [`admin/README.md`](CreditDocStruct/admin/README.md).
 
-제목: **신용평가서 관리자 페이지**. 실행: `admin/run_admin.bat` → `http://localhost:8501`.
-
-### 4탭
-
-| 탭 | 역할 |
-|----|------|
-| **결과 조회** | `results/*.json` 선택, 신평사·회사명 필터, 공개 컬럼 신용등급 표, 행 선택 시 해당 PDF **raw 재무지표**, 비개발자 Excel 다운로드(공개 목록은 **분류 success만**) |
-| **확인 필요** | 최신/선택 결과 JSON 기준 예외 목록(**읽기 전용**, 승인·거절 없음). 유형: 미분류 상품 · 신용등급 모호/충돌 · 재무지표 없음 · 파일/텍스트/구조 오류 |
-| **상품 사전** | 표준 상품별 원문 라벨 조회·추가. 기존 라벨은 **잠금**, 관리자 추가분(`managed_by: admin`)만 삭제. **추가**=연초록 / **삭제**=연빨강 |
-| **운영 가이드** | `admin/content/ops_guide.md` 표시 전용(문구 수정은 파일 편집) |
-
-사이드바: **새로고침**, **확인 필요 N건**(최신 결과 파일 기준, `exception_service.count_exceptions`).
-
-### 운영 루프·데이터
+| 항목 | 내용 |
+|------|------|
+| 최초 설치 | `admin/setup_admin.bat` — `.venv` + `requirements.txt` + `admin/requirements.txt` |
+| 추출 래퍼 | `admin/run_extract.bat` — `.venv`로 `main.py` (`.env` `INPUT_DIR`). UI와 별개 |
+| 웹 실행 | `admin/run_admin.bat` — `--server.address 0.0.0.0 --server.port 8501`. 로컬 `http://localhost:8501`, 사내망 `http://<서버IP>:8501` (방화벽 8501·동일 망) |
+| 인증 | 앱 로그인 없음. 사내망 신뢰 전제 |
+| 탭 | 결과 조회 · 확인 필요 · 상품 사전 · 운영 가이드 |
+| 결과 조회 | `results/*.json`, 신평사·회사 필터, 공개 표, 행 선택 시 raw 재무. 재무 없으면 `st.error`만. Excel은 success+등급만 |
+| 확인 필요 | `exception_service.collect_exceptions` (읽기 전용). `action`은 `ops_guide` §4와 동기화 |
+| 상품 사전 | `instruments.yaml` 라벨. `managed_by: admin`만 삭제. 쓰기 전 `admin/backup/` |
+| 운영 가이드 | `content/ops_guide.md` (운영자용). 모듈·스키마는 이 README / admin README |
+| 사이드바 | 새로고침, 최신 mtime JSON 기준 확인 필요 건수 |
+| UI 스타일 | `admin/ui/theme.py`, `.streamlit/config.toml` |
 
 ```
-추출(main.py) → results/*.json · documents.db
-  → 확인 필요(미분류 등) → 상품 사전에서 YAML 등록 → 재추출
+run_extract.bat | main.py → results/*.json · documents.db
+  → 확인 필요 → 상품 사전(YAML) → 재추출
 ```
 
-- 미분류 전용 SQLite(`admin.db`) **없음**. `undefined_records`는 JSON에만 남김.
-- YAML 쓰기 시 `admin/backup/` 자동 백업. 복원 UI 없음(개발자 수동).
-- 재무지표 카탈로그·새 상품 코드·잠긴 라벨 수정은 개발자 전용.
-
-핵심 파이프라인(`main.py`)과 **별도 진입점**이며, 배치 추출 로직은 admin에 두지 않는다.  
-About 문서에 구 검수/이력 UI가 남아 있어도, 현재 비개발자 UI는 위 4탭만 노출한다.
+관리자 화면에 PDF 추출·업로드는 없다. 원격 브라우저가 클라이언트 PC 로컬 폴더를 읽어 추출하지도 않는다. 상세는 [`admin/README.md`](CreditDocStruct/admin/README.md).
 
 ---
 
@@ -704,19 +762,22 @@ About 문서에 구 검수/이력 UI가 남아 있어도, 현재 비개발자 UI
 
 ### 코드 수정 시 지켜야 할 것
 
-- 오케스트레이션을 `main.py` 밖으로 옮기지 않는다
+- 오케스트레이션을 `main.py` 밖으로 옮기지 않는다 (`run_extract.bat`은 래퍼만 허용)
 - `ExtractedRatingRow`와 `RatingRecord` 역할을 섞지 않는다
 - 분류기가 `rating`을 재계산하지 않게 한다
 - undefined 추천을 자동 확정에 쓰지 않는다
 - 경로를 코드에 하드코딩하지 않는다
 - 추출 실패·usable 미달 데이터를 Excel/원본에 억지로 넣지 않는다 (게이트 유지)
+- 운영자 문구는 `ops_guide.md`, 개발 계약은 이 README / `admin/README.md`에 둔다
+- 예외 `action`/`type_label` 변경 시 `ops_guide.md`와 동기화한다
 
 ### AI 유지보수 시 권장 순서
 
-1. 이 README §1(범위) — 요청이 In/Out of Scope인지 판단
-2. §5 흐름도 — 어느 단계 문제인지 특정
-3. 해당 패키지 파일 + `tests/test_*.py`
-4. `.cursor/rules/` (architecture, extraction, taxonomy, testing)
+1. [§1](#1-추출-대상과-범위) — 요청이 In/Out of Scope인지 판단
+2. [§3](#3-아키텍처개발-규칙) — 가드레일 위반 없는지 확인
+3. [§5](#5-전체-처리-흐름) — 어느 단계 문제인지 특정
+4. 해당 패키지 파일 + `tests/test_*.py`
+5. 문서·`ops_guide`가 코드와 어긋나면 함께 수정 ([§3.5](#35-문서화))
 
 ---
 
@@ -730,6 +791,6 @@ About 문서에 구 검수/이력 UI가 남아 있어도, 현재 비개발자 UI
 | 미등록 라벨 | 자동 확정 없음 — YAML 수동 등록 필요 |
 | Excel 원본·요약 | 성공/usable 게이트 통과분만 표시. NICE 요지 등에서 재무 미추출 시 해당 신평사 블록 생략 |
 | 발행자(`issuer`) 등 | PDF에 해당 상품 행이 없으면 합성하지 않음 (다른 신평사·요약 cascade로만 보완) |
-| 재무지표 8키 | `매출액`·`EBITDA` 등은 요약 대상 밖 → `undefined_metrics`로 남을 수 있음 (정상) |
+| 재무지표 8키 | `매출액`·`EBITDA` 등은 카탈로그 밖 → `undefined_metrics`로 남을 수 있음 (정상) |
 
-미분류 라벨은 결과 JSON `undefined_records`에만 남고(`admin.db` 없음), 관리자 **확인 필요** → **상품 사전**에서 YAML 등록 후 재추출한다.
+운영 루프: `run_extract.bat`/`main.py` → JSON `undefined_records`/확인 필요 → 상품 사전 → 재추출.

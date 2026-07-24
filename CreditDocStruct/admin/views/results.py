@@ -86,7 +86,7 @@ def render_result_tab() -> None:
     ]
 
     st.download_button(
-        "Excel 다운로드",
+        "⭳ Excel 다운로드",
         data=build_public_excel_bytes(filtered, config),
         file_name=f"{selected.path.stem}.xlsx",
         mime=(
@@ -138,16 +138,7 @@ def render_result_tab() -> None:
     columns, wide_rows = financial_table_to_wide_rows(fin_table)
 
     if not wide_rows:
-        st.markdown(
-            f'<p class="fin-fail-msg">{financial_fail_message(source_result)}</p>',
-            unsafe_allow_html=True,
-        )
-        st.dataframe(
-            _empty_financial_frame(),
-            use_container_width=True,
-            hide_index=True,
-            key="financial_fail_empty_table",
-        )
+        st.error(financial_fail_message(source_result))
         return
 
     display = pd.DataFrame(wide_rows, columns=columns)

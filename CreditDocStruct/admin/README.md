@@ -1,114 +1,231 @@
-# CreditDocStruct 관리자 애플리케이션
+# admin — 관리자 앱 개발자 매뉴얼
 
-**신평서 데이터 구조화 프로젝트** — 브라우저에서 **추출 결과를 확인·다운로드**하고,
-**확인이 필요한 예외**를 보며 **상품 사전**(원문 라벨)을 유지보수하는 비개발자용 도구입니다.
+Streamlit 기반 **관리자 웹 앱**. 배치 추출(`main.py`)과 **별도 진입점**이며,  
+결과 조회·예외 점검·상품 라벨 YAML 편집을 담당한다.
 
-화면 제목: **신용평가서 관리자 페이지**  
-부제: 신평서에서 추출한 신용등급·재무제표를 확인합니다. 비개발자용 유지보수 내역을 관리합니다.
+이 문서는 **개발자·AI 에이전트**용이다.  
+- 운영자(비개발자) 화면 문구 → `content/ops_guide.md`  
+- 추출·분류·Excel·설정 전체 → 저장소 루트 [`README.md`](../../README.md)
 
-재무지표 분류 키는 코드 상수(`common/metric_catalog.py`)이며, 관리자에서 지표 YAML을 편집하지 않습니다.
+---
 
-## 필요 사항
+## 1. 역할과 경계
 
-- **Python 3.11 64-bit** ([python.org](https://www.python.org/downloads/))
-- **SQLite는 Python에 포함**되어 있어 별도 설치가 필요 없습니다. (`documents.db`용)
+| 할 일 | 하지 않는 일 |
+|--------|----------------|
+| `results/*.json` 로드·필터·공개 표·공개 Excel 바이트 | PDF 배치 루프, `extract_credit_report`, `commit_batch_outputs` |
+| JSON → 확인 필요 목록 집계(읽기 전용) | 예외 상태 머신·별도 미분류 DB |
+| `instruments.yaml` **라벨** 추가·삭제(`managed_by: admin`) | 새 `instrument_key`, 잠긴 라벨 수정, 재무지표 카탈로그 |
+| YAML 쓰기 전 `admin/backup/` 스냅샷 | 백업 복원 UI |
+| `ops_guide.md` 렌더 | 추출 규칙·매칭 정책 변경 UI |
 
-## 설치 (최초 1회)
+```
+main.py → results/*.json · documents.db
+  → 확인 필요(읽기) → 상품 사전(YAML) → main.py 재추출
+```
 
-1. `admin\setup_admin.bat` 을 더블클릭합니다.
-2. "설치가 완료되었습니다." 메시지가 나오면 닫습니다.
+원격 브라우저의 Python은 **서버 PC**에서만 돈다. 클라이언트 PC의 로컬 폴더 경로로 추출을 돌리는 기능은 없다.
 
-## 실행 (평소)
+---
 
-1. `admin\run_admin.bat` 을 더블클릭합니다.
-2. 브라우저에서 관리 화면이 열립니다 (`http://localhost:8501`).
+## 2. 디렉터리
 
-## 화면 구성
+```
+admin/
+├── admin_main.py          # Streamlit 진입: 4탭 + 사이드바
+├── requirements.txt       # streamlit, ruamel.yaml
+├── setup_admin.bat        # 앱 루트 .venv + requirements + admin/requirements
+├── run_admin.bat          # --server.address 0.0.0.0 --server.port 8501
+├── run_extract.bat        # .env INPUT_DIR로 main.py 배치 추출 (관리자 UI와 별개)
+├── views/                 # 탭 UI (I/O는 services만)
+│   ├── results.py
+│   ├── exceptions.py
+│   ├── dictionary.py
+│   └── guide.py
+├── services/
+│   ├── result_service.py
+│   ├── exception_service.py
+│   └── yaml_service.py
+├── ui/
+│   ├── theme.py           # CSS: 섹션 라벨, stAlert 글씨, Excel/추가/삭제 버튼
+│   └── copy.py            # YAML 등 사용자향 에러 문구
+├── content/
+│   └── ops_guide.md       # 「운영 가이드」탭 본문
+├── backup/                # YAML 쓰기 시 자동 백업 (제거 금지)
+└── data/                  # documents.db 기본 위치
+```
 
-| 메뉴 | 설명 |
+경로·상수는 `common/settings.py` / `.env`만 사용. admin에 절대 경로 하드코딩 금지.
+
+앱 루트에 `.streamlit/config.toml`(테마 색)이 있다.
+
+---
+
+## 3. 실행·의존성
+
+앱 루트: `CreditDocStruct/CreditDocStruct/`.
+
+```bat
+admin\setup_admin.bat
+admin\run_admin.bat      # 관리자 웹
+admin\run_extract.bat    # PDF 추출 (INPUT_DIR → main.py)
+```
+
+`run_admin.bat`은 `0.0.0.0:8501`으로 바인딩한다. `run_extract.bat`은 Streamlit을 켜지 않고 `main.py`만 실행한다.
+
+| 접속 | URL |
+|------|-----|
+| 서버 PC | `http://localhost:8501` |
+| 같은 사내망 다른 PC | `http://<서버IPv4>:8501` |
+
+접속 실패 시 Windows 방화벽 **TCP 8501** 인바운드 확인. 앱 로그인 레이어는 없다.
+
+수동:
+
+```bash
+cd CreditDocStruct/CreditDocStruct
+.venv\Scripts\python.exe -m pip install -r requirements.txt -r admin/requirements.txt
+.venv\Scripts\python.exe -m streamlit run admin/admin_main.py --server.address 0.0.0.0 --server.port 8501
+```
+
+---
+
+## 4. 진입점 (`admin_main.py`)
+
+- `st.set_page_config` → `inject_styles()` → 제목/캡션
+- 사이드바: 새로고침(`st.rerun`), **확인 필요 N건**  
+  - `list_result_files()[0]`(mtime 최신) → `count_exceptions`
+  - 탭에서 다른 결과 파일을 고르면 사이드바와 건수가 다를 수 있음
+- 탭: 결과 조회 · 확인 필요 · 상품 사전 · 운영 가이드 → `render_*_tab()`
+
+뷰는 `services`만 호출한다.
+
+---
+
+## 5. 서비스 계약
+
+### 5.1 `result_service`
+
+| 함수 | 역할 |
 |------|------|
-| **결과 조회** | `results/*.json` 선택, 신평사·회사명 필터, 신용등급 표·행 선택 raw 재무지표, Excel 다운로드 |
-| **확인 필요** | 결과 JSON 기준 예외 목록(유형별). **읽기 전용**(승인·거절 없음) |
-| **상품 사전** | 표준 상품별 원문 라벨 조회·추가. 관리자 추가 행만 삭제 |
-| **운영 가이드** | `admin/content/ops_guide.md` 표시(읽기 전용) |
+| `list_result_files` | `RESULT_DIR`의 `*.json`, mtime 내림차순 |
+| `load_results_json` | JSON 배열 검증; 실패 시 `ResultServiceError` |
+| `filter_results` | 신평사 표시명 exact / 회사명 substring |
+| `build_public_rows*` | `build_excel_public_rows` — **success + 등급 있음**만 |
+| `build_public_excel_bytes` | `write_results_excel_tmp` → 바이트 |
+| `first_financial_table` / `financial_table_to_wide_rows` | 결과 조회 raw 재무 미리보기 |
+| `financial_fail_message` | 재무 없음 시 `st.error` 문구 |
 
-사이드바: **⟲ 새로고침**, **확인 필요 N건**(목록상 **가장 최근** 결과 JSON 기준).
+공개 Excel/표 게이트를 완화하지 않는다.
 
-### 결과 조회
+### 5.2 `exception_service`
 
-1. 결과 JSON 파일을 선택합니다.
-2. **신평사**(전체 / NICE신용평가㈜ · 한국신용평가㈜ · 한국기업평가㈜)와 **회사명 검색**으로 필터합니다.
-3. 상단에 `전체 N건 · 성공 … · 부분성공 … · 실패 …` 요약이 표시됩니다.
-4. **Excel 다운로드**(연한 초록 버튼)는 현재 필터 결과로 비개발자 Excel(신용등급 목록 + 기업별 시트)을 받습니다. 공개 목록에는 **분류 성공(`success`)이고 등급이 있는 행만** 포함됩니다.
-5. **신용등급** 표: 공개 컬럼(`No`, 회사명, 신평사, 상품분류, 신용등급, 등급전망, 평가일, 원본파일명). 행을 체크하면 아래 **주요 재무지표**에 해당 PDF의 raw 표(계정과목×기간)가 표시됩니다. 재무 추출이 없으면 회색 안내 문구가 뜹니다.
+`collect_exceptions(results) -> list[dict]` — 영속화 없음.  
+각 항목: `type`, `type_label`, `action`(조치 caption), `detail` 등.
 
-### 확인 필요
+| `type` | `type_label` | 출처 |
+|--------|--------------|------|
+| `undefined_label` | 미분류 상품 | `undefined_records`(등급 있는 것만) |
+| `rating_ambiguous` | 신용등급 모호/충돌 | 상품 `multiple_rating_columns` / `multiple_ratings` |
+| `no_financial_table` | 재무지표 없음 | `financial_tables` 비어 있고 파일급 오류 아님 |
+| `file_or_parse_error` | 파일/텍스트/구조 오류 | PDF급 `file_error` / `text_extraction_failed` / `parse_error` |
 
-1. 결과 JSON 파일을 선택합니다(사이드바 건수와 다를 수 있음 — 탭에서 다른 파일을 고른 경우).
-2. 유형별로 구역이 나뉩니다. 각 구역에 조치 안내(caption)와 표(No·회사명·신평사·원본파일명·상세)가 있습니다.
+`action` 문구는 운영 가이드 §4와 맞춘다. 변경 시 `ops_guide.md`와 함께 수정.
 
-| 유형 | 의미·조치 요약 |
+`count_exceptions` = `len(collect_exceptions(...))`.
+
+### 5.3 `yaml_service`
+
+- **ruamel.yaml** (순서·주석 보존). PyYAML로 덮어쓰지 않음.
+- 쓰기 전 `_backup_yaml` → `ADMIN_BACKUP_DIR`.
+- `add_alias`: 정규화 충돌 검사 → `managed_by: admin`, `active: true`.
+- `delete_aliases`: `managed_by == "admin"`만 삭제.
+- `list_instrument_aliases`: UI용(`is_admin_managed`).
+
+---
+
+## 6. 탭별 구현 메모
+
+### 결과 조회 (`views/results.py`)
+
+- 필터 → 상태 요약 → 공개 신용등급 표 → Excel 다운로드
+- 행 선택 → `financial_tables[0]` wide 표
+- 행 없음 / 재무 행 없음 → **`st.error(financial_fail_message)`만**, 빈 dataframe 숨김
+
+### 확인 필요 (`views/exceptions.py`)
+
+- 유형별 `section-label` + `action` caption + dataframe
+- 쓰기·버튼 없음. 수정은 상품 사전 또는 `main.py` 재추출/개발
+
+### 상품 사전 (`views/dictionary.py`)
+
+- 잠금 라벨 / admin 관리 라벨 분리
+- 버튼 key: `dict_confirm_{instrument_key}`, `dict_delete_{instrument_key}`  
+  → `theme.py`의 `st-key-dict_confirm_*` / `st-key-dict_delete_*`로 색 지정
+- YAML 반영 후 결과 JSON은 재추출 전까지 불변
+
+### 운영 가이드 (`views/guide.py`)
+
+- `content/ops_guide.md`만 표시. 스키마·모듈 설명은 넣지 않음
+
+---
+
+## 7. UI (`ui/theme.py`)
+
+| 대상 | 방식 |
+|------|------|
+| 섹션 제목 | `.section-label` |
+| `st.error` / `st.warning` 본문 | `stAlert` 글씨 크기 |
+| Excel 다운로드 | `stDownloadButton` — 연한 초록 |
+| 추가 / 삭제 | Streamlit `st-key-{key}` 클래스 — 연초록 / 연빨강 |
+
+---
+
+## 8. 데이터·설정
+
+| 항목 | 설정 키 / 기본 |
 |------|----------------|
-| 미분류 상품 | 등급은 있으나 YAML 미등록 라벨 → **상품 사전**에 원문 라벨 추가 후 재추출 |
-| 신용등급 모호/충돌 | 등급 확정 실패 → 원문 확인 후 수기·개발 검토 |
-| 재무지표 없음 | `financial_tables` 비어 있음 → 필요 시 수기 |
-| 파일/텍스트/구조 오류 | PDF 열기·텍스트·표 구성 실패 → PDF 재확보 후 재실행 |
+| 결과 JSON | `RESULT_DIR` → `results/` |
+| 상품 YAML | `INSTRUMENTS_YAML_PATH` → `config/instruments.yaml` |
+| YAML 백업 | `ADMIN_BACKUP_DIR` → `admin/backup/` |
+| documents.db | `DOCUMENT_DB_PATH` → `admin/data/documents.db` (UI는 JSON 중심) |
 
-승인·거절 버튼은 없습니다.
+미분류 저장소: 결과 JSON `undefined_records` (+ 확인 필요 탭).
 
-### 상품 사전
+---
 
-1. **상품분류** 표에서 행을 선택합니다(상품키·상품명).
-2. **원문라벨** 영역:
-   - **잠금 (삭제 불가)** — 기존(비관리자) 라벨
-   - **삭제 가능 (체크 후 삭제)** — `managed_by: admin`으로 추가한 라벨만
-3. 원문 라벨·메모를 입력하고 **추가**(연한 초록)를 누르면 `config/instruments.yaml`에 저장됩니다.
-4. **삭제**(연한 빨강)는 삭제 가능 표에서 체크한 행만 제거합니다.
-5. 반영 후 **반드시 PDF를 재추출**해야 결과 JSON/Excel에 반영됩니다.
+## 9. 유지보수·확장 규칙
 
-### 운영 가이드
+1. I/O·규칙 → `services/`; 위젯 → `views/`; CSS/문구 → `ui/`·`content/`.
+2. admin에 PDF 순회·배치 저장을 넣지 않는다.
+3. 공개 행/Excel = success+등급 게이트 유지.
+4. admin이 쓰는 YAML은 `label_dictionary`뿐.
+5. `_backup_yaml` / `backup/` 유지. 복원은 파일 복사.
+6. 운영자 문장 ↔ `ops_guide.md`, 개발 계약 ↔ 이 README.
+7. 의존 방향: **admin → common/export**. 코어가 admin을 import하지 않음.
+8. 예외 `action`/`type_label` 변경 시 `ops_guide.md` §4·테스트와 동기화.
 
-탭에는 `admin/content/ops_guide.md` 내용만 표시됩니다. 문구 수정은 해당 파일을 편집하세요.
+---
 
-재무지표 facts 재생성은 CLI `python main.py --renormalize` 를 사용합니다(관리자 UI에 없음).
+## 10. 테스트
 
-## 사내 서버에서 실행
+```bash
+.venv\Scripts\python.exe -m pytest tests/test_yaml_service.py tests/test_exception_service.py tests/test_result_service.py tests/test_app_helpers.py -q
+```
 
-한 대의 PC에서 `run_admin.bat`을 실행한 뒤, 다른 사용자는 브라우저만 쓰면 됩니다.
-
-- 서버 PC IP: `http://<서버주소>:8501`
-- 외부 접속이 필요하면 `run_admin.bat` 안의 안내대로 `--server.address 0.0.0.0` 옵션을 사용하세요.
-
-## 할 수 없는 작업 (개발자 전용)
-
-- 새 상품 종류(상품 코드) 만들기
-- 잠긴(기존) 라벨 수정·삭제
-- 재무지표 카탈로그·요약 규칙 변경
-- 정규화·매칭·추출 규칙 변경
-- YAML 구조 직접 편집·백업 복원 UI(복원은 파일/`admin/backup` 수동)
-
-## 데이터 저장 위치
-
-| 항목 | 경로 |
+| 파일 | 검증 |
 |------|------|
-| 상품·라벨 사전 | `config/instruments.yaml` |
-| 문서·재무지표 DB | `admin/data/documents.db` |
-| YAML 백업(쓰기 시 자동) | `admin/backup/` |
-| 추출 결과 | `results/result_YYYYMMDD.json` · `.xlsx` (미분류는 JSON `undefined_records`) |
-| 운영 가이드 본문 | `admin/content/ops_guide.md` |
-| UI 스타일(섹션 라벨·버튼 색) | `admin/ui/theme.py`, `.streamlit/config.toml` |
+| `test_yaml_service.py` | managed_by 추가/삭제, 충돌, 백업 |
+| `test_exception_service.py` | 예외 유형 집계 |
+| `test_result_service.py` | 필터·공개 행·재무 헬퍼 |
+| `test_app_helpers.py` | UI 헬퍼 |
 
-PDF 추출(`main.py`)을 실행하면 결과 JSON·Excel과 문서 DB가 저장됩니다.  
-미분류 전용 SQLite(`admin.db`)는 **사용하지 않습니다.**
+---
 
-## 개발자 참고 (코드 위치)
+## 11. 관련 문서
 
-| 역할 | 경로 |
+| 문서 | 내용 |
 |------|------|
-| 앱 진입 | `admin/admin_main.py` |
-| 결과 조회 | `admin/views/results.py`, `admin/services/result_service.py` |
-| 확인 필요 | `admin/views/exceptions.py`, `admin/services/exception_service.py` |
-| 상품 사전 | `admin/views/dictionary.py`, `admin/services/yaml_service.py` |
-| 운영 가이드 | `admin/views/guide.py` |
-
-루트 개발자 문서: 저장소 `README.md` §17.
+| 루트 `README.md` | 파이프라인·아키텍처·개발 규칙(§3)·admin 요약(§17) |
+| `About_CreditDocStruct.md` | 업무 배경 (구현 계약 원천 아님) |
+| `admin/content/ops_guide.md` | UI 운영자 가이드 |

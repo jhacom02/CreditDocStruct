@@ -24,8 +24,7 @@ def render_exceptions_tab() -> None:
     files = list_result_files()
     if not files:
         st.info(
-            "결과 파일이 없습니다. `main.py`로 PDF 추출을 실행하면 "
-            "`results/` 폴더에 JSON이 생성됩니다."
+            "결과 파일이 없습니다. PDF 추출을 실행하면 결과 파일이 생성됩니다."
         )
         return
 
