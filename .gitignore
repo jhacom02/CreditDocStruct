@@ -20,8 +20,10 @@ logs/
 .DS_Store
 Thumbs.db
 
-# VSCode
+# VSCode / Cursor
 .vscode/
+.cursor/
+.cursorignore
 
 # Build / package
 build/
