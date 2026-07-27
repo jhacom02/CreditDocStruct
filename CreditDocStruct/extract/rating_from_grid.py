@@ -14,7 +14,6 @@ from extract.row_parser import (
 )
 from extract.section_catalog import SECTION_PRIMARY, SECTION_VALID
 
-# 라벨 자체가 재무지표인 경우만 행 전체 폐기
 _METRIC_LABEL_RE = re.compile(
     r"(?:"
     r"ROA|ROE|NIM|BIS|Peer|PEER|EBITDA|EBIT"
@@ -66,7 +65,6 @@ def is_financial_noise_rating_row(values: list) -> bool:
     if is_rating_tokens_only_label(label):
         return True
 
-    # 상품 라벨처럼 보이면 행 유지(셀 트림으로 처리)
     if looks_like_instrument_label(label):
         return False
 

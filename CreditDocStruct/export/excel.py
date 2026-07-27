@@ -58,7 +58,6 @@ ADMIN_COLUMNS = [
     "실패사유",
 ]
 
-# 하위 호환: 기존 코드/테스트는 ADMIN 컬럼을 가리킴
 EXCEL_COLUMNS = ADMIN_COLUMNS
 
 _HEADER_FILL = PatternFill("solid", fgColor="002060")

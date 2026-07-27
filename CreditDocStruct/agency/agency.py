@@ -1,7 +1,4 @@
-"""신평사 식별 · 기관별 레이아웃 · 회사명 추출.
-
-Plan: CreditDocStruct_restructure_43c68190 섹션 G 참고.
-"""
+"""신평사 식별, 기관별 레이아웃, 회사명 추출."""
 
 from __future__ import annotations
 
@@ -91,7 +88,6 @@ class AgencyLayoutConfig:
         r"평가\s*담당자",
         r"주요\s*평가\s*요소",
     )
-    # 거터 실패 시 최후 fallback 전용 (공용 region 경로가 우선)
     valid_rating_width_ratio: float = 0.38
     valid_rating_max_width: float = 360.0
     extra_header_tokens: tuple[str, ...] = ()
@@ -252,7 +248,6 @@ _COMPANY_NOISE = (
     "한국기업평가㈜",
 )
 
-# 회사명 출력 시 제거 (탐지 시 '(주)' 포함 여부와 별개)
 _COMPANY_CORP_MARK_RE = re.compile(r"\(\s*주\s*\)|㈜")
 
 

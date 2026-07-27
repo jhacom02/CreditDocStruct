@@ -13,7 +13,6 @@ SECTION_FINANCIAL = "financial_indicators"
 
 SECTION_KEYS = (SECTION_PRIMARY, SECTION_VALID, SECTION_FINANCIAL)
 
-# 제목 줄 잔여에 있으면 오염(재무·본문)으로 본다
 _TITLE_CONTAMINATION_RE = re.compile(
     r"(?:"
     r"\d"
@@ -87,7 +86,6 @@ SECTION_CATALOG: dict[str, SectionSpec] = {
     ),
 }
 
-# 거터·섹션 역할: 좌우 동시 배치 시 기대 region
 PREFERRED_REGION_BY_SECTION: dict[str, str] = {
     SECTION_VALID: "left",
     SECTION_FINANCIAL: "right",
@@ -114,7 +112,6 @@ def title_is_contaminated(text: str | None, *, matched_alias: str | None = None)
     if matched_alias:
         residual = _residual_after_alias(compact, compact_title(matched_alias))
     else:
-        # 알려진 alias 제거 후 잔여 검사
         for spec in SECTION_CATALOG.values():
             for alias in spec.title_aliases:
                 alias_c = compact_title(alias)
@@ -130,9 +127,7 @@ def title_is_contaminated(text: str | None, *, matched_alias: str | None = None)
 
 
 def match_section_key(text: str | None) -> str | None:
-    """줄 텍스트가 카탈로그 제목이면 section_key, 아니면 None.
-
-    재무 수치가 붙은 오염 제목(예: '유효등급 충당금/…')은 거부한다.
+    """줄 텍스트가 카탈로그 제목이면 section_key, 아니면 None. 재무 수치가 붙은 오염 제목(예: '유효등급 충당금/…')은 거부한다.
     """
     normalized = normalize_text(text)
     compact = compact_title(normalized)

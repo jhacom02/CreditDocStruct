@@ -147,7 +147,6 @@ def gutter_from_side_by_side_headings(
         return None
 
     best: tuple[float, float, float] | None = None
-    # (y_gap, left_x1, right_x0) — y가 가깝고 좌우 분리된 쌍
     for valid in valid_lines:
         for fin in fin_lines:
             y_gap = abs(valid.y0 - fin.y0)
@@ -155,13 +154,11 @@ def gutter_from_side_by_side_headings(
                 continue
             valid_mid = (valid.x0 + valid.x1) / 2
             fin_mid = (fin.x0 + fin.x1) / 2
-            # 같은 visual line에 합쳐진 경우: 폭이 넓고 mid가 우측
             if valid is fin or (
                 abs(valid.y0 - fin.y0) < 3
                 and abs(valid.x0 - fin.x0) < 3
                 and abs(valid.x1 - fin.x1) < 3
             ):
-                # 페이지 중좌 거터 추정
                 mid = page_width * 0.38
                 if best is None or y_gap < best[0]:
                     best = (y_gap, mid, mid)
@@ -195,7 +192,6 @@ def title_anchor_x(
     patterns = [
         re.compile(p, re.IGNORECASE) for p in title_patterns_for(section_key)
     ]
-    # 단어들을 이어 붙여 패턴 위치를 찾고, 해당 span의 시작 x 사용
     if words:
         parts: list[tuple[str, float, float]] = []
         for word in words:
@@ -204,7 +200,7 @@ def title_anchor_x(
                 continue
             parts.append((text, float(word[0]), float(word[2])))
         joined = ""
-        spans: list[tuple[int, int, float]] = []  # start, end, x0
+        spans: list[tuple[int, int, float]] = []
         for text, x0, _x1 in parts:
             start = len(joined)
             if joined:
@@ -222,7 +218,6 @@ def title_anchor_x(
                 if match.start() <= start and end <= match.end():
                     return x0
 
-    # compact alias가 heading 앞부분에 있으면 x0 사용
     compact = compact_title(heading.text)
     for pattern in title_patterns_for(section_key):
         if re.search(pattern, normalize_text(heading.text), re.IGNORECASE):
@@ -259,7 +254,6 @@ def detect_page_regions(
         for left, right in zip(centers, centers[1:]):
             gap = right - left
             mid = (left + right) / 2
-            # NICE 요지: 거터가 중~중좌에 오는 경우가 많음
             if gap < min_gutter_gap:
                 continue
             if not (page_width * 0.15 <= mid <= page_width * 0.60):

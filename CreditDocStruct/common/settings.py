@@ -1,13 +1,4 @@
-"""`.env` 로드 및 `config/instruments.yaml` 로드·기동 시 검증.
-
-경로·상수는 이 모듈을 통해서만 읽는다(코드에 하드코딩하지 않음).
-매칭 정책(정규화·추천·검증)은 `common.matching_policy`가 단일 원천이다.
-`instruments.yaml`은 상품·라벨 딕셔너리만 보관한다.
-
-`target_instrument`/`DEFAULT_TARGET_INSTRUMENT` 개념은 없다: 사용자는
-대상 상품을 지정하지 않고, PDF에서 실제 검출된 라벨을 자동 탐색해
-YAML로 분류한다.
-"""
+"""`.env` 로드 및 `config/instruments.yaml` 로드·기동 시 검증."""
 
 from __future__ import annotations
 
@@ -24,7 +15,6 @@ from common.matching_policy import MatchingPolicyError, build_normalized_lookup
 
 APP_ROOT = Path(__file__).resolve().parent.parent
 
-# 결과 파일명 접두어 → {접두어}_YYYYMMDD.json / .xlsx (코드 고정)
 RESULT_FILENAME_PREFIX = "result"
 
 
@@ -32,9 +22,7 @@ RESULT_FILENAME_PREFIX = "result"
 class Settings:
     """`.env`에서 로드한 애플리케이션 설정."""
 
-    # PDF 입력 폴더. 코드 기본값 없음 — .env INPUT_DIR에만 지정.
     input_dir: str | None
-    # 폴더/파일을 하나의 경로 변수로 지정 (예: config/instruments.yaml)
     instruments_yaml: str = "config/instruments.yaml"
     result_dir: str = "results"
     document_db_path: str = "admin/data/documents.db"
@@ -180,11 +168,7 @@ def _validate(
 
 
 def load_instruments_config(path: Path | None = None) -> InstrumentsConfig:
-    """검증 실패 시 `InstrumentsConfigError`를 던진다(캐시 없이 매번 로드).
-
-    `instruments`·`label_dictionary`만 소비한다. 구 백업에 남아 있는
-    normalization/recommendation/validation 등 여분 최상위 키는 무시한다.
-    """
+    """검증 실패 시 `InstrumentsConfigError`를 던진다(캐시 없이 매번 로드)."""
     settings = get_settings()
     yaml_path = path or settings.instruments_yaml_path
 
@@ -211,8 +195,7 @@ def get_instruments_config() -> InstrumentsConfig:
     return load_instruments_config()
 
 
-# 재무지표는 코드 카탈로그 (metrics.yaml 없음)
-from common.metric_catalog import (  # noqa: E402
+from common.metric_catalog import (
     MetricDefinition,
     MetricLabelEntry,
     MetricsConfig,

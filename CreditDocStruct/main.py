@@ -1,7 +1,5 @@
-"""CreditDocStruct (신평서 데이터 구조화 프로젝트) 진입점.
-
-CLI: python main.py <dir|pdf> [-o stem]
-공개 API: from main import extract_credit_report
+"""
+CreditDocStruct (신평서 데이터 구조화 프로젝트) 진입점.
 """
 
 from __future__ import annotations
@@ -198,11 +196,7 @@ def _resolve_product_group(group: list[RatingRecord]) -> dict[str, Any]:
 def build_products(
     records: list[RatingRecord],
 ) -> tuple[list[dict[str, Any]], str, dict[str, str] | None]:
-    """instrument_key별 상품 결과 + PDF 상태 집계.
-
-    Returns:
-        products, status (`success`|`partial`|`fail`), fail_reason
-    """
+    """instrument_key별 상품 결과 + PDF 상태 집계."""
     matched = [
         record
         for record in records
@@ -528,8 +522,6 @@ def collect_undefined_occurrences(
                 continue
             if record.get("rating_status") == "none" and not record.get("rating"):
                 continue
-            # YAML에 이미 matched로 등록된 라벨은 누적 제외
-            # (정규화 결과가 lookup에 있으면 skip)
             config = get_instruments_config()
             if normalized in config.normalized_lookup:
                 continue
@@ -571,7 +563,7 @@ def commit_batch_outputs(
     *,
     stem: str | None = None,
 ) -> tuple[Path, Path, Path]:
-    """JSON·Excel·문서 DB를 저장한다."""
+    """JSON·Excel·DB를 저장한다."""
     settings = get_settings()
     config = get_instruments_config()
 
@@ -634,7 +626,6 @@ def build_argument_parser() -> argparse.ArgumentParser:
 
 
 def resolve_input_path(cli_input: str | None) -> Path:
-    """CLI 인자가 있으면 우선, 없으면 .env INPUT_DIR을 사용한다."""
     from common.settings import APP_ROOT
 
     if cli_input:
@@ -661,7 +652,6 @@ def main(argv: list[str] | None = None) -> None:
             f"(.env INPUT_DIR 또는 CLI 인자를 확인하세요)"
         )
 
-    # 기동 시 YAML 검증
     classifier = LabelClassifier.from_yaml()
     metric_classifier = MetricClassifier.from_yaml()
 

@@ -66,7 +66,6 @@ _VALID_NOISE_PATTERNS = (
     r"적용재무제표",
 )
 
-# 등급 토큰 뒤에 이어지는 한글(재무·각주) 시작점
 _HANGUL_AFTER_RATING_RE = re.compile(r"\s+[\uac00-\ud7a3]")
 
 
@@ -90,7 +89,6 @@ def truncate_valid_row_text(text: str) -> str:
         if match:
             cut_index = min(cut_index, match.start())
 
-    # 구조적 cut: 등급 토큰 직후 한글(재무·각주)이 시작되면 그 앞에서 자른다
     token_end = _rating_token_end_index(normalized)
     if token_end is not None:
         hangul = _HANGUL_AFTER_RATING_RE.search(normalized, token_end)
@@ -260,7 +258,6 @@ def infer_evaluation_type(
         if value in EVALUATION_TYPES:
             return value
 
-    # visual_layout은 표 한 행 전체가 단일 cell로 들어올 수 있다.
     combined = normalize_text(" ".join(cells))
     for eval_type in sorted(EVALUATION_TYPES, key=len, reverse=True):
         if re.search(
@@ -379,7 +376,6 @@ def rating_token_for_split_index(
     if index < len(previous_tokens):
         return previous_tokens[index]
 
-    # 현재·직전 열에 동일 단일 등급만 있을 때 merged 상품 전체에 공통 적용
     if (
         len(current_tokens) == 1
         and current_tokens[0]

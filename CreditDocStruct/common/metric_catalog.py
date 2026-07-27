@@ -1,8 +1,4 @@
-"""재무지표 8키 코드 카탈로그 (exact match).
-
-metrics.yaml 대체. 비개발자 유지보수 대상 아님.
-요약 Excel 표시명은 METRIC_DISPLAY_NAMES 고정 문자열만 사용한다.
-"""
+"""재무지표 8키 코드 카탈로그 (exact match)."""
 
 from __future__ import annotations
 
@@ -49,8 +45,6 @@ METRIC_DISPLAY_NAMES: dict[str, str] = {
     key: spec.display_name for key, spec in METRIC_DEFINITIONS.items()
 }
 
-# 원문 라벨 → key (단위 괄호는 normalize_metric_label이 제거)
-# net_income은 '당기순이익'만 — '순이익' substring 금지
 _METRIC_ALIASES: dict[str, tuple[str, ...]] = {
     "total_assets": ("총자산", "자산총계"),
     "net_income": ("당기순이익",),

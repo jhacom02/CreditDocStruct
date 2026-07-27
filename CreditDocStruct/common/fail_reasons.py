@@ -1,9 +1,4 @@
-"""fail_reason code·message 상수 및 우선순위.
-
-문구는 별도 YAML/JSON으로 분리하지 않고 코드 상수로만 둔다.
-PDF급 오류는 `PRIORITY_ORDER` 위→아래 순서로 매기고,
-상품급 오류(`multiple_rating_columns` 등)는 products[].fail_reason에 둔다.
-"""
+"""fail_reason code·message 상수 및 우선순위."""
 
 from __future__ import annotations
 
@@ -18,7 +13,6 @@ RATING_NOT_FOUND: Final[str] = "rating_not_found"
 LABEL_NOT_FOUND: Final[str] = "label_not_found"
 UNDEFINED_LABEL: Final[str] = "undefined_label"
 
-# PDF급 오류 우선순위 (위→아래). 상품 복수(multiple_instruments)는 제거됨.
 PRIORITY_ORDER: Final[tuple[str, ...]] = (
     FILE_ERROR,
     TEXT_EXTRACTION_FAILED,

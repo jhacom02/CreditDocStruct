@@ -1,15 +1,4 @@
-"""PDF 문서·등급/재무 raw·정규화 결과 SQLite 저장소.
-
-테이블:
-  documents           — PDF 요약
-  rating_grids_raw    — 신용등급 섹션 그리드 원본
-  financial_grids_raw — 재무지표 섹션 그리드 원본
-  rating_norm         — 상품별 신용등급 추출 결과
-  financial_norm      — 재무지표 추출 결과
-
-API 결과 dict의 financial_facts / products 키는 호환용으로 유지하고,
-DB 테이블명만 *_norm / *_grids_raw 를 쓴다.
-"""
+"""PDF 문서·등급/재무 raw·정규화 결과 SQLite 저장소."""
 
 from __future__ import annotations
 
@@ -258,7 +247,6 @@ def upsert_document_result(
                 ),
             )
 
-        # 재무 raw: financial_tables 우선, 없으면 tables 중 financial 섹션
         if fin_tables:
             for index, table in enumerate(fin_tables):
                 conn.execute(
@@ -469,7 +457,6 @@ def replace_financial_norm(
         conn.commit()
 
 
-# 하위 호환 alias
 replace_financial_facts = replace_financial_norm
 
 

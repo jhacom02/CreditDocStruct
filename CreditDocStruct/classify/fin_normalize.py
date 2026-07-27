@@ -48,7 +48,6 @@ def facts_from_fin_table(
         if period is not None:
             period_cols.append((col_index, period, year, month))
 
-    # 기간이 없으면 숫자 열을 그대로 period=header 로 취급 (구분 열 제외)
     if not period_cols and len(table.headers) >= 2:
         for col_index, header in enumerate(table.headers[1:], start=1):
             period_cols.append((col_index, header or None, None, None))
@@ -64,7 +63,6 @@ def facts_from_fin_table(
         cleaned_label, _mark = strip_footnote_marker(raw_label_cell)
         if not cleaned_label:
             continue
-        # 적용재무제표처럼 텍스트만 있는 행도 포함
         metric_key, normalized, status = classifier.classify_label(
             cleaned_label
         )

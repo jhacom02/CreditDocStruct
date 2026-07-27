@@ -140,10 +140,7 @@ def empty_financial_wide_columns() -> list[str]:
 def financial_table_to_wide_rows(
     table: dict[str, Any] | None,
 ) -> tuple[list[str], list[dict[str, Any]]]:
-    """raw financial_tables 항목 → (열이름, wide 행).
-
-    열1=계정과목, 이후=기간 헤더. 유효 행이 없으면 빈 목록.
-    """
+    """raw financial_tables 항목 → (열이름, wide 행)."""
     if not table:
         return empty_financial_wide_columns(), []
 

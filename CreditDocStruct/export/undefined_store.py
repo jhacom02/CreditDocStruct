@@ -1,7 +1,4 @@
-"""파일 해시·occurrence id 헬퍼.
-
-미분류 라벨 SQLite(admin.db) 저장은 제거됨. JSON `undefined_records`만 유지.
-"""
+"""파일 해시·occurrence id 헬퍼."""
 
 from __future__ import annotations
 

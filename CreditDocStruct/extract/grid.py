@@ -135,11 +135,9 @@ def _grid_from_table_matrix(
             bbox=bbox,
         )
 
-    # valid_rating: 헤더 없이 2열 또는 라벨|등급
     rows = [list(row) for row in cleaned if any(cell.strip() for cell in row)]
     if not rows:
         return None
-    # 제목 행 제거
     filtered: list[list[str]] = []
     for row in rows:
         joined = normalize_text(" ".join(row))
@@ -281,7 +279,6 @@ def _visual_valid_grid(
         if not tokens:
             continue
 
-        # 좌표 기반 좌(라벨)/우(등급) 분리 — region clip 안이므로 거터 혼선 없음
         words = page.get_text(
             "words",
             clip=pymupdf.Rect(clip.x0, line.y0 - 1, clip.x1, line.y1 + 1),
@@ -306,7 +303,6 @@ def _visual_valid_grid(
             if tokens[0].outlook:
                 rating_part = f"{rating_part}/{tokens[0].outlook}"
         if not label:
-            # 텍스트에서 등급 토큰 이전을 라벨로
             match = re.search(
                 r"(AAA|AA[+-]?|A[+-]?|BBB[+-]?|BB[+-]?|B[+-]?|"
                 r"CCC?|CC|C|D|A[123])",

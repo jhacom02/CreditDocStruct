@@ -1,8 +1,4 @@
-"""라벨 매칭 정책의 단일 원천.
-
-`config/instruments.yaml`은 상품·라벨 딕셔너리만 보관하고,
-정규화·추천·카탈로그 검증 규칙은 이 모듈에서만 관리한다.
-"""
+"""라벨 매칭 정책의 단일 원천."""
 
 from __future__ import annotations
 
@@ -14,7 +10,7 @@ from typing import Any, Iterable, Mapping
 
 @dataclass(frozen=True)
 class RecommendationPolicy:
-    """undefined 라벨 추천 파라미터. 자동 분류에는 사용하지 않는다."""
+    """undefined 라벨 추천 파라미터."""
 
     ngram_size: int = 2
     top_k: int = 3
@@ -97,10 +93,7 @@ def build_normalized_lookup(
     instrument_keys: Mapping[str, Any] | Iterable[str],
     entries: Iterable[Any],
 ) -> dict[str, str]:
-    """active 라벨의 정규화 lookup을 만들고 충돌·미등록 키를 거부한다.
-
-    `entries` 항목은 `raw_label`, `instrument_key`, `active` 속성을 가진다.
-    """
+    """active 라벨의 정규화 lookup을 만들고 충돌·미등록 키를 거부한다."""
     known_keys = set(
         instrument_keys.keys()
         if isinstance(instrument_keys, Mapping)

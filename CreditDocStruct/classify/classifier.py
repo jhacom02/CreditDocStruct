@@ -1,9 +1,4 @@
-"""라벨 정규화 · label_dictionary exact match · RatingRecord 생성.
-
-rating 필드는 ExtractedRatingRow에서 그대로 이전한다(재계산하지 않음).
-
-Plan: CreditDocStruct_restructure_43c68190 섹션 D/E 참고.
-"""
+"""라벨 정규화, label_dictionary exact match, RatingRecord 생성."""
 
 from __future__ import annotations
 

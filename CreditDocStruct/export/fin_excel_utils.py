@@ -105,7 +105,6 @@ def _index_table_by_metric(
         key = lookup.get(normalized)
         if key is None:
             continue
-        # 동일 키 첫 행만 (요약용)
         index.setdefault(key, list(row))
     return index
 

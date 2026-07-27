@@ -128,11 +128,7 @@ def list_instrument_aliases(
 def load_active_alias_lookup(
     yaml_path: Path | None = None,
 ) -> dict[str, dict[str, str]]:
-    """현재 YAML의 active alias를 정규화 키로 조회한다.
-
-    캐시된 설정 대신 파일을 매번 다시 읽어 서버 시작 동기화가 개발자의
-    직접 YAML 변경까지 반영하도록 한다.
-    """
+    """현재 YAML의 active alias를 정규화 키로 조회한다."""
     config = load_instruments_config(_resolve_yaml_path(yaml_path))
     lookup: dict[str, dict[str, str]] = {}
     for entry in config.label_dictionary:
@@ -262,10 +258,7 @@ def remove_alias(
     backup_dir: Path | None = None,
     allow_locked: bool = False,
 ) -> Path:
-    """label_dictionary에서 alias를 삭제하고 백업 경로를 반환한다.
-
-    기본은 managed_by=admin 행만 삭제. allow_locked=True면 잠금 행도 삭제(테스트·개발용).
-    """
+    """label_dictionary에서 alias를 삭제하고 백업 경로를 반환한다."""
     return delete_aliases(
         [alias],
         yaml_path=yaml_path,
@@ -316,7 +309,6 @@ def restore_from_backup(
     if not backup.exists():
         raise YamlServiceError(f"백업 파일이 없습니다: {backup}")
 
-    # 현재 파일 백업 후 복원본 검증
     current_backup = _backup_yaml(path, _resolve_backup_dir(backup_dir))
     tmp_path = path.with_suffix(path.suffix + ".restore_tmp")
     shutil.copy2(backup, tmp_path)

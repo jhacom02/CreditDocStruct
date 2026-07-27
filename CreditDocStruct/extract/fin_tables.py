@@ -75,10 +75,7 @@ def _digits_only(text: str | None) -> str:
 
 
 def take_first_concatenated_number(text: str | None) -> str | None:
-    """공백으로 붙은 복수 수치 셀이면 첫 수치만 남긴다.
-
-    예: '2,111,237 2,348,050' → '2,111,237'
-    """
+    """공백으로 붙은 복수 수치 셀이면 첫 수치만 남긴다."""
     raw = normalize_text(text)
     if not raw or not _CONCAT_NUMBERS_ONLY_RE.match(raw):
         return None
@@ -114,7 +111,6 @@ def repair_financial_row_label(row: list[Any]) -> list[Any]:
     if not first_val:
         new_row[1] = trailing_num
     elif len(first_digits) > len(trailing_digits) + 3:
-        # 한전 NICE 등: 기간 값이 이어붙은 경우 라벨 trailing을 1열 값으로
         new_row[1] = trailing_num
     elif first_digits == trailing_digits:
         new_row[1] = trailing_num
@@ -138,9 +134,7 @@ def align_sparse_period_columns(
     headers: list[Any],
     rows: list[list[Any]],
 ) -> tuple[list[str], list[list[str]]]:
-    """빈 헤더 열에 수치가 있고 기간 헤더 아래가 비어 있으면 값을 기간 열로 옮긴 뒤
-    라벨+기간 열만 남긴다. (한전 KIS 등 PyMuPDF 교차 빈 칸)
-    """
+    """빈 헤더 열에 수치가 있고 기간 헤더 아래가 비어 있으면 값을 기간 열로 옮긴 뒤 라벨+기간 열만 남긴다."""
     if not headers:
         return [], [list(map(lambda c: normalize_text(str(c or "")), row)) for row in rows]
 
@@ -183,7 +177,6 @@ def align_sparse_period_columns(
             if not prev_val.strip():
                 continue
             if parse_numeric_cell(prev_val)[0] is None:
-                # concat 정리 전일 수 있어 첫 수치만 검사
                 first = take_first_concatenated_number(prev_val)
                 if first is None:
                     continue
@@ -203,7 +196,7 @@ def repair_financial_matrix(
     headers: list[Any],
     rows: list[list[Any]],
 ) -> tuple[list[str], list[list[str]]]:
-    """라벨 trailing·값 concat·빈 기간열 정렬을 한 번에 적용."""
+    """라벨 trailing, 값 concat, 빈 기간열 정렬을 한 번에 적용."""
     repaired = [
         repair_financial_value_cells(repair_financial_row_label(list(row)))
         for row in rows
@@ -212,7 +205,7 @@ def repair_financial_matrix(
 
 
 def repair_financial_data_rows(rows: list[list[Any]]) -> list[list[Any]]:
-    """모든 데이터 행에 라벨 trailing·값 concat 정리를 적용."""
+    """모든 데이터 행에 라벨 trailing, 값 concat 정리를 적용."""
     return [
         repair_financial_value_cells(repair_financial_row_label(list(row)))
         for row in rows
@@ -220,27 +213,24 @@ def repair_financial_data_rows(rows: list[list[Any]]) -> list[list[Any]]:
 
 
 def filter_financial_data_rows(rows: list[list[Any]]) -> list[list[Any]]:
-    """적용재무제표 이후·서술/각주/불릿 행 제거."""
+    """적용재무제표 이후, 서술/각주/불릿 행 제거."""
     filtered: list[list[Any]] = []
     for row in rows:
         if not row:
             continue
         label = normalize_text(str(row[0] or ""))
         if not label.strip():
-            # 빈 라벨이고 값도 없으면 skip
             if not any(str(cell or "").strip() for cell in row[1:]):
                 continue
             filtered.append(row)
             continue
         if _APPLIED_STATEMENTS_RE.search(label):
             filtered.append(row)
-            # 이후 행은 서술로 보고 중단
             break
         if _NARRATIVE_LABEL_RE.search(label):
             break
         if "평정논거" in _compact(label) or _compact(label).startswith("평정논거"):
             break
-        # 숫자 값이 전무하고 서술성 긴 라벨이면 drop
         has_number = False
         for cell in row[1:]:
             value, _ = parse_numeric_cell(cell if cell is not None else None)
@@ -254,10 +244,7 @@ def filter_financial_data_rows(rows: list[list[Any]]) -> list[list[Any]]:
 
 
 def parse_period_header(text: str | None) -> tuple[str | None, int | None, int | None]:
-    """기간 헤더 → (canonical 'YYYY.MM', year, month).
-
-    연도만 있으면 연말(`.12`)로 정규화 (NICE 요지 연도 열).
-    """
+    """기간 헤더 → (canonical 'YYYY.MM', year, month). 연도만 있으면 연말(`.12`)로 정규화."""
     normalized = normalize_text(text)
     if not normalized:
         return None, None, None
@@ -283,7 +270,6 @@ def parse_numeric_cell(text: str | None) -> tuple[float | None, str | None]:
 
     cleaned = raw.replace(",", "").replace(" ", "")
     cleaned = cleaned.replace("△", "-").replace("▲", "")
-    # 괄호 음수 (1,234) → -1234
     if re.fullmatch(r"\(\s*-?[\d.]+\s*\)", cleaned):
         cleaned = "-" + cleaned.strip("()")
 
@@ -417,7 +403,6 @@ def _from_pymupdf_table(
         return None
 
     headers = list(cleaned[header_index])
-    # 첫 열이 기간이 아니면 구분 열로 유지
     data_rows = [
         list(row)
         for row in cleaned[header_index + 1 :]
@@ -500,7 +485,6 @@ def _visual_fin_grid(
         item for item in period_words if abs(item["ymid"] - header_y) <= 10.0
     ]
     header_items.sort(key=lambda item: item["x0"])
-    # 중복 기간 제거
     seen: set[str] = set()
     unique_headers: list[dict[str, Any]] = []
     for item in header_items:
@@ -511,7 +495,6 @@ def _visual_fin_grid(
     if len(unique_headers) < 2:
         return None
 
-    # 열 경계: 구분 열 + 기간 열
     col_bounds: list[tuple[float, float]] = []
     first_x0 = unique_headers[0]["x0"]
     label_right = max(clip.x0 + 10.0, first_x0 - 4.0)
@@ -526,7 +509,6 @@ def _visual_fin_grid(
 
     headers = ["구분"] + [item["text"] for item in unique_headers]
 
-    # 데이터 행: 헤더 아래 word를 y 클러스터
     data_words = [
         {
             "x0": float(w[0]),
@@ -567,7 +549,6 @@ def _visual_fin_grid(
             ]
             row_values.append(normalize_text(" ".join(parts)))
         if any(row_values):
-            # 각주/자료 행 스킵
             label = _compact(row_values[0])
             if label.startswith("주") or label.startswith("자료"):
                 continue
@@ -614,8 +595,6 @@ def extract_financial_tables_from_page(
         FINANCIAL_END_PATTERNS,
         region=region,
     )
-    # 각주가 표 바로 아래이므로 end를 너무 이르게 자르지 않도록
-    # '주)'는 clip 하단으로만 쓰고, 표 본체는 find_tables / visual이 담당
     soft_end = end_y if end_y is not None else page.rect.height
     clip = regions.clip_for_heading(
         heading,
@@ -664,7 +643,6 @@ def extract_financial_tables_from_page(
         if visual:
             tables.append(visual)
 
-    # 각주 부착
     for table in tables:
         bottom = table.bbox[3] if table.bbox else clip.y1
         table.footnotes = _extract_footnotes(all_lines, bottom)

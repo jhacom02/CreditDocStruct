@@ -68,7 +68,6 @@ def _pick_heading(
     preferred_id = PREFERRED_REGION_BY_SECTION.get(section_key)
 
     def score(line: VisualLine) -> tuple:
-        # 순수 제목·짧은 줄·선호 region 우선
         pure = 0 if match_section_key(line.text) == section_key else 1
         length = len(re.sub(r"\s+", "", normalize_text(line.text)))
         mid = (line.x0 + line.x1) / 2
@@ -151,9 +150,6 @@ def extract_section_tables(
             )
             if other.y0 <= heading.y1 + 5:
                 continue
-            # 같은 region: 기존처럼 하단 경계
-            # 좌우 배치: 재무(우) clip이 아래쪽 유효등급 밴드와 섞이지 않게
-            # valid 제목 y도 financial end로 사용
             same_region = other_region.region_id == region.region_id
             cross_fin_valid = (
                 key == SECTION_FINANCIAL

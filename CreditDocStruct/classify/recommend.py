@@ -1,8 +1,4 @@
-"""undefined 전용 추천 Key·점수 (자동 확정에 사용하지 않음).
-
-순수 Python char n-gram cosine 유사도.
-추천 파라미터는 `common.matching_policy.RECOMMENDATION`이 단일 원천이다.
-"""
+"""undefined 전용 추천 Key·점수."""
 
 from __future__ import annotations
 

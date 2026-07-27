@@ -1,9 +1,4 @@
-"""ExtractedRatingRow / RatingRecord / VisualLine / 재무지표 데이터 모델.
-
-추출 단계(row_parser)가 ExtractedRatingRow를 만들고,
-분류 단계(classifier)가 RatingRecord로 변환한다.
-재무지표는 ExtractedFinTable → FinancialFact 경로를 쓴다.
-"""
+"""ExtractedRatingRow / RatingRecord / VisualLine / 재무지표 데이터 모델."""
 
 from __future__ import annotations
 

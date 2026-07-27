@@ -132,7 +132,6 @@ def find_header_token_spans(
     if not items:
         return []
 
-    # 가장 위에 모인 헤더 줄 선택
     items.sort(key=lambda item: item["ymid"])
     base_y = items[0]["ymid"]
     same_row = [
@@ -140,7 +139,6 @@ def find_header_token_spans(
     ]
     same_row.sort(key=lambda item: item["x0"])
 
-    # 이름당 첫 번째 span
     seen: set[str] = set()
     spans: list[tuple[str, float, float, float]] = []
     for item in same_row:

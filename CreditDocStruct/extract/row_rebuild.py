@@ -244,8 +244,6 @@ def rebuild_merged_rows(
         multi_label = len({item[3] for item in label_spans}) >= 2
         collapsed = is_collapsed_rating_fields(decomposed)
 
-        # 라벨 없이 종류/등급만 붕괴된 primary는 복원 불가 → 스킵
-        # (유효등급 섹션에서 상품을 가져오는 경우가 일반적)
         if collapsed and not multi_label and not normalize_text(label_text):
             index += 1
             continue
@@ -257,11 +255,8 @@ def rebuild_merged_rows(
             decomposed.source == "visual_layout"
             and decomposed.rating_status == "single"
         ):
-            # visual 한 줄에는 평가대상 뒤의 종목명이 함께 붙는다.
-            # 종목명에 등록 alias가 있어도 단일 등급 행이면 별도 상품이 아니다.
             merged = False
-
-        # 복수 상품 라벨 + 붕괴된 종류/등급 → 분할 복원
+            
         if collapsed and multi_label:
             merged = True
 
