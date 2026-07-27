@@ -37,13 +37,3 @@ htmlcov/
 data/
 output/
 downloads/
-results/
-
-# Admin application runtime (CreditDocStruct/CreditDocStruct/)
-CreditDocStruct/admin/data/admin.db
-CreditDocStruct/admin/data/*.db
-CreditDocStruct/admin/backup/*.yaml
-CreditDocStruct/admin/backup/*.yml
-!CreditDocStruct/admin/data/.gitkeep
-!CreditDocStruct/admin/backup/.gitkeep
-!CreditDocStruct/results/.gitkeep
