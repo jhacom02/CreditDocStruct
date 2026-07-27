@@ -728,8 +728,15 @@ def test_company_name_rejects_credit_opinion() -> None:
         agency_key="kr",
     )
     assert name != "CREDIT OPINION"
-    assert "경남" in name or "CREDIT" not in name.upper()
+    assert name == "경남은행"
+    assert "(주)" not in name
 
+
+def test_company_name_strips_corp_mark() -> None:
+    assert (
+        extract_company_name("(주)삼성전자\n평가개요", "x.pdf") == "삼성전자"
+    )
+    assert extract_company_name("현대차㈜\n평가개요", "x.pdf") == "현대차"
 
 def test_outlook_parenthetical_and_short_codes() -> None:
     token = parse_rating_value("A+(안정적)")

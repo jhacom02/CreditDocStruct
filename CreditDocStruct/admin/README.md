@@ -76,9 +76,35 @@ admin\run_extract.bat    # PDF 추출 (INPUT_DIR → main.py)
 | 접속 | URL |
 |------|-----|
 | 서버 PC | `http://localhost:8501` |
-| 같은 사내망 다른 PC | `http://<서버IPv4>:8501` |
+| 같은 사내망 다른 PC | `http://{서버 PC IP}:8501` |
 
 접속 실패 시 Windows 방화벽 **TCP 8501** 인바운드 확인. 앱 로그인 레이어는 없다.
+
+서버 PC 인바운드 허용 방법
+1. 관리자 관한으로 제어판 실행
+2. Windows Defender 방화벽
+3. 고급 설정
+4. 인바운드 규칙
+5. 새 규칙
+6. 포트
+7. TCP
+8. 특정 로컬 포트: 8501
+9. 연결 허용
+10. 프로필(도메인/개인/공용) 체크
+11. 이름: CreditDocStruct
+
+CMD 테스트 (서버 PC)
+1. Test-NetConnection {서버 PC IP} -Port 8501
+   - TCPTestSucceeded = TRUE면 정상
+2. netstat -ano | findstr :8501
+   - 0.0.0.0:8501 또는 [::]:8501 이 보이면 정상
+
+PowerShell 테스트 (다른 PC)
+1. Test-NetConnection {서버 PC IP} -Port 8501
+   - TCPTestSucceeded = TRUE면 정상
+   - 반드시 서버 PC IP로 입력할 것!
+
+다른 PC 인터넷망에서 `http://{서버 PC IP}:8501`에 접속한다.
 
 수동:
 

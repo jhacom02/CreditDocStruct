@@ -252,6 +252,9 @@ _COMPANY_NOISE = (
     "한국기업평가㈜",
 )
 
+# 회사명 출력 시 제거 (탐지 시 '(주)' 포함 여부와 별개)
+_COMPANY_CORP_MARK_RE = re.compile(r"\(\s*주\s*\)|㈜")
+
 
 def is_plausible_company_name(value: str) -> bool:
     line = normalize_text(value)
@@ -276,6 +279,13 @@ def is_plausible_company_name(value: str) -> bool:
     return False
 
 
+def _clean_company_name(value: str) -> str:
+    """추출 회사명에서 (주)·㈜ 표기 제거."""
+    cleaned = _COMPANY_CORP_MARK_RE.sub("", normalize_text(value))
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
+    return cleaned or normalize_text(value)
+
+
 def _company_name_from_filename(file_name: str | Path) -> str:
     stem = Path(file_name).stem
     stem = re.sub(
@@ -285,7 +295,7 @@ def _company_name_from_filename(file_name: str | Path) -> str:
         flags=re.IGNORECASE,
     )
     stem = stem.replace("_", " ").replace("-", " ").strip()
-    return stem or Path(file_name).stem
+    return _clean_company_name(stem or Path(file_name).stem)
 
 
 def extract_company_name(
@@ -304,7 +314,7 @@ def extract_company_name(
         ]
         for line in lines[:12]:
             if is_plausible_company_name(line):
-                return line
+                return _clean_company_name(line)
         return _company_name_from_filename(file_name)
 
     layout = get_agency_layout(agency_key)
@@ -325,12 +335,12 @@ def extract_company_name(
 
     for line in title_lines:
         if is_plausible_company_name(line):
-            return normalize_text(line)
+            return _clean_company_name(line)
 
     page_text = page.get_text("text", sort=True)
     for line in page_text.splitlines():
         normalized = normalize_text(line)
         if is_plausible_company_name(normalized):
-            return normalized
+            return _clean_company_name(normalized)
 
     return _company_name_from_filename(file_name)
