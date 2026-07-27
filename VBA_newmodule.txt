@@ -1,0 +1,501 @@
+Option Explicit
+
+' CreditDocStruct 결과 폴더 경로 지정
+Private Const SR_RESULT_FOLDER As String = "C:\mycode\CreditDocStruct\CreditDocStruct\results"
+
+' CreditDocStruct 추출 결과에서 신용등급 & 재무지표 데이터 가져와 '종목정보' 시트에 붙여넣기
+Public Sub GetCreditDocStructResult()
+
+    Dim targetWS As Worksheet
+    Dim resultWB As Workbook
+    Dim sourceWS As Worksheet
+
+    Dim financialLabel As Range
+    Dim ratingLabel As Range
+
+    Dim financialSource As Range
+    Dim ratingSource As Range
+
+    Dim financialTarget As Range
+    Dim ratingTarget As Range
+
+    Dim financialPasteRange As Range
+    Dim ratingPasteRange As Range
+
+    Dim issuerName As String
+    Dim resultPath As String
+
+    Dim openedByMacro As Boolean
+    Dim stateChanged As Boolean
+
+    Dim previousScreenUpdating As Boolean
+    Dim previousEnableEvents As Boolean
+    Dim previousDisplayAlerts As Boolean
+    Dim previousCalculation As XlCalculation
+
+    Dim errorNumber As Long
+    Dim errorDescription As String
+
+    On Error GoTo ErrorHandler
+
+    Set targetWS = ThisWorkbook.Worksheets("종목정보")
+
+
+    ' 1. 발행사명 확인
+    issuerName = Trim$(CStr(targetWS.Range("B2").Value))
+
+    If issuerName = "" Then
+        MsgBox "종목정보 시트 B2에 발행사명을 입력해 주세요."
+        Exit Sub
+    End If
+
+
+    ' 2. 오늘 날짜 결과 파일 검색
+    resultPath = SR_FindTodayResultFile(SR_RESULT_FOLDER)
+
+    If resultPath = "" Then
+        MsgBox "오늘 날짜의 결과 파일을 찾을 수 없습니다."
+        Exit Sub
+    End If
+
+
+    ' 3. 엑셀 실행 상태 저장
+    previousScreenUpdating = Application.ScreenUpdating
+    previousEnableEvents = Application.EnableEvents
+    previousDisplayAlerts = Application.DisplayAlerts
+    previousCalculation = Application.Calculation
+
+    stateChanged = True
+
+    Application.ScreenUpdating = False
+    Application.EnableEvents = False
+    Application.DisplayAlerts = False
+    Application.Calculation = xlCalculationManual
+    Application.StatusBar = _
+        issuerName & " 신용등급 및 재무지표를 불러오는 중입니다."
+
+    Set resultWB = SR_GetOpenWorkbook(resultPath)
+
+    If resultWB Is Nothing Then
+        Set resultWB = Workbooks.Open( _
+                            Filename:=resultPath, _
+                            UpdateLinks:=False, _
+                            ReadOnly:=True, _
+                            AddToMru:=False, _
+                            Notify:=False)
+        openedByMacro = True
+    End If
+
+
+    '4. 발행사명 일치 시트 찾기
+    Set sourceWS = SR_GetExactWorksheet( _
+                        sourceWB:=resultWB, _
+                        worksheetName:=issuerName)
+
+    If sourceWS Is Nothing Then
+        Err.Raise _
+            Number:=vbObjectError + 3001, _
+            Source:="GetCreditDocStructResult", _
+            Description:="결과 파일에 " & issuerName & "과 정확히 일치하는 시트가 없습니다."
+    End If
+
+    '5. 신용등급 & 재무지표 테이블 찾기
+    Set ratingLabel = SR_FindExactLabel( _
+                            targetWS:=sourceWS, _
+                            labelText:="신용등급(요약)")
+
+    If ratingLabel Is Nothing Then
+        Err.Raise _
+            Number:=vbObjectError + 3002, _
+            Source:="GetCreditDocStructResult", _
+            Description:=issuerName & " 시트에서 '신용등급(요약)' 셀을 찾을 수 없습니다."
+    End If
+
+    Set financialLabel = SR_FindExactLabel( _
+                                targetWS:=sourceWS, _
+                                labelText:="재무지표(요약)")
+
+    If financialLabel Is Nothing Then
+        Err.Raise _
+            Number:=vbObjectError + 3003, _
+            Source:="GetCreditDocStructResult", _
+            Description:=issuerName & " 시트에서 '재무지표(요약)' 셀을 찾을 수 없습니다."
+    End If
+
+    Set ratingSource = SR_GetTableBelowLabel( _
+                            labelCell:=ratingLabel, _
+                            tableColumnCount:=2)
+
+    If ratingSource Is Nothing Then
+        Err.Raise _
+            Number:=vbObjectError + 3004, _
+            Source:="GetCreditDocStructResult", _
+            Description:="'신용등급(요약)' 테이블을 찾을 수 없습니다."
+    End If
+
+    Set financialSource = SR_GetTableBelowLabel( _
+                                labelCell:=financialLabel, _
+                                tableColumnCount:=4)
+
+    If financialSource Is Nothing Then
+        Err.Raise _
+            Number:=vbObjectError + 3005, _
+            Source:="GetCreditDocStructResult", _
+            Description:="'재무지표(요약)' 테이블을 찾을 수 없습니다."
+    End If
+
+    '6. 신용등급 & 재무지표 테이블 복붙
+    Set ratingTarget = targetWS.Range("D16:E20")
+    Set financialTarget = targetWS.Range("D8:G12")
+
+    ratingTarget.ClearContents
+    financialTarget.ClearContents
+
+    Set ratingPasteRange = ratingTarget.Cells(1, 1).Resize( _
+                                ratingSource.Rows.Count, _
+                                ratingSource.Columns.Count)
+
+    Set financialPasteRange = financialTarget.Cells(1, 1).Resize( _
+                                    financialSource.Rows.Count, _
+                                    financialSource.Columns.Count)
+
+    ratingSource.Copy
+
+    ratingPasteRange.PasteSpecial _
+        Paste:=xlPasteValuesAndNumberFormats
+
+    Application.CutCopyMode = False
+
+    financialSource.Copy
+
+    financialPasteRange.PasteSpecial _
+        Paste:=xlPasteValuesAndNumberFormats
+
+    Application.CutCopyMode = False
+
+    targetWS.Calculate
+
+    On Error Resume Next
+    ThisWorkbook.Worksheets("Paste").Calculate
+    On Error GoTo ErrorHandler
+
+    If openedByMacro Then
+        resultWB.Close SaveChanges:=False
+        Set resultWB = Nothing
+    End If
+
+
+    '7. 엑셀 실행 상태 복원
+    Application.Calculation = previousCalculation
+    Application.DisplayAlerts = previousDisplayAlerts
+    Application.EnableEvents = previousEnableEvents
+    Application.ScreenUpdating = previousScreenUpdating
+    Application.StatusBar = False
+
+    stateChanged = False
+
+    MsgBox "신용등급 & 재무지표 데이터 불러오기를 완료했습니다."
+
+    Exit Sub
+
+
+ErrorHandler:
+
+    errorNumber = Err.Number
+    errorDescription = Err.Description
+
+    On Error Resume Next
+
+    Application.CutCopyMode = False
+
+    If openedByMacro Then
+
+        If Not resultWB Is Nothing Then
+            resultWB.Close SaveChanges:=False
+        End If
+
+    End If
+
+    If stateChanged Then
+
+        Application.Calculation = previousCalculation
+        Application.DisplayAlerts = previousDisplayAlerts
+        Application.EnableEvents = previousEnableEvents
+        Application.ScreenUpdating = previousScreenUpdating
+
+    End If
+
+    Application.StatusBar = False
+
+    On Error GoTo 0
+
+    MsgBox "신용등급 및 재무지표를 불러오지 못했습니다." & _
+           vbCrLf & vbCrLf & _
+           "오류 번호: " & errorNumber & vbCrLf & _
+           "오류 내용: " & errorDescription, _
+           vbCritical, _
+           "불러오기 오류"
+
+End Sub
+
+
+'하위 함수: 오늘 날짜 파일 검색
+Private Function SR_FindTodayResultFile( _
+            ByVal folderPath As String) As String
+
+    Dim searchPattern As String
+    Dim fileName As String
+    Dim fullPath As String
+
+    Dim latestPath As String
+    Dim latestModified As Date
+    Dim currentModified As Date
+
+    If Trim$(folderPath) = "" Then Exit Function
+
+    If Right$(folderPath, 1) <> "\" Then
+        folderPath = folderPath & "\"
+    End If
+
+    searchPattern = folderPath & _
+                    "result_" & _
+                    Format$(Date, "yyyymmdd") & _
+                    ".xls*"
+
+    fileName = Dir$(searchPattern)
+
+    Do While fileName <> ""
+
+        fullPath = folderPath & fileName
+
+        On Error Resume Next
+        currentModified = FileDateTime(fullPath)
+
+        If Err.Number = 0 Then
+            If latestPath = "" Or currentModified > latestModified Then
+                latestPath = fullPath
+                latestModified = currentModified
+            End If
+        End If
+
+        Err.Clear
+
+        On Error GoTo 0
+
+        fileName = Dir$
+
+    Loop
+
+    SR_FindTodayResultFile = latestPath
+
+End Function
+
+
+'하위 함수: 결과 엑셀 파일 이미 열려 있는지 확인
+Private Function SR_GetOpenWorkbook( _
+            ByVal fullPath As String) As Workbook
+
+    Dim wb As Workbook
+
+    For Each wb In Application.Workbooks
+        If StrComp( _
+                wb.FullName, _
+                fullPath, _
+                vbTextCompare) = 0 Then
+
+            Set SR_GetOpenWorkbook = wb
+            Exit Function
+        End If
+
+    Next wb
+
+    Set SR_GetOpenWorkbook = Nothing
+
+End Function
+
+
+'하위 함수: 발행사명 일치 시트 찾기
+Private Function SR_GetExactWorksheet( _
+            ByVal sourceWB As Workbook, _
+            ByVal worksheetName As String) As Worksheet
+
+    Dim ws As Worksheet
+
+    For Each ws In sourceWB.Worksheets
+
+        If StrComp( _
+                ws.Name, _
+                worksheetName, _
+                vbBinaryCompare) = 0 Then
+
+            Set SR_GetExactWorksheet = ws
+            Exit Function
+        End If
+
+    Next ws
+
+    Set SR_GetExactWorksheet = Nothing
+
+End Function
+
+
+'하위 함수: 신용등급 & 재무지표 테이블 제목 검색
+Private Function SR_FindExactLabel( _
+            ByVal targetWS As Worksheet, _
+            ByVal labelText As String) As Range
+
+    Dim foundCell As Range
+
+    On Error Resume Next
+
+    Set foundCell = targetWS.Cells.Find( _
+                        What:=labelText, _
+                        After:=targetWS.Cells(1, 1), _
+                        LookIn:=xlValues, _
+                        LookAt:=xlWhole, _
+                        SearchOrder:=xlByRows, _
+                        SearchDirection:=xlNext, _
+                        MatchCase:=True, _
+                        SearchFormat:=False)
+
+    On Error GoTo 0
+
+    Set SR_FindExactLabel = foundCell
+
+End Function
+
+
+'하위 함수: 신용등급 & 재무지표 테이블 범위 반환
+Private Function SR_GetTableBelowLabel( _
+            ByVal labelCell As Range, _
+            ByVal tableColumnCount As Long) As Range
+
+    Dim targetWS As Worksheet
+    Dim rowRange As Range
+
+    Dim startRow As Long
+    Dim currentRow As Long
+    Dim lastUsedRow As Long
+    Dim tableRowCount As Long
+
+    Set targetWS = labelCell.Worksheet
+
+    startRow = labelCell.Row + 1
+    lastUsedRow = SR_GetLastUsedRow(targetWS)
+
+    If startRow > lastUsedRow Then
+        Set SR_GetTableBelowLabel = Nothing
+        Exit Function
+    End If
+
+    For currentRow = startRow To lastUsedRow
+
+        Set rowRange = targetWS.Cells( _
+                            currentRow, _
+                            labelCell.Column).Resize( _
+                                RowSize:=1, _
+                                ColumnSize:=tableColumnCount)
+
+        If SR_IsBlankRange(rowRange) Then Exit For
+
+        If currentRow > startRow Then
+            If SR_IsSectionTitleRow(rowRange) Then Exit For
+        End If
+
+        tableRowCount = tableRowCount + 1
+
+    Next currentRow
+
+    If tableRowCount = 0 Then
+        Set SR_GetTableBelowLabel = Nothing
+    Else
+        Set SR_GetTableBelowLabel = targetWS.Cells( _
+                                        startRow, _
+                                        labelCell.Column).Resize( _
+                                            RowSize:=tableRowCount, _
+                                            ColumnSize:=tableColumnCount)
+    End If
+
+End Function
+
+
+'하위 함수: 붙여넣을 범위 내 셀 비어 있는지 확인
+Private Function SR_IsBlankRange( _
+            ByVal targetRange As Range) As Boolean
+
+    Dim cell As Range
+    Dim cellValue As Variant
+
+    SR_IsBlankRange = True
+
+    For Each cell In targetRange.Cells
+        cellValue = cell.Value
+
+        If IsError(cellValue) Then
+            SR_IsBlankRange = False
+            Exit Function
+        End If
+
+        If Len(Trim$(CStr(cellValue))) > 0 Then
+            SR_IsBlankRange = False
+            Exit Function
+        End If
+
+    Next cell
+
+End Function
+
+
+'하위 함수: 제목 행인지 판정
+Private Function SR_IsSectionTitleRow( _
+            ByVal targetRow As Range) As Boolean
+
+    Dim firstText As String
+    Dim remainingRange As Range
+
+    firstText = Trim$(CStr(targetRow.Cells(1, 1).Value))
+
+    If firstText = "" Then Exit Function
+
+    If targetRow.Columns.Count > 1 Then
+        Set remainingRange = targetRow.Cells(1, 2).Resize( _
+                                RowSize:=1, _
+                                ColumnSize:=targetRow.Columns.Count - 1)
+        If Not SR_IsBlankRange(remainingRange) Then Exit Function
+    End If
+
+    If InStr(1, firstText, "(요약)", vbBinaryCompare) > 0 Or _
+        InStr(1, firstText, "(원본)", vbBinaryCompare) > 0 Then
+        SR_IsSectionTitleRow = True
+    End If
+
+End Function
+
+
+'하위 함수: 시트 마지막 사용 행 반환 (최대 검색 한도)
+Private Function SR_GetLastUsedRow( _
+            ByVal targetWS As Worksheet) As Long
+
+    Dim lastCell As Range
+
+    On Error Resume Next
+
+    Set lastCell = targetWS.Cells.Find( _
+                        What:="*", _
+                        After:=targetWS.Cells(1, 1), _
+                        LookIn:=xlFormulas, _
+                        LookAt:=xlPart, _
+                        SearchOrder:=xlByRows, _
+                        SearchDirection:=xlPrevious, _
+                        MatchCase:=False, _
+                        SearchFormat:=False)
+
+    On Error GoTo 0
+
+    If lastCell Is Nothing Then
+        SR_GetLastUsedRow = 1
+    Else
+        SR_GetLastUsedRow = lastCell.Row
+    End If
+
+End Function
