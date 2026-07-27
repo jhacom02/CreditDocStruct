@@ -166,13 +166,12 @@ AI 에이전트·후임 개발자는 이 절을 **변경의 가드레일**로 �
 - 상품·라벨 매핑은 `config/instruments.yaml`만 (`instruments` + `label_dictionary`).
 - 분류는 `label_dictionary` **exact match만**. 점수형 feature taxonomy 없음.
 - 라벨 status: `matched` | `undefined` 만.
-- undefined 추천(`classify/recommend.py`)은 검토용. `instrument_key` 자동 확정 금지. `RECOMMENDATION.min_score` 미만 suggestion 제외.
 - `classify/undefined_filter.py`로 이메일·재무지표·rating none 등 후보 제외.
 - 기동 시: 동일 정규화 라벨 상충 매핑 거부, 미등록 `instrument_key` 참조 거부.
 
 ### 3.4 테스트
 
-- `tests/label_variants.json`: exact → matched/key, 미등록 → undefined + suggestions, 자동 key 확정 없음.
+- `tests/label_variants.json`: exact → matched/key, 미등록 → undefined만, 자동 key 확정 없음.
 - 유지할 단위 테스트 영역: 현재등급 열 선택, 상품별 `products` 집계, source 병합, `fail_reason`, Excel 상품당 1행, occurrence_id, 원자적 저장, YAML `managed_by`, 예외 대기열.
 - 테스트·문서·API에 쓰지 않는 개념: `--target`, scoring taxonomy, `ocr_required`, `metrics.yaml`, 구결과 경로 `result/`(기본은 `results/`), 라벨 status `unknown`/`ambiguous`.
 
@@ -199,7 +198,7 @@ CreditDocStruct/
     ├── common/               # 설정, 모델, 정책, 등급 토큰, fail_reason
     ├── agency/               # 신평사 식별, 회사명, 기관별 레이아웃
     ├── extract/              # PDF → 섹션 그리드 → ExtractedRatingRow / ExtractedFinTable
-    ├── classify/             # YAML exact match, 재무지표 분류, undefined 추천
+    ├── classify/             # YAML exact match, 재무지표 분류
     ├── export/               # JSON, Excel, documents.db
     ├── admin/                # Streamlit 관리자 + 운영용 bat (추출 로직은 main.py)
     │   ├── admin_main.py
@@ -241,7 +240,6 @@ CreditDocStruct/
 | `classify/classifier.py` | — | `LabelClassifier` — YAML exact match |
 | `classify/metric_classifier.py` | — | `MetricClassifier` — 코드 카탈로그 exact match |
 | `classify/fin_normalize.py` | — | `ExtractedFinTable` → `FinancialFact[]` |
-| `classify/recommend.py` | — | undefined 라벨 char n-gram cosine 추천 (자동 확정 안 함) |
 | `classify/undefined_filter.py` | — | undefined_records JSON 누적 대상 필터 |
 | `export/json_io.py` | — | JSON 직렬화 |
 | `export/excel.py` | — | 공개/관리자 Excel, 기업별 시트(요약+원본); 공개 목록은 success만 |
@@ -330,7 +328,7 @@ FinancialFact[]             # metric_key, period, value
 | 값 | 의미 |
 |----|------|
 | `matched` | YAML `label_dictionary` exact match |
-| `undefined` | 미등록 라벨 (추천 suggestions 첨부, 자동 확정 없음) |
+| `undefined` | 미등록 라벨 (자동 확정 없음) |
 
 ---
 
@@ -401,7 +399,7 @@ instrument_key = config.normalized_lookup.get(normalized)  # exact only
 ```
 
 - **matched**: `instrument_key` 확정, `rating`/`outlook`은 추출값 그대로 이전
-- **undefined**: `recommend_instruments()`로 top-k 추천 (`RECOMMENDATION.min_score` 미만 제외). **자동 확정에 사용하지 않음**
+- **undefined**: YAML `label_dictionary`에 없는 라벨. **자동 확정에 사용하지 않음**
 
 ### 8.2 undefined 필터 (`classify/undefined_filter.py`)
 
@@ -521,7 +519,7 @@ instrument_key = config.normalized_lookup.get(normalized)  # exact only
 | `products` | 상품별 최종 1건 |
 | `records` | 전체 `RatingRecord` (canonical 병합 후) |
 | `validation_warnings` | Primary·유효등급 불일치 등 |
-| `undefined_records` | YAML 미등록 + `suggestions` |
+| `undefined_records` | YAML 미등록 |
 | `tables` | 등급·재무 원본 그리드 |
 | `financial_tables`, `financial_facts`, `undefined_metrics` | 재무 |
 | `file_hash` | SHA-256 |

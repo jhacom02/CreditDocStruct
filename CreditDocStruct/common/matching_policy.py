@@ -4,20 +4,8 @@ from __future__ import annotations
 
 import re
 import unicodedata
-from dataclasses import dataclass
 from typing import Any, Iterable, Mapping
 
-
-@dataclass(frozen=True)
-class RecommendationPolicy:
-    """undefined 라벨 추천 파라미터."""
-
-    ngram_size: int = 2
-    top_k: int = 3
-    min_score: float = 15.0
-
-
-RECOMMENDATION = RecommendationPolicy()
 
 _BRACKET_MAP = {
     "（": "(",

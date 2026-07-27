@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from classify.recommend import recommend_instruments
 from common.models import ExtractedRatingRow, RatingRecord
 from common.settings import (
     InstrumentsConfig,
@@ -46,14 +45,12 @@ class LabelClassifier:
                 row_index=row.row_index,
                 section=row.section,
                 source=row.source,
-                suggestions=[],
                 evaluation_type=row.evaluation_type,
                 issue_name=row.issue_name,
                 remark=row.remark,
                 label_text=row.label_text,
             )
 
-        suggestions = recommend_instruments(normalized, self.config)
         return RatingRecord(
             raw_label=row.raw_label,
             normalized_label=normalized,
@@ -67,7 +64,6 @@ class LabelClassifier:
             row_index=row.row_index,
             section=row.section,
             source=row.source,
-            suggestions=suggestions,
             evaluation_type=row.evaluation_type,
             issue_name=row.issue_name,
             remark=row.remark,

@@ -6,10 +6,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from classify.recommend import recommend_instruments
 from common.matching_policy import (
     MatchingPolicyError,
-    RECOMMENDATION,
     build_normalized_lookup,
     find_alias_conflict,
     normalize_label,
@@ -22,12 +20,6 @@ from common.settings import (
     LabelDictionaryEntry,
     load_instruments_config,
 )
-
-
-def test_recommendation_defaults() -> None:
-    assert RECOMMENDATION.ngram_size == 2
-    assert RECOMMENDATION.top_k == 3
-    assert RECOMMENDATION.min_score == 15.0
 
 
 @pytest.mark.parametrize(
@@ -137,26 +129,3 @@ def test_find_alias_conflict_normalized() -> None:
     assert "정규화 충돌" in message
 
 
-def test_recommend_uses_policy_min_score() -> None:
-    config = InstrumentsConfig(
-        instruments={
-            "issuer": InstrumentDefinition("issuer", "발행자신용등급"),
-            "senior_unsecured": InstrumentDefinition(
-                "senior_unsecured", "무보증사채"
-            ),
-        },
-        label_dictionary=(
-            LabelDictionaryEntry("발행자신용등급", "issuer", True, ""),
-            LabelDictionaryEntry("무보증사채", "senior_unsecured", True, ""),
-        ),
-        normalized_lookup={
-            normalize_label("발행자신용등급"): "issuer",
-            normalize_label("무보증사채"): "senior_unsecured",
-        },
-    )
-    suggestions = recommend_instruments(
-        normalize_label("완전무관한XYZ라벨"),
-        config,
-    )
-    assert all(item.score >= RECOMMENDATION.min_score for item in suggestions)
-    assert len(suggestions) <= RECOMMENDATION.top_k

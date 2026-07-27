@@ -544,18 +544,9 @@ def collect_undefined_occurrences(
                     "outlook": record.get("outlook"),
                     "evaluation_type": record.get("evaluation_type"),
                     "label_text": record.get("label_text"),
-                    "suggestions": record.get("suggestions") or [],
                 }
             )
     return occurrences
-
-
-def collect_undefined_metric_occurrences(
-    results: list[dict[str, Any]],
-) -> list[dict[str, Any]]:
-    """하위 호환: 지표 YAML 운영 루프 제거 후 빈 목록."""
-    del results
-    return []
 
 
 def commit_batch_outputs(

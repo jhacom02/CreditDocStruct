@@ -149,16 +149,6 @@ class ExtractedRatingRow:
 
 
 @dataclass
-class Suggestion:
-    instrument_key: str
-    score: float
-    reasons: list[str] = field(default_factory=list)
-
-    def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
-
-
-@dataclass
 class RatingRecord:
     """분류 단계 결과. rating 필드는 ExtractedRatingRow에서 그대로 이전."""
 
@@ -173,7 +163,6 @@ class RatingRecord:
     row_index: int
     section: str | None = None
     source: str = "unknown"
-    suggestions: list[Suggestion] = field(default_factory=list)
     evaluation_type: str | None = None
     issue_name: str | None = None
     remark: str | None = None
