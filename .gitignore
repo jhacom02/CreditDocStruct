@@ -40,6 +40,7 @@ output/
 downloads/
 results/*
 !results/.gitkeep
+!results/result_20260723.json
 admin/backup/*.yaml
 
 # Streamlit
