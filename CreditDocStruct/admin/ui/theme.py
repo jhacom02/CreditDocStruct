@@ -90,6 +90,23 @@ def inject_styles() -> None:
         color: #741612 !important;
         box-shadow: none !important;
     }
+
+    section[data-testid="stFileUploader"] [data-testid="stFileUploaderDropzoneInstructions"],
+    section[data-testid="stFileUploader"] [data-testid="stFileUploaderDropzone"] svg,
+    section[data-testid="stFileUploader"] [data-testid="stFileUploaderAddButton"] {
+        display: none !important;
+    }
+
+    section[data-testid="stFileUploader"] [data-testid="stFileUploaderDropzone"] {
+        background-color: transparent !important;
+        border: none !important;
+        padding: 0 !important;
+        min-height: 0 !important;
+    }
+
+    section[data-testid="stFileUploader"] [data-testid="stFileUploaderDropzone"] button {
+        width: 100% !important;
+    }
 </style>
         """,
         unsafe_allow_html=True,

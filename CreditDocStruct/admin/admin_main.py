@@ -2,10 +2,19 @@
 
 from __future__ import annotations
 
+import sys
+import tempfile
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 import streamlit as st
 
 from admin.services.exception_service import count_exceptions
 from admin.services.result_service import (
+    ADHOC_RESULT_LABEL,
     ResultServiceError,
     list_result_files,
     load_results_json,
@@ -15,6 +24,7 @@ from admin.views.dictionary import render_dictionary_tab
 from admin.views.exceptions import render_exceptions_tab
 from admin.views.guide import render_guide_tab
 from admin.views.results import render_result_tab
+from main import extract_credit_report
 
 
 def _sidebar_exception_count() -> int:
@@ -33,6 +43,28 @@ def _render_sidebar() -> None:
         st.rerun()
     pending = _sidebar_exception_count()
     st.sidebar.caption(f"확인 필요 {pending}건")
+
+    uploaded = st.sidebar.file_uploader("PDF 업로드", type=["pdf"])
+    if (
+        st.sidebar.button(
+            "테스트 추출",
+            use_container_width=True,
+            disabled=uploaded is None,
+        )
+        and uploaded is not None
+    ):
+        try:
+            with st.spinner("추출 중..."):
+                with tempfile.TemporaryDirectory() as tmp_dir:
+                    tmp_path = Path(tmp_dir) / Path(uploaded.name).name
+                    tmp_path.write_bytes(uploaded.getvalue())
+                    result = extract_credit_report(tmp_path)
+            st.session_state["adhoc_results"] = [result]
+            st.session_state["result_file"] = ADHOC_RESULT_LABEL
+            st.session_state["exc_result_file"] = ADHOC_RESULT_LABEL
+            st.rerun()
+        except Exception as exc:
+            st.sidebar.error(str(exc))
 
 
 def main() -> None:

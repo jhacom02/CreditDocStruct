@@ -7,6 +7,7 @@ import streamlit as st
 
 from admin.services.exception_service import collect_exceptions
 from admin.services.result_service import (
+    ADHOC_RESULT_LABEL,
     ResultServiceError,
     list_result_files,
     load_results_json,
@@ -22,20 +23,29 @@ def _section_label(text: str) -> None:
 
 def render_exceptions_tab() -> None:
     files = list_result_files()
-    if not files:
+    adhoc = st.session_state.get("adhoc_results")
+    if not files and not adhoc:
         st.info(
-            "결과 파일이 없습니다. PDF 추출을 실행하면 결과 파일이 생성됩니다."
+            "결과 파일이 없습니다. 사이드바에서 PDF를 올리거나 "
+            "PDF 추출을 실행하면 결과 파일이 생성됩니다."
         )
         return
 
-    names = [item.name for item in files]
+    names: list[str] = []
+    if adhoc:
+        names.append(ADHOC_RESULT_LABEL)
+    names.extend(item.name for item in files)
     selected_name = st.selectbox("결과 파일", names, key="exc_result_file")
-    selected = next(item for item in files if item.name == selected_name)
-    try:
-        results = load_results_json(selected.path)
-    except ResultServiceError as exc:
-        st.error(str(exc))
-        return
+
+    if selected_name == ADHOC_RESULT_LABEL:
+        results = list(adhoc)
+    else:
+        selected = next(item for item in files if item.name == selected_name)
+        try:
+            results = load_results_json(selected.path)
+        except ResultServiceError as exc:
+            st.error(str(exc))
+            return
 
     items = collect_exceptions(results)
     st.caption(f"확인 필요 {len(items)}건")

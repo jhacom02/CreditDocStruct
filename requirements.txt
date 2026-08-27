@@ -1,0 +1,2 @@
+-r CreditDocStruct/requirements.txt
+-r CreditDocStruct/admin/requirements.txt

@@ -6,6 +6,7 @@ import pandas as pd
 import streamlit as st
 
 from admin.services.result_service import (
+    ADHOC_RESULT_LABEL,
     AGENCY_FILTER_OPTIONS,
     ResultServiceError,
     build_public_excel_bytes,
@@ -36,21 +37,32 @@ def _empty_financial_frame() -> pd.DataFrame:
 
 def render_result_tab() -> None:
     files = list_result_files()
-    if not files:
+    adhoc = st.session_state.get("adhoc_results")
+    if not files and not adhoc:
         st.info(
-            "결과 파일이 없습니다. `main.py`로 PDF 추출을 실행하면 "
+            "결과 파일이 없습니다. 사이드바에서 PDF를 올리거나 "
+            "`main.py`로 PDF 추출을 실행하면 "
             "`results/` 폴더에 JSON이 생성됩니다."
         )
         return
 
-    names = [item.name for item in files]
-    selected_name = st.selectbox("결과 파일", names)
-    selected = next(item for item in files if item.name == selected_name)
-    try:
-        results = load_results_json(selected.path)
-    except ResultServiceError as exc:
-        st.error(str(exc))
-        return
+    names: list[str] = []
+    if adhoc:
+        names.append(ADHOC_RESULT_LABEL)
+    names.extend(item.name for item in files)
+    selected_name = st.selectbox("결과 파일", names, key="result_file")
+
+    if selected_name == ADHOC_RESULT_LABEL:
+        results = list(adhoc)
+        excel_stem = ADHOC_RESULT_LABEL
+    else:
+        selected = next(item for item in files if item.name == selected_name)
+        try:
+            results = load_results_json(selected.path)
+        except ResultServiceError as exc:
+            st.error(str(exc))
+            return
+        excel_stem = selected.path.stem
 
     if not results:
         st.warning("선택한 결과 파일이 비어 있습니다.")
@@ -88,7 +100,7 @@ def render_result_tab() -> None:
     st.download_button(
         "⭳ Excel 다운로드",
         data=build_public_excel_bytes(filtered, config),
-        file_name=f"{selected.path.stem}.xlsx",
+        file_name=f"{excel_stem}.xlsx",
         mime=(
             "application/vnd.openxmlformats-officedocument."
             "spreadsheetml.sheet"

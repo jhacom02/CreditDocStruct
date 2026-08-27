@@ -38,3 +38,8 @@ htmlcov/
 # Data / output files
 output/
 downloads/
+results/
+
+# Others
+CreditDocStruct_doc.md
+VBA_newmodule.txt

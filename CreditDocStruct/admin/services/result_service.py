@@ -16,6 +16,8 @@ AGENCY_FILTER_OPTIONS: tuple[str, ...] = (
     *(AGENCY_DISPLAY_NAMES[key] for key in ("nice", "kis", "kr")),
 )
 
+ADHOC_RESULT_LABEL = "result_test"
+
 
 class ResultServiceError(ValueError):
     """결과 파일 로드·검증 실패."""

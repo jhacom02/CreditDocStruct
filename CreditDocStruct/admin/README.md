@@ -13,7 +13,8 @@ Streamlit 기반 **관리자 웹 앱**. 배치 추출(`main.py`)과 **별도 진
 
 | 할 일 | 하지 않는 일 |
 |--------|----------------|
-| `results/*.json` 로드·필터·공개 표·공개 Excel 바이트 | PDF 배치 루프, `extract_credit_report`, `commit_batch_outputs` |
+| `results/*.json` 로드·필터·공개 표·공개 Excel 바이트 | PDF 배치 루프, `commit_batch_outputs` |
+| 사이드바 PDF 1건 → `extract_credit_report` → 세션(`result_test`) | JSON/DB에 업로드 결과 저장 |
 | JSON → 확인 필요 목록 집계(읽기 전용) | 예외 상태 머신·별도 미분류 DB |
 | `instruments.yaml` **라벨** 추가·삭제(`managed_by: admin`) | 새 `instrument_key`, 잠긴 라벨 수정, 재무지표 카탈로그 |
 | YAML 쓰기 전 `admin/backup/` 스냅샷 | 백업 복원 UI |
@@ -24,7 +25,7 @@ main.py → results/*.json · documents.db
   → 확인 필요(읽기) → 상품 사전(YAML) → main.py 재추출
 ```
 
-원격 브라우저의 Python은 **서버 PC**에서만 돈다. 클라이언트 PC의 로컬 폴더 경로로 추출을 돌리는 기능은 없다.
+사이드바 업로드는 브라우저가 보낸 PDF 바이트를 서버에서 `extract_credit_report`로만 처리한다. 배치 저장은 하지 않는다.
 
 ---
 
@@ -119,12 +120,13 @@ cd CreditDocStruct/CreditDocStruct
 ## 4. 진입점 (`admin_main.py`)
 
 - `st.set_page_config` → `inject_styles()` → 제목/캡션
-- 사이드바: 새로고침(`st.rerun`), **확인 필요 N건**  
-  - `list_result_files()[0]`(mtime 최신) → `count_exceptions`
+- 사이드바: 새로고침(`st.rerun`), **확인 필요 N건**, PDF 1건 업로드·추출  
+  - `list_result_files()[0]`(mtime 최신) → `count_exceptions` (JSON만)
   - 탭에서 다른 결과 파일을 고르면 사이드바와 건수가 다를 수 있음
+  - 추출은 `extract_credit_report`만. 결과는 세션 `adhoc_results` / 셀렉트 `result_test` (결과 조회·확인 필요)
 - 탭: 결과 조회 · 확인 필요 · 상품 사전 · 운영 가이드 → `render_*_tab()`
 
-뷰는 `services`만 호출한다.
+뷰는 `services`만 호출한다. 사이드바 1건 추출은 `admin_main`에서 `extract_credit_report`를 호출한다.
 
 ---
 
@@ -174,12 +176,14 @@ cd CreditDocStruct/CreditDocStruct
 
 ### 결과 조회 (`views/results.py`)
 
+- 셀렉트: 세션 업로드는 `result_test`가 맨 위, 그다음 `results/*.json`
 - 필터 → 상태 요약 → 공개 신용등급 표 → Excel 다운로드
 - 행 선택 → `financial_tables[0]` wide 표
 - 행 없음 / 재무 행 없음 → **`st.error(financial_fail_message)`만**, 빈 dataframe 숨김
 
 ### 확인 필요 (`views/exceptions.py`)
 
+- 셀렉트: 세션 업로드는 `result_test`가 맨 위, 그다음 `results/*.json` (결과 조회와 동일)
 - 유형별 `section-label` + `action` caption + dataframe
 - 쓰기·버튼 없음. 수정은 상품 사전 또는 `main.py` 재추출/개발
 
@@ -228,7 +232,7 @@ cd CreditDocStruct/CreditDocStruct
 4. admin이 쓰는 YAML은 `label_dictionary`뿐.
 5. `_backup_yaml` / `backup/` 유지. 복원은 파일 복사.
 6. 운영자 문장 ↔ `ops_guide.md`, 개발 계약 ↔ 이 README.
-7. 의존 방향: **admin → common/export**. 코어가 admin을 import하지 않음.
+7. 의존 방향: **admin → common/export**. 사이드바 1건만 `main.extract_credit_report`. 코어가 admin을 import하지 않음.
 8. 예외 `action`/`type_label` 변경 시 `ops_guide.md` §4·테스트와 동기화.
 
 ---
