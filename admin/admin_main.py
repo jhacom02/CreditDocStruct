@@ -44,7 +44,7 @@ def _render_sidebar() -> None:
     pending = _sidebar_exception_count()
     st.sidebar.caption(f"확인 필요 {pending}건")
 
-    uploaded = st.sidebar.file_uploader("PDF 업로드", type=["pdf"])
+    uploaded = st.sidebar.file_uploader("신용평가서 PDF 업로드", type=["pdf"])
     if (
         st.sidebar.button(
             "테스트 추출",

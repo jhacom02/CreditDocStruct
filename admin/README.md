@@ -5,7 +5,7 @@ Streamlit 기반 **관리자 웹 앱**. 배치 추출(`main.py`)과 **별도 진
 
 이 문서는 **개발자·AI 에이전트**용이다.  
 - 운영자(비개발자) 화면 문구 → `content/ops_guide.md`  
-- 추출·분류·Excel·설정 전체 → 저장소 루트 [`README.md`](../../README.md)
+- 추출·분류·Excel·설정 전체 → [`docs/CreditDocStruct_doc.md`](../docs/CreditDocStruct_doc.md)
 
 ---
 
@@ -64,7 +64,7 @@ admin/
 
 ## 3. 실행·의존성
 
-앱 루트: `CreditDocStruct/CreditDocStruct/`.
+앱 루트: 저장소 루트.
 
 ```bat
 admin\setup_admin.bat
@@ -110,7 +110,6 @@ PowerShell 테스트 (다른 PC)
 수동:
 
 ```bash
-cd CreditDocStruct/CreditDocStruct
 .venv\Scripts\python.exe -m pip install -r requirements.txt -r admin/requirements.txt
 .venv\Scripts\python.exe -m streamlit run admin/admin_main.py --server.address 0.0.0.0 --server.port 8501
 ```
@@ -256,6 +255,7 @@ cd CreditDocStruct/CreditDocStruct
 
 | 문서 | 내용 |
 |------|------|
-| 루트 `README.md` | 파이프라인·아키텍처·개발 규칙(§3)·admin 요약(§17) |
+| 루트 `README.md` | 공개용 소개·실행 안내 |
+| `docs/CreditDocStruct_doc.md` | 파이프라인·아키텍처·개발 규칙 |
 | `About_CreditDocStruct.md` | 업무 배경 (구현 계약 원천 아님) |
 | `admin/content/ops_guide.md` | UI 운영자 가이드 |

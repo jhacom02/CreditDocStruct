@@ -1,7 +1,7 @@
 @echo off
 setlocal
 
-REM App root: CreditDocStruct\CreditDocStruct
+REM App root
 cd /d "%~dp0.."
 
 if not exist ".venv\Scripts\python.exe" (

@@ -1,7 +1,7 @@
 @echo off
 setlocal
 
-REM Move to app root (CreditDocStruct\CreditDocStruct)
+REM Move to app root
 cd /d "%~dp0.."
 
 echo [CreditDocStruct] Starting admin application setup...

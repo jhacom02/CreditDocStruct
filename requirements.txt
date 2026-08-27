@@ -1,2 +1,8 @@
--r CreditDocStruct/requirements.txt
--r CreditDocStruct/admin/requirements.txt
+pymupdf>=1.24.0
+pandas>=2.0.0
+openpyxl>=3.1.0
+PyYAML>=6.0.0
+python-dotenv>=1.0.0
+pytest>=8.0.0
+streamlit>=1.35.0
+ruamel.yaml>=0.18.0

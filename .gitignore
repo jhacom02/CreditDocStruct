@@ -38,8 +38,18 @@ htmlcov/
 # Data / output files
 output/
 downloads/
-results/
+results/*
+!results/.gitkeep
+admin/data/*
+!admin/data/.gitkeep
+admin/backup/*.yaml
+*.db
+*.db-wal
+*.db-shm
+*.pdf
+
+# Streamlit
+.streamlit/secrets.toml
 
 # Others
-CreditDocStruct_doc.md
-VBA_newmodule.txt
+docs/
