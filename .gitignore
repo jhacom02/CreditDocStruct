@@ -40,13 +40,7 @@ output/
 downloads/
 results/*
 !results/.gitkeep
-admin/data/*
-!admin/data/.gitkeep
 admin/backup/*.yaml
-*.db
-*.db-wal
-*.db-shm
-*.pdf
 
 # Streamlit
 .streamlit/secrets.toml

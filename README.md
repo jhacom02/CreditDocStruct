@@ -16,10 +16,10 @@ Python 3.11 또는 3.12.
 copy .env.example .env
 admin\setup_admin.bat
 admin\run_admin.bat
-```
-
-http://localhost:8501
-
-```bash
 streamlit run streamlit_app.py
 ```
+
+## Streamlit Cloud
+
+- 진입점: `streamlit_app.py`
+- 주소: https://creditdocstruct.streamlit.app/
